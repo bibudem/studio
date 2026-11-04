@@ -1,0 +1,142 @@
+---
+/*
+ * Page 404, reprise de celle de bibweb (elle-même tirée de coquille-web), dans la coquille complète
+ * du site : en-tête, pied de page.
+ *
+ * Selon les recommandations de NN/g pour les pages 404 : les causes probables (adresse mal tapée
+ * comprise), la recherche dans studio·bib pré-remplie avec les mots de l'adresse demandée, les
+ * pages les plus demandées et un lien pour signaler le lien brisé. L'image reste petite pour ne
+ * pas repousser le message sous la ligne de flottaison.
+ *
+ * Amplify sert ce fichier (dist/404.html) pour toute adresse inconnue grâce à une règle de
+ * réécriture « 404 » dans la console (voir README, Déploiement).
+ */
+import { Image } from 'astro:assets'
+import Base from '@/layouts/Base.astro'
+import Bouton from '@/components/contenu/primitives/Bouton.astro'
+import RechercheSite from '@/components/coquille/RechercheSite.astro'
+import image404 from '@/components/coquille/pied/im-um-404.webp'
+
+const LIENS = [
+  { libelle: 'Proxy', href: '/informatique/proxy/' },
+  { libelle: 'Postes à distance', href: '/informatique/connexion-distance/' },
+  { libelle: 'Impression 3D', href: '/creatives/impression3d/' },
+  { libelle: 'Studios', href: '/medias/' },
+]
+---
+
+<Base titre="Page non trouvée" noindex>
+  <main id="contenu-principal" class="page-404">
+    <Image src={image404} alt="Erreur 404" widths={[300, 600]} sizes="(min-width: 900px) 300px, 60vw" class="illustration" loading="eager" />
+    <h1>Désolés… nous n'avons pas trouvé ce que vous demandez.</h1>
+    <p class="causes">L'adresse est peut-être mal tapée, ou la page a été déplacée ou supprimée.</p>
+
+    <div class="champ-404" data-recherche-404>
+      <RechercheSite id="recherche-404" nom="Rechercher dans studio·bib" />
+    </div>
+
+    <h2 class="sous-titre">Ces pages peuvent vous aider</h2>
+    <ul class="liens">
+      {
+        LIENS.map(({ libelle, href }) => (
+          <li>
+            <a href={href}>{libelle}</a>
+          </li>
+        ))
+      }
+    </ul>
+
+    <p class="signaler">
+      Ce lien brisé vient de notre site? <a href="/a-propos/nous-joindre/">Signalez-le-nous</a>.
+    </p>
+
+    <Bouton href="/" retour>Retour à la page d'accueil</Bouton>
+  </main>
+</Base>
+
+<script>
+  // Mots de l'adresse demandée dans le champ : /impression-3d-prusa/ → « impression 3d prusa ».
+  // Rien pour les extensions et les nombres seuls.
+  const champ = document.querySelector<HTMLInputElement>('[data-recherche-404] input[type=search]')
+  if (champ) {
+    let chemin = location.pathname
+    try {
+      chemin = decodeURIComponent(chemin)
+    } catch {
+      // adresse mal encodée : on garde le texte brut
+    }
+    const mots = chemin
+      .replace(/\.[a-z0-9]+$/i, '')
+      .split(/[/\-_.+]+/)
+      .filter((mot) => mot && !/^\d+$/.test(mot))
+      .join(' ')
+    if (mots) champ.value = mots
+  }
+</script>
+
+<style>
+  .page-404 {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 32px 16px 48px;
+    text-align: center;
+  }
+
+  .page-404:focus {
+    outline: none;
+  }
+
+  .page-404 :global(.illustration) {
+    width: min(60vw, 300px);
+    height: auto;
+    margin-bottom: 24px;
+  }
+
+  /* Un mot long tient dans 320 px même avec le texte agrandi */
+  h1 {
+    max-width: 40rem;
+    margin: 0 0 16px;
+    color: var(--couleur-texte);
+    font-size: 2rem;
+    overflow-wrap: anywhere;
+  }
+
+  .causes {
+    max-width: 36rem;
+    margin: 0 0 32px;
+  }
+
+  /* Le champ reste aligné à gauche, dans une colonne centrée : un champ de recherche centré se lit mal */
+  .champ-404 {
+    width: min(100%, 36rem);
+    text-align: start;
+  }
+
+  .sous-titre {
+    margin: 40px 0 12px;
+    font-size: 1.25rem;
+  }
+
+  .liens {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 24px;
+    margin: 0 0 32px;
+    padding: 0;
+    list-style: none;
+  }
+
+  .liens a {
+    display: inline-block;
+    padding-block: 6px;
+  }
+
+  .signaler {
+    max-width: 36rem;
+    margin: 0 0 32px;
+    color: var(--couleur-texte-secondaire);
+    font-size: 0.9375rem;
+  }
+</style>

@@ -32,6 +32,8 @@ npm test             # tests unitaires
 
 AWS Amplify (`amplify.yml`, `customHttp.yml`), sortie `dist/`. La branche `main` est le site public (seule indexée) ; Decap CMS y enregistre directement. Ailleurs, le site est une préproduction.
 
+Page 404 : une règle de la console Amplify (**Hosting** → **Rewrites and redirects**) sert `404.html` pour toute adresse inconnue. À placer en dernier : source `/<*>`, cible `/404.html`, type `404 (Rewrite)`.
+
 ## Licence
 
 Code : MIT. Contenu : CC BY 4.0, sauf indication contraire (Les bibliothèques de l'Université de Montréal).
