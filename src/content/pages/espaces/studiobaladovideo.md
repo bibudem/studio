@@ -1,7 +1,9 @@
 ---
 title: Studio balado vidéo
-description: "Studio balado vidéo de la Bibliothèque LSH (local 2076-2) : caméras à commutation automatique, jusqu'à 4 personnes de la communauté UdeM."
-image: "../images/cover/studiobalado.webp"
+description: "Studio balado vidéo de la Bibliothèque LSH (local 2076-2) :
+  caméras à commutation automatique, jusqu'à 4 personnes de la communauté UdeM.
+  A"
+image: ../images/cover/studiobalado.webp
 aide: crea
 derniereMaj: 2026-10-31
 ---
