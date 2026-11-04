@@ -35,6 +35,10 @@ const processeur = unified({
 })
 
 export default defineConfig({
+  // Cache d'Astro (images déjà converties en AVIF et WebP) hors de node_modules : `npm ci` vide
+  // node_modules à chaque build Amplify, ce qui forçait la reconversion de toutes les images.
+  // Le dossier est gardé d'un build à l'autre par le cache d'Amplify (amplify.yml).
+  cacheDir: './.cache/astro',
   // Adresse du site : source unique (src/data/site.ts la lit sous import.meta.env.SITE)
   site: 'https://studio.bib.umontreal.ca',
   // Pages avec ou sans barre oblique finale : les deux formes restent valides

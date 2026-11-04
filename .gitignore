@@ -1,6 +1,9 @@
 dist/
 docs/
 .astro/
+# Caches de build (Astro : images converties ; npm), gardés par Amplify
+.cache/
+.npm/
 node_modules/
 .env
 .env.production
