@@ -1,0 +1,287 @@
+---
+/*
+ * Agrandissement des photos du contenu.
+ *
+ * Les images du texte portent `data-agrandir` (version jusqu'à 2000 px). Au chargement, celles
+ * qui s'affichent nettement plus petites que cette version (au moins 1,25 fois) sont enveloppées
+ * d'un vrai <button> : au clavier, Entrée ou Espace. Les autres (déjà à leur taille, icônes,
+ * images dans un lien) restent telles quelles.
+ *
+ * Accessibilité : <dialog> modal natif (focus piégé, Échap ferme, le reste de la page est inerte,
+ * le focus revient au bouton), nom accessible du bouton et du dialogue tiré du texte alternatif,
+ * bouton « Fermer » visible, clic sur le fond pour fermer, aucun défilement de la page derrière,
+ * mouvement réduit respecté (règle globale), cible tactile d'au moins 44 px.
+ */
+---
+
+<dialog class="agrandissement" aria-labelledby="agrandissement-legende" data-agrandissement>
+  <figure>
+    <img alt="" />
+    <figcaption id="agrandissement-legende"></figcaption>
+  </figure>
+  <button type="button" class="fermer" data-agrandissement-fermer>
+    <svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="20" height="20"><path d="M6 6l12 12M18 6L6 18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"></path></svg>
+    Fermer
+  </button>
+</dialog>
+
+<script>
+  const dialogue = document.querySelector<HTMLDialogElement>('[data-agrandissement]')!
+  const grande = dialogue.querySelector('img')!
+  const legende = dialogue.querySelector('figcaption')!
+  const RAPPORT_MIN = 1.25
+  const LOUPE =
+    '<svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="18" height="18"><path d="M11 4a7 7 0 1 0 4.2 12.6l4.1 4.1 1.4-1.4-4.1-4.1A7 7 0 0 0 11 4zm0 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm-.5 2v2.5H8v1h2.5V14h1v-2.5H14v-1h-2.5V8z" fill="currentColor"></path></svg>'
+
+  function ouvrir(source: string, alt: string, declencheur: HTMLElement) {
+    grande.alt = alt
+    grande.src = source
+    legende.textContent = alt
+    legende.hidden = !alt
+    dialogue.showModal()
+    // Le focus entre dans la fenêtre : au bouton « Fermer », pour que le clavier agisse tout de suite
+    dialogue.querySelector<HTMLElement>('[data-agrandissement-fermer]')?.focus()
+    dialogue.dataset.declencheur = declencheur.id
+  }
+
+  function preparer(img: HTMLImageElement) {
+    if (img.closest('a, button, [data-agrandi]') || !img.dataset.agrandir) return
+    const largeurAffichee = img.clientWidth
+    const largeurAgrandie = Number(img.dataset.largeurAgrandie)
+    if (!largeurAffichee || largeurAgrandie < largeurAffichee * RAPPORT_MIN) return
+
+    const cible = img.parentElement?.tagName === 'PICTURE' ? img.parentElement : img
+    const bouton = document.createElement('button')
+    bouton.type = 'button'
+    bouton.className = 'agrandir-image'
+    bouton.dataset.agrandi = ''
+    bouton.setAttribute('aria-haspopup', 'dialog')
+    bouton.setAttribute('aria-label', img.alt ? `Agrandir l’image : ${img.alt}` : 'Agrandir l’image')
+    cible.replaceWith(bouton)
+    bouton.append(cible)
+    bouton.insertAdjacentHTML('beforeend', `<span class="loupe">${LOUPE}</span>`)
+    bouton.addEventListener('click', () => {
+      bouton.id ||= `agrandir-${Math.random().toString(36).slice(2)}`
+      ouvrir(img.dataset.agrandir!, img.alt, bouton)
+    })
+  }
+
+  function tout() {
+    for (const img of document.querySelectorAll<HTMLImageElement>('img[data-agrandir]')) {
+      if (img.complete) preparer(img)
+      else img.addEventListener('load', () => preparer(img), { once: true })
+    }
+  }
+  tout()
+
+  dialogue.querySelector('[data-agrandissement-fermer]')!.addEventListener('click', () => dialogue.close())
+  // Clic sur le fond (hors de l'image et du bouton) : fermer
+  dialogue.addEventListener('click', (e) => {
+    if (e.target === dialogue) dialogue.close()
+  })
+  // Échap ferme la fenêtre dans tous les cas, même si le navigateur ne le fait pas de lui-même
+  // (focus perdu sur la page, navigateur ancien) ; en phase de capture, avant les autres écouteurs
+  document.addEventListener(
+    'keydown',
+    (e) => {
+      if (e.key === 'Escape' && dialogue.open) {
+        e.preventDefault()
+        e.stopPropagation()
+        dialogue.close()
+      }
+    },
+    true,
+  )
+  dialogue.addEventListener('close', () => {
+    // L'image reste en place le temps du fondu de fermeture (sinon elle disparaît d'un coup et la
+    // figure s'effondre avant la fin de l'animation) ; on la libère ensuite, si la fenêtre est
+    // toujours fermée
+    setTimeout(() => {
+      if (!dialogue.open) grande.removeAttribute('src')
+    }, 300)
+  })
+</script>
+
+<style>
+  .agrandissement {
+    /* Fixe en permanence : pendant le fondu de fermeture, la fenêtre n'est plus « modale » et le
+       navigateur la repositionnerait en haut de la page (position: absolute) */
+    position: fixed;
+    inset: 0;
+    box-sizing: border-box;
+    inline-size: 100vw;
+    max-inline-size: 100vw;
+    block-size: 100dvh;
+    max-block-size: 100dvh;
+    margin: 0;
+    padding: var(--espace-3) var(--espace-2) var(--espace-2);
+    border: 0;
+    background: transparent;
+    color: #fff;
+    overflow: hidden;
+  }
+
+    .agrandissement::backdrop {
+    background-color: color-mix(in srgb, var(--couleur-voile) 85%, transparent);
+  }
+
+  /* Animation légère : le fond se fonce en fondu et la photo apparaît en grandissant à peine
+     (0,96 → 1). À la fermeture, l'inverse, un peu plus vite. `display` et `overlay` en transition
+     discrète gardent la fenêtre à l'écran le temps du fondu ; sans cette prise en charge, la
+     fenêtre s'ouvre et se ferme simplement sans animation. Le réglage de mouvement réduit coupe
+     tout (global.css). */
+  .agrandissement,
+  .agrandissement::backdrop,
+  .agrandissement figure,
+  .fermer {
+    transition-duration: 180ms;
+    transition-timing-function: cubic-bezier(0.4, 0, 1, 1);
+  }
+
+  .agrandissement {
+    transition-property: display, overlay;
+    transition-behavior: allow-discrete;
+  }
+
+  .agrandissement::backdrop {
+    transition-property: opacity, display, overlay;
+    transition-behavior: allow-discrete;
+    opacity: 0;
+  }
+
+  .agrandissement figure {
+    transition-property: opacity, scale;
+    opacity: 0;
+    scale: 0.96;
+  }
+
+  .agrandissement[open]::backdrop {
+    opacity: 1;
+  }
+
+  .agrandissement[open] figure {
+    opacity: 1;
+    scale: 1;
+  }
+
+  .agrandissement[open],
+  .agrandissement[open]::backdrop,
+  .agrandissement[open] figure {
+    transition-duration: 280ms;
+    transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  @starting-style {
+    .agrandissement[open]::backdrop {
+      opacity: 0;
+    }
+
+    .agrandissement[open] figure {
+      opacity: 0;
+      scale: 0.96;
+    }
+  }
+
+  /* La figure remplit la fenêtre et centre elle-même son contenu : le centrage ne dépend pas de
+     l'état « ouvert » de la fenêtre, qui change dès le début du fondu de fermeture */
+  figure {
+    position: absolute;
+    inset: var(--espace-3) var(--espace-2) var(--espace-2);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--espace-1);
+    margin: 0;
+  }
+
+  figure img {
+    max-inline-size: 100%;
+    max-block-size: calc(100dvh - 8rem);
+    inline-size: auto;
+    block-size: auto;
+    object-fit: contain;
+    border-radius: var(--rayon-tres-petit);
+    background-color: #fff;
+  }
+
+  figcaption {
+    max-inline-size: 60ch;
+    font-size: 0.9375rem;
+    text-align: center;
+  }
+
+  .fermer {
+    position: absolute;
+    inset-block-start: var(--espace-2);
+    inset-inline-end: var(--espace-2);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-block-size: 44px;
+    padding: 0 1rem;
+    border: 0;
+    border-radius: var(--rayon-plein);
+    /* Jaune de l'action principale du site (jetons --action-*) */
+    background-color: var(--action-fond);
+    color: var(--action-texte);
+    font: inherit;
+    font-weight: var(--graisse-moyenne);
+    cursor: pointer;
+  }
+
+  .fermer:hover {
+    background-color: var(--action-fond-survol);
+  }
+
+  /* Focus : l'anneau du site (jaune, filet bleu foncé collé), détaché du bouton jaune par un espace
+     et lisible sur le fond sombre de la fenêtre */
+  .fermer:focus-visible {
+    outline: 3px solid var(--couleur-focus);
+    outline-offset: 3px;
+    box-shadow: 0 0 0 2px var(--couleur-focus-contour);
+    border-radius: var(--rayon-plein);
+  }
+
+  /* Défilement de la page bloqué derrière le dialogue */
+  :global(html:has(.agrandissement[open])) {
+    overflow: hidden;
+    /* La place de la barre de défilement est gardée : la page ne saute pas à l'ouverture ni à la fermeture */
+    scrollbar-gutter: stable;
+  }
+
+  /* Boutons créés par le script : hors de la portée du CSS du composant */
+  :global(.agrandir-image) {
+    position: relative;
+    display: block;
+    inline-size: fit-content;
+    max-inline-size: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: inherit;
+    font: inherit;
+    cursor: zoom-in;
+  }
+
+  :global(.agrandir-image .loupe) {
+    position: absolute;
+    inset-block-end: 0.5rem;
+    inset-inline-end: 0.5rem;
+    display: grid;
+    place-items: center;
+    inline-size: 2rem;
+    block-size: 2rem;
+    border-radius: var(--rayon-plein);
+    background-color: rgb(0 0 0 / 0.65);
+    color: #fff;
+    pointer-events: none;
+  }
+
+  /* Cible tactile : tout le bouton (l'image) est cliquable, la loupe n'est qu'un indice visuel */
+  :global(.agrandir-image:hover .loupe),
+  :global(.agrandir-image:focus-visible .loupe) {
+    background-color: rgb(0 0 0 / 0.85);
+  }
+</style>

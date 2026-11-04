@@ -1,0 +1,250 @@
+---
+/*
+ * Visite virtuelle 360°, sur photo-sphere-viewer.
+ *
+ * - Façade : au build, un aperçu léger (le centre du panorama, en WebP
+ *   d'une vingtaine de Ko, inline) et un bouton « Démarrer la visite ».
+ *   photo-sphere-viewer (et three.js, ~160 Ko gzip) et le panorama lui-même
+ *   ne sont chargés qu'à l'activation : aucune requête avant.
+ * - Sans JS : l'aperçu (avec son alt), la légende et le lien vers l'image
+ *   panoramique à plat.
+ * - Clavier : flèches pour tourner, + et − pour zoomer, seulement quand la
+ *   visite a le focus (keyboard: 'always' écouterait toute la fenêtre et
+ *   bloquerait le défilement de la page). Les boutons de la barre de
+ *   photo-sphere-viewer sont des <div> : on leur donne rôle et nom, et
+ *   Espace les active comme Entrée.
+ */
+import { readFile } from 'node:fs/promises'
+import { join } from 'node:path'
+import sharp from 'sharp'
+import { CubeFocusIcon } from '@phosphor-icons/react/dist/ssr/CubeFocus'
+import { idUnique } from '@/lib/ids'
+
+interface Props {
+  image: string
+  alt: string
+  titre?: string
+  legende?: string
+  [attribut: string]: unknown
+}
+
+const { image, alt, titre, legende } = Astro.props
+if (!image?.startsWith('/')) throw new Error(`Pano360 : image=${image} doit être un chemin de public/ (/img/pano/…).`)
+
+const id = idUnique('pano')
+const texte = legende || alt || titre || ''
+const nom = titre ? `Visite virtuelle 360° : ${titre}` : 'Visite virtuelle 360°'
+
+// Aperçu : la bande centrale du panorama équirectangulaire (la vue de départ)
+let apercu = ''
+try {
+  const source = sharp(await readFile(join(process.cwd(), 'public', decodeURI(image))))
+  const { width = 0, height = 0 } = await source.metadata()
+  const tampon = await source
+    .extract({ left: Math.round(width * 0.3), top: Math.round(height * 0.3), width: Math.round(width * 0.4), height: Math.round(height * 0.4) })
+    .resize({ width: 960 })
+    .webp({ quality: 50 })
+    .toBuffer()
+  apercu = `data:image/webp;base64,${tampon.toString('base64')}`
+} catch (erreur) {
+  throw new Error(`Pano360 : image introuvable ou illisible dans public/ : ${image} (${erreur})`)
+}
+---
+
+<figure class="pano" data-pano data-image={image} data-legende={texte} data-nom={nom} data-description={`${id}-legende`}>
+  <div class="visionneuse" data-visionneuse>
+    <img class="apercu" src={apercu} alt={alt} width="960" height="480" decoding="async" />
+    <button type="button" class="demarrer" data-demarrer hidden>
+      <CubeFocusIcon size={24} aria-hidden="true" focusable="false" />
+      <span>Démarrer la visite virtuelle<span class="visuellement-masque"> : {titre ?? alt}</span></span>
+    </button>
+    <p class="etat" role="status" data-etat></p>
+  </div>
+  <figcaption id={`${id}-legende`} class="legende">
+    {texte && <span>{texte}. </span>}
+    <span class="aide" data-aide hidden>Flèches pour tourner, + et − pour zoomer. </span>
+    <a href={image}>Voir l’image panoramique à plat</a>
+  </figcaption>
+</figure>
+
+<script>
+  const LANG = {
+    zoom: 'Zoom',
+    zoomOut: 'Dézoomer',
+    zoomIn: 'Zoomer',
+    moveUp: 'Haut',
+    moveDown: 'Bas',
+    moveLeft: 'Gauche',
+    moveRight: 'Droite',
+    fullscreen: 'Plein écran',
+    loadError: 'Le panorama n’a pas pu être chargé.',
+    webglError: 'Votre navigateur ne permet pas d’afficher la visite 360° (WebGL non disponible).',
+    twoFingers: 'Utilisez deux doigts pour naviguer',
+    ctrlZoom: 'Utilisez Ctrl + molette pour zoomer',
+  }
+
+  function rendreBoutonsAccessibles(conteneur: HTMLElement) {
+    for (const bouton of conteneur.querySelectorAll<HTMLElement>('.psv-button')) {
+      bouton.setAttribute('role', 'button')
+      const nom = bouton.getAttribute('title')
+      if (nom && !bouton.getAttribute('aria-label')) bouton.setAttribute('aria-label', nom)
+    }
+  }
+
+  for (const figure of document.querySelectorAll<HTMLElement>('[data-pano]')) {
+    const visionneuse = figure.querySelector<HTMLElement>('[data-visionneuse]')!
+    const bouton = figure.querySelector<HTMLButtonElement>('[data-demarrer]')!
+    const etat = figure.querySelector<HTMLElement>('[data-etat]')!
+    bouton.hidden = false
+
+    bouton.addEventListener('click', async () => {
+      bouton.disabled = true
+      etat.textContent = 'Chargement de la visite virtuelle…'
+      try {
+        const [{ Viewer }] = await Promise.all([import('@photo-sphere-viewer/core'), import('@photo-sphere-viewer/core/index.css')])
+        const conteneur = document.createElement('div')
+        conteneur.className = 'psv-conteneur'
+        Object.assign(conteneur, { tabIndex: 0 })
+        conteneur.setAttribute('role', 'application')
+        conteneur.setAttribute('aria-roledescription', 'visite virtuelle')
+        conteneur.setAttribute('aria-label', figure.dataset.nom!)
+        conteneur.setAttribute('aria-describedby', figure.dataset.description!)
+        visionneuse.replaceChildren(conteneur, etat)
+
+        const viewer = new Viewer({
+          container: conteneur,
+          panorama: figure.dataset.image!,
+          caption: figure.dataset.legende,
+          navbar: ['zoom', 'move', 'caption', 'fullscreen'],
+          keyboard: 'fullscreen',
+          lang: LANG,
+        })
+        viewer.addEventListener(
+          'ready',
+          () => {
+            rendreBoutonsAccessibles(conteneur)
+            etat.textContent = ''
+            if (conteneur.contains(document.activeElement)) viewer.startKeyboardControl()
+          },
+          { once: true },
+        )
+        conteneur.addEventListener('keydown', (e) => {
+          const cible = (e.target as HTMLElement).closest<HTMLElement>('.psv-button')
+          if (e.key !== ' ' || !cible) return
+          e.preventDefault()
+          cible.click()
+        })
+        conteneur.addEventListener('focusin', () => viewer.startKeyboardControl())
+        conteneur.addEventListener('focusout', (e) => {
+          if (!conteneur.contains(e.relatedTarget as Node)) viewer.stopKeyboardControl()
+        })
+        figure.querySelector<HTMLElement>('[data-aide]')!.hidden = false
+        // Le bouton a disparu : le focus passe à la visite
+        conteneur.focus()
+      } catch (erreur) {
+        console.error('Visite virtuelle :', erreur)
+        bouton.disabled = false
+        etat.textContent = 'La visite virtuelle n’a pas pu être chargée. Utilisez le lien vers l’image à plat sous l’aperçu.'
+      }
+    })
+  }
+</script>
+
+<style>
+  .pano {
+    margin: var(--espace-4) 0;
+  }
+
+  .visionneuse {
+    position: relative;
+    height: clamp(280px, 60vw, 500px);
+    overflow: hidden;
+    border-radius: var(--rayon-moyen);
+    background: var(--couleur-teinte);
+  }
+
+  .apercu {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .visionneuse :global(.psv-conteneur) {
+    width: 100%;
+    height: 100%;
+  }
+
+  .demarrer {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--espace-1);
+    min-height: var(--taille-cible);
+    max-width: calc(100% - 2 * var(--espace-2));
+    padding: var(--espace-1) var(--espace-3);
+    border: 0;
+    border-radius: var(--rayon-plein);
+    background: var(--action-fond);
+    box-shadow: var(--ombre-2);
+    color: var(--action-texte);
+    font: inherit;
+    font-weight: var(--graisse-forte);
+    cursor: pointer;
+    transform: translate(-50%, -50%);
+    transition: background-color var(--duree-courte-4) var(--courbe-standard);
+  }
+
+  .demarrer:hover {
+    background: var(--action-fond-survol);
+  }
+
+  .demarrer[hidden] {
+    display: none;
+  }
+
+  .demarrer:disabled {
+    cursor: progress;
+  }
+
+  .demarrer :global(svg) {
+    flex: 0 0 auto;
+  }
+
+  .etat {
+    position: absolute;
+    right: var(--espace-1);
+    bottom: var(--espace-1);
+    left: var(--espace-1);
+    max-inline-size: none;
+    margin: 0;
+    padding: var(--espace-1) var(--espace-2);
+    border-radius: var(--rayon-petit);
+    background: var(--couleur-surface);
+    color: var(--couleur-texte);
+    font-size: 0.875rem;
+  }
+
+  .etat:empty {
+    display: none;
+  }
+
+  .legende {
+    margin-top: var(--espace-1);
+    color: var(--couleur-texte-secondaire);
+    font-size: 0.875rem;
+    line-height: 1.5;
+  }
+
+  .legende a {
+    color: var(--couleur-lien);
+  }
+
+  @media (forced-colors: active) {
+    .demarrer {
+      border: 2px solid ButtonText;
+    }
+  }
+</style>

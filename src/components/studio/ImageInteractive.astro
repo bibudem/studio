@@ -1,0 +1,186 @@
+---
+/*
+ * Capture d'écran commentée : une liste de
+ * zones, et l'image dont la zone choisie reste éclairée, le reste assombri.
+ * Données : src/data/images-interactives.ts (prop `nom`).
+ *
+ * - Sans JS : la liste en texte et l'image avec son alt ; rien ne manque,
+ *   l'éclairage n'est qu'une aide visuelle.
+ * - Avec JS : chaque élément devient un bouton (aria-pressed) ; survol et
+ *   focus éclairent la zone, un clic (ou un toucher) la garde éclairée.
+ *   Les zones de l'image répondent au survol de la souris seulement : le
+ *   clavier passe par la liste.
+ */
+import { Image } from 'astro:assets'
+import { IMAGES_INTERACTIVES } from '@/data/images-interactives'
+
+interface Props {
+  nom: string
+  [attribut: string]: unknown
+}
+
+const donnees = IMAGES_INTERACTIVES[Astro.props.nom]
+if (!donnees) throw new Error(`ImageInteractive : nom=${Astro.props.nom} inconnu (src/data/images-interactives.ts : ${Object.keys(IMAGES_INTERACTIVES).join(', ')}).`)
+const Liste = donnees.numerotee ? 'ol' : 'ul'
+const position = (z: { haut: number; gauche: number; largeur: number; hauteur: number }) => `top: ${z.haut}%; left: ${z.gauche}%; width: ${z.largeur}%; height: ${z.hauteur}%`
+---
+
+<div class="image-interactive" data-image-interactive>
+  <Liste class="zones">
+    {
+      donnees.zones.map((z) => (
+        <li data-zone={z.id} data-position={position(z)}>
+          {z.libelle}
+        </li>
+      ))
+    }
+  </Liste>
+  <div class="cadre">
+    <Image src={donnees.image} alt={donnees.alt} widths={[600, 900, 1200, donnees.image.width].filter((w) => w <= donnees.image.width)} sizes="(min-width: 900px) 800px, 100vw" />
+    <span class="projecteur" aria-hidden="true" data-projecteur></span>
+    {donnees.zones.map((z) => <span class="cible" aria-hidden="true" data-cible={z.id} style={position(z)} />)}
+  </div>
+</div>
+
+<script>
+  for (const racine of document.querySelectorAll<HTMLElement>('[data-image-interactive]')) {
+    const projecteur = racine.querySelector<HTMLElement>('[data-projecteur]')!
+    const elements = [...racine.querySelectorAll<HTMLElement>('[data-zone]')]
+    const boutons = new Map<string, HTMLButtonElement>()
+    let fixe: string | null = null
+
+    const eclairer = (id: string | null) => {
+      const element = elements.find((e) => e.dataset.zone === id)
+      racine.toggleAttribute('data-eclaire', Boolean(element))
+      if (element) projecteur.style.cssText = element.dataset.position!
+      for (const [cle, bouton] of boutons) bouton.toggleAttribute('data-actif', cle === id)
+    }
+    const relacher = () => eclairer(fixe)
+
+    for (const element of elements) {
+      const id = element.dataset.zone!
+      const bouton = document.createElement('button')
+      bouton.type = 'button'
+      bouton.className = 'zone'
+      bouton.setAttribute('aria-pressed', 'false')
+      bouton.append(...element.childNodes)
+      element.append(bouton)
+      boutons.set(id, bouton)
+      bouton.addEventListener('mouseenter', () => eclairer(id))
+      bouton.addEventListener('mouseleave', relacher)
+      bouton.addEventListener('focus', () => eclairer(id))
+      bouton.addEventListener('blur', relacher)
+      bouton.addEventListener('click', () => {
+        fixe = fixe === id ? null : id
+        for (const [cle, b] of boutons) b.setAttribute('aria-pressed', String(cle === fixe))
+        eclairer(fixe ?? id)
+      })
+    }
+
+    for (const cible of racine.querySelectorAll<HTMLElement>('[data-cible]')) {
+      const id = cible.dataset.cible!
+      cible.addEventListener('mouseenter', () => eclairer(id))
+      cible.addEventListener('mouseleave', relacher)
+      cible.addEventListener('click', () => boutons.get(id)?.click())
+    }
+  }
+</script>
+
+<style>
+  .image-interactive {
+    margin-block: var(--espace-element) var(--espace-bloc);
+  }
+
+  .zones {
+    margin: 0 0 var(--espace-element);
+    padding-left: 1.5rem;
+  }
+
+  .zones li {
+    margin: 0.35rem 0;
+  }
+
+  /* Le bouton garde l'apparence du texte de la liste */
+  /* Un bouton reste un bloc en ligne : en bloc, la puce s'aligne sur sa première ligne */
+  .zones :global(.zone) {
+    display: block;
+    width: calc(100% + 0.5rem);
+    padding: 0.1rem 0.25rem;
+    margin-inline: -0.25rem;
+    border: 0;
+    border-radius: var(--rayon-minuscule);
+    background: none;
+    color: inherit;
+    font: inherit;
+    text-align: start;
+    cursor: pointer;
+    transition: background-color var(--duree-courte-4) var(--courbe-standard);
+  }
+
+  /* studio·bib : survol en jaune pâle, zone fixée en bleu foncé (état choisi) */
+  .zones :global(.zone:hover),
+  .zones :global(.zone[data-actif]) {
+    background: var(--action-douce-fond-survol);
+    color: var(--action-texte);
+  }
+
+  .zones :global(.zone[aria-pressed='true']) {
+    background: var(--selection-fond);
+    color: var(--selection-texte);
+    font-weight: var(--graisse-forte);
+  }
+
+  .cadre {
+    position: relative;
+    max-width: 100%;
+    width: fit-content;
+    overflow: hidden;
+    border-radius: var(--rayon-tres-petit);
+  }
+
+  .cadre :global(img) {
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* La zone éclairée ; le reste de l'image passe sous un voile */
+  .projecteur {
+    position: absolute;
+    z-index: 1;
+    box-shadow: 0 0 0 100vmax color-mix(in srgb, var(--couleur-voile) 60%, transparent);
+    opacity: 0;
+    pointer-events: none;
+    /* Exception voulue à « transform et opacity seulement » : le cadre glisse d'une zone à
+       l'autre en changeant de taille ; un scale déformerait son contour et son arrondi */
+    transition:
+      opacity var(--duree-moyenne-4) var(--courbe-standard),
+      top var(--duree-moyenne-2) var(--courbe-standard),
+      left var(--duree-moyenne-2) var(--courbe-standard),
+      width var(--duree-moyenne-2) var(--courbe-standard),
+      height var(--duree-moyenne-2) var(--courbe-standard);
+  }
+
+  [data-eclaire] .projecteur {
+    opacity: 1;
+  }
+
+  .cible {
+    position: absolute;
+    z-index: 2;
+    cursor: pointer;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .projecteur {
+      transition: opacity var(--duree-courte-3) linear;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .projecteur {
+      outline: 3px solid Highlight;
+      outline-offset: -3px;
+    }
+  }
+</style>

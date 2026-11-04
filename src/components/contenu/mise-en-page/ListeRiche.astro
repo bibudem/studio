@@ -1,0 +1,36 @@
+---
+/*
+ * Liste riche : liste sans puces, décalée de
+ * `offset` colonnes de chaque côté (0.5 par défaut). Ses éléments sont des
+ * ListeRicheElementLien.
+ */
+import GrilleDecalee from '@/components/contenu/primitives/GrilleDecalee.astro'
+import { classes, fusionnerStyles, type Style } from '@/lib/styles'
+
+interface Props {
+  offset?: number
+  /** Passé dans le contenu (etudes) mais ignoré */
+  bg?: string
+  class?: string
+  className?: string
+  style?: Style
+  [attribut: string]: unknown
+}
+
+const { offset = 0.5, bg: _bg, class: classe, className, style, ...reste } = Astro.props
+---
+
+<GrilleDecalee offset={offset} class={classes('bib-comp-rich-list', classe, className)} style={fusionnerStyles(style)} {...reste}>
+  <ul class="liste-riche" data-revelation="groupe">
+    <slot />
+  </ul>
+</GrilleDecalee>
+
+<style>
+  .liste-riche {
+    width: 100%;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+</style>

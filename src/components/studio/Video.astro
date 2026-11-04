@@ -1,0 +1,213 @@
+---
+/*
+ * Directive `video` : une vidéo YouTube, Loom, d'une autre plateforme (adresse
+ * d'intégration) ou un fichier du site, en 16:9.
+ *
+ * YouTube, Loom et autres plateformes : rien ne vient de la plateforme avant le clic (ni lecteur,
+ * ni vignette, ni témoin) ; la page reste légère et ne transmet rien sans
+ * geste de la personne. Le bouton de lecture est d'abord un lien vers la
+ * vidéo sur la plateforme (il fonctionne sans JavaScript) ; le script le
+ * remplace au clic par le lecteur, qui démarre et reçoit le focus.
+ * Fichier : <video controls> natif, qui ne charge que ses métadonnées.
+ * Le titre, obligatoire, nomme le lecteur et le lien (WCAG 4.1.2).
+ */
+import { PlayIcon } from '@phosphor-icons/react/dist/ssr/Play'
+
+interface Props {
+  titre: string
+  youtube?: string
+  loom?: string
+  fichier?: string
+  /** Adresse d'intégration (iframe) d'une autre plateforme */
+  integration?: string
+}
+
+const { titre, youtube, loom, fichier, integration } = Astro.props
+
+const PLATEFORMES = {
+  youtube: {
+    nom: 'YouTube',
+    page: (id: string) => `https://www.youtube.com/watch?v=${id}`,
+    lecteur: (id: string) => `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0`,
+  },
+  loom: {
+    nom: 'Loom',
+    page: (id: string) => `https://www.loom.com/share/${id}`,
+    lecteur: (id: string) => `https://www.loom.com/embed/${id}?autoplay=1`,
+  },
+}
+const plateforme = youtube ? 'youtube' : loom ? 'loom' : null
+const id = youtube ?? loom ?? ''
+// Autre plateforme : le lien et le lecteur sont l'adresse d'intégration elle-même
+const autre = integration ? { nom: new URL(integration).hostname.replace(/^www\./, ''), page: () => integration, lecteur: () => integration } : null
+const source = plateforme ? PLATEFORMES[plateforme] : autre
+---
+
+{
+  source ? (
+    <div class="cadre" data-video-studio data-lecteur={source.lecteur(id)} data-titre-video={titre}>
+      <a class="lecture" href={source.page(id)}>
+        <span class="pastille" aria-hidden="true">
+          <PlayIcon size="2rem" weight="fill" />
+        </span>
+        <span class="texte-lecture">
+          <span class="action">Lire la vidéo</span>
+          <span class="titre-video">{titre}</span>
+          <span class="plateforme">{source.nom}</span>
+        </span>
+      </a>
+    </div>
+  ) : (
+    <figure class="video-fichier">
+      <video class="cadre" controls preload="metadata" aria-label={titre}>
+        <source src={fichier} />
+        <a href={fichier}>Télécharger la vidéo « {titre} »</a>
+      </video>
+      <figcaption>{titre}</figcaption>
+    </figure>
+  )
+}
+
+<script>
+  for (const cadre of document.querySelectorAll<HTMLElement>('[data-video-studio]')) {
+    const lien = cadre.querySelector<HTMLAnchorElement>('.lecture')
+    lien?.addEventListener('click', (evenement) => {
+      // Ctrl/Cmd/Maj-clic : ouvrir la plateforme, comme tout lien
+      if (evenement.metaKey || evenement.ctrlKey || evenement.shiftKey) return
+      evenement.preventDefault()
+      const lecteur = document.createElement('iframe')
+      lecteur.src = cadre.dataset.lecteur!
+      lecteur.title = cadre.dataset.titreVideo ?? 'Vidéo'
+      lecteur.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen'
+      lecteur.allowFullscreen = true
+      lecteur.referrerPolicy = 'strict-origin-when-cross-origin'
+      lien.replaceWith(lecteur)
+      lecteur.focus()
+    })
+  }
+</script>
+
+<style>
+  .cadre {
+    position: relative;
+    display: block;
+    box-sizing: border-box;
+    width: 100%;
+    max-inline-size: 45rem;
+    margin-block: var(--espace-element) var(--espace-bloc);
+    /* Sans overflow caché : si le texte agrandi ne tient pas en 16:9, le
+       cadre grandit au lieu de couper le titre */
+    display: grid;
+    aspect-ratio: 16 / 9;
+    border-radius: var(--rayon-carte);
+    background-color: var(--bleu-fonce);
+  }
+
+  .cadre :global(iframe) {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    border-radius: inherit;
+  }
+
+  .lecture {
+    display: flex;
+    border-radius: inherit;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--espace-2);
+    padding: var(--espace-2);
+    color: var(--couleur-sur-fonce);
+    text-align: center;
+    text-decoration: none;
+  }
+
+  .lecture:focus-visible {
+    outline: 3px solid var(--couleur-sur-fonce);
+    outline-offset: -6px;
+  }
+
+  .pastille {
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 4rem;
+    height: 4rem;
+    border-radius: var(--rayon-plein);
+    /* Icône blanche sur rouge orangé : 3,4:1, assez pour un élément graphique (WCAG 1.4.11) */
+    background-color: var(--rouge-orange);
+    color: var(--couleur-sur-fonce);
+    transition: transform var(--duree-courte-4) var(--courbe-standard);
+  }
+
+  .lecture:focus-visible .pastille {
+    transform: scale(1.08);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .lecture:hover .pastille {
+      transform: scale(1.08);
+    }
+  }
+
+  .texte-lecture {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+
+  .action,
+  .plateforme {
+    font-size: 0.8333rem;
+    font-weight: var(--graisse-moyenne);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .titre-video {
+    max-inline-size: 36ch;
+    font-size: 1.1111rem;
+    font-weight: var(--graisse-forte);
+    line-height: 1.3;
+    overflow-wrap: break-word;
+  }
+
+  /* Téléphone : le titre seul, sans les mentions, pour tenir en 16:9 */
+  .action,
+  .plateforme {
+    display: none;
+  }
+
+  @media (min-width: 600px) {
+    .action,
+    .plateforme {
+      display: block;
+    }
+  }
+
+  .video-fichier {
+    max-inline-size: 45rem;
+    margin: var(--espace-element) 0 var(--espace-bloc);
+  }
+
+  .video-fichier .cadre {
+    display: block;
+    margin: 0;
+  }
+
+  .video-fichier figcaption {
+    margin-top: var(--espace-1);
+    color: var(--couleur-texte-secondaire);
+    font-size: 0.9444rem;
+  }
+
+  @media (forced-colors: active) {
+    .cadre {
+      border: 1px solid CanvasText;
+    }
+  }
+</style>

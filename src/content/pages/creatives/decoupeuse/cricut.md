@@ -1,0 +1,357 @@
+---
+title: Cricut
+description: "Guide de la découpeuse Cricut Maker de la Bibliothèque de mathématiques et informatique : projet dans Cricut Design Space, découpe de vinyle, tapis et lames."
+aide: crea
+derniereMaj: 2026-10-21
+---
+
+Cette page présente la découpeuse Cricut Maker : un guide de découpe pas à pas avec le logiciel Cricut Design Space, suivi d’une description des tapis de découpe, des lames et des outils compatibles.
+
+## Guide de découpe
+
+Ce guide est une introduction à l’utilisation du logiciel Cricut Design Space en vue de découper des matériaux.
+
+### 1. Choix d’une image
+
+Tout d’abord, il faut choisir une image! Dans ce guide l’image source provient du site web [The Noun Project](https://thenounproject.com/icons/). Il est préférable de choisir une image dont les traits sont assez larges, car cela facilitera la manipulation lors de l’installation.
+
+:::alerte{type="info"}
+La plupart des formats conviennent. Cependant, il est préférable d’utiliser des images de format vectoriel (.SVG) puisque ce format permet l’ajustement de la taille sans compromettre la qualité de l’image.
+:::
+
+### 2. Cricut Design Space
+
+2.1. [Télécharger](https://design.cricut.com/) et lancer le logiciel **Cricut Design Space**.
+
+Choisir la machine Cricut Maker tm dans la liste de recherche
+
+![Choisir Cricut Maker tm](./images/telecharger_logiciel_cricut.jpg)
+
+2.2. Créer un  **ID Cricut** pour utiliser l’appareil, remplir le formulaire et appuyer sur **Créer un ID Cricut**. Un courriel de confirmation sera envoyé.
+
+### 3. Créer un nouveau projet
+
+3.1. Pour débuter un nouveau projet, cliquer sur le menu **Nouveau projet** en haut à gauche de l’écran, et choisissez **Toile vierge**.
+
+![Cricut Design Space : menu Nouveau projet ouvert en haut à droite, avec l’option Toile vierge](./images/cricut3.webp)
+
+### 4. Importation de l’image-source
+
+4.1. Une fois votre choix d’image fait, cliquer sur l’option **Mettre en ligne** afin de pouvoir l’importer sur la toile.
+
+![Cricut Design Space : onglet Mettre en ligne dans le panneau de gauche et bouton Mettre en ligne une image](./images/cricut5.webp)
+
+4.2. Récupérer l’image afin de l’ajouter à la toile en la glissant et déposant ou en utilisant le menu **Parcourir.**
+
+![Fenêtre Mettre en ligne une image : zone de glisser-déposer et bouton Parcourir](./images/cricut7.webp)
+
+4.4. Vous avez la possibilité de rogner l'image afin de supprimer des parties non désiré. Cliquez sur l'icône de rognage et sélectionner la zone à conserver.
+
+![Outil de suppression d’arrière-plan : icône de rognage au-dessus de l’image importée d’un chat](./images/cricut8.webp)
+
+4.5. Sélectionner **Monocalque**, puis continuer.
+
+![Écran Convertir le chargement en : option Monocalque sélectionnée parmi Multicalques et Design plat](./images/cricut59.webp)
+
+---
+
+### 5. Choix de la lame
+
+5.1. Sélectionner de nouveau l’image puis choisir le type de lame selon votre projet dans la section **Opérations.**
+
+:::alerte{type="info"}
+Pour plus d’informations sur les lames disponibles, consulter la section [Lames et outils](#lames-et-outils).
+:::
+
+![Menu Opération déroulé avec les options Découper, Dessiner et Impression, puis découpe](./images/cricut17.webp)
+
+---
+
+5.2. Cliquer sur **Créer** pour lancer la découpe.
+
+![Barre supérieure de Cricut Design Space avec le bouton Créer encerclé](./images/cricut18.webp)
+
+:::alerte{type="info"}
+Notez que les tapis de découpe disponibles à l’atelier sont d’un format de 30,5 cm par 30,5 cm. Assurez-vous que votre projet ne dépasse pas cette taille pour éviter de mauvaises découpes ainsi que le bris de l’équipement.
+:::
+
+### 6. Découpe
+
+6.1. Retirer la pellicule de protection du tapis de découpe.
+
+6.2. Coller un morceau de vinyle sur le tapis ayant le même format que votre modèle vis à vis l’emplacement dans le logiciel.
+
+![Tapis de découpe StandardGrip vert avec une feuille de vinyle noir collée dans le coin supérieur gauche](./images/cricut19.webp)
+
+Pour obtenir une mesure exacte de taille nécessaire et ainsi ne pas gaspiller les matériaux, on peut se fier sur les mesures du canevas dans le logiciel.
+
+![Règle graduée en centimètres du canevas de Cricut Design Space](./images/cricut20.webp)
+![Gros plan sur la règle graduée du canevas indiquant la taille du motif](./images/cricut21.webp)
+
+6.3. Déposer le tapis sur la découpeuse, sous les roulettes sans effectuer de pression.
+
+![Cricut Maker ouverte avec le tapis de découpe et le vinyle posés devant les roulettes](./images/cricut22.webp)
+
+6.4. Appuyer sur la **flèche** pour insérer le tapis.
+
+![Boutons de la Cricut Maker : bouton flèche de chargement du tapis encerclé](./images/cricut23.webp)
+
+6.5. Sélectionner l’option **Sur le tapis,** **30.5 cm x 30.5 cm** pour la taille du tapis et cocher **Garder la sélection** puis cliquer sur **Continuer.**
+
+![Fenêtre de chargement : options Sur le tapis, taille 30,5 cm x 30,5 cm et Garder cette sélection](./images/cricut24.webp)
+
+6.6. Appuyer de nouveau sur **Continuer**
+
+![Écran Préparer : aperçu du motif sur le tapis, taille du matériel et bouton Continuer encerclés](./images/cricut25.webp)
+
+6.7. Sélectionner le matériel utilisé. Dans le cas présent on sélectionne **Vinyle.**
+
+![Écran Fabrication : liste des matériaux populaires avec l’option Vinyle encerclée](./images/cricut26.webp)
+
+6.8. Vérifier que la lame dans la mâchoire B est la bonne.
+
+![Lame à pointe fine Cricut, embout métallique cylindrique](./images/cricut27.webp)
+
+![Chariot de la Cricut Maker avec la mâchoire B encerclée, contenant la lame](./images/cricut28.webp)
+
+6.9. Appuyer sur le **bouton de mise en marche (logo de cricut)** de l’appareil et patienter pendant la durée de la découpe. Le logiciel fera état de la progression.
+
+![Boutons de la Cricut Maker : bouton de mise en marche au logo Cricut encerclé](./images/cricut29.webp)
+
+![Cricut Design Space : progression de la découpe affichée à 62 %](./images/cricut30.webp)
+
+6.10. Une fois la découpe terminée, retirer le tapis de découpe de la machine en appuyant sur la flèche. Appuyer sur **Terminé** pour revenir à l’accueil du logiciel.
+
+![Cricut Design Space : message Décharger le matériau et bouton Terminé](./images/cricut31.webp)
+
+### 7. Installation et Finition
+
+7.1. Décoller le vinyle du tapis, bien s’assurer de retirer le le papier ciré de base aussi.
+
+7.2. Retirer l’excédent de vinyle à l’aide des outils disponibles à l’atelier (pinces, crochet etc.). Prudence! Le vinyle peut facilement se déchirer à cette étape et le résultat sera beaucoup moins satisfaisant.
+
+![Retrait de l’excédent de vinyle autour du motif de machine à café à l’aide d’un crochet](./images/cricut32.webp)
+
+![Motif de machine à café en vinyle noir sur le papier ciré, une fois l’excédent retiré](./images/cricut33.webp)
+
+7.3. Tailler un calque de papier transfert couvrant la surface entière du motif.
+
+![Rouleau de papier transfert quadrillé de bleu](./images/cricut34.webp)
+
+7.4. Coller le papier transfert sur le motif en appuyant et en frottant l’ensemble de la surface pour augmenter l’adhérence.  La spatule est utile pour cette étape. Les bulles entre le vinyle et le papier transfert doivent être réduites au maximum.
+
+![Papier transfert appliqué sur le motif en vinyle, avec une spatule Cricut](./images/cricut35.webp)
+
+7.5. Retirer le papier transfert du papier ciré de base, de manière à ce que le vinyle soit exclusivement sur le papier transfert.
+
+7.6. Coller le vinyle à l’endroit désiré en effectuant le même processus que pour l’adhésion au papier transfert, puis retirer le papier transfert de manière à ce que le vinyle n’y adhère pas.
+
+![Motif en vinyle appliqué sur le capot d’un ordinateur portable, papier transfert encore en place](./images/cricut36.webp)
+
+Voilà, vous avez désormais un modèle personnalisé en vinyle!
+
+![Résultat final : autocollant en vinyle d’une machine à café sur un ordinateur portable](./images/cricut37.webp)
+
+## Tapis de découpe
+
+Les tapis sont des planches adhésives qui servent à maintenir le matériel en place lors de la découpe afin de donner un travail de qualité supérieure et de faciliter le retrait du motif. Cricut offre une gamme de tapis distinctifs et plusieurs formats *(30,5 cm x 30,5 cm ou 30,5 cm x 61 cm)* selon votre projet.
+
+:::alerte{type="info"}
+À noter que les tapis de découpe ne sont pas nécessaires lors de l'utilisation du smart vinyl.
+:::
+
+### Le StandardGrip
+
+Le tapis le plus communément utilisé pour les matériaux standards tels que :
+
+- Vinyle (permanent ou temporaire)
+- Vinyle de transfert thermique (HTV)
+- Papier cartonné
+
+### Le LightGrip
+
+Conçu pour les découpes de matériaux légers tels que :
+
+- Papier régulier
+- Papier cartonné mince
+- Papier de construction
+- Vélin
+- Vinyle (permanent ou temporaire)
+
+### Le StrongGrip
+
+Conçu pour les découpes de matériaux résistants, tels que :
+
+- Papier cartonné épais
+- Bois de tilleul, de balsa (il est nécessaire de fixer le matériau avec du ruban de masquage ou *masking tape*)
+- Chipboard
+- Cuir
+- Textile avec durcisseur ou raidisseur
+
+### Le fabric grip
+
+Conçu pour les découpes de tissus tels que :
+
+- Tissus non tissés ou tissés
+
+### Entretien des tapis
+
+- Couvrir le tapis après usage afin qu'il conserve son adhérence.
+- Utiliser les matériaux et les lames adéquats pour ne pas abîmer l'équipement et obtenir de bons résultats.
+
+### Nettoyage des tapis
+
+- Retirer les résidus de matériaux à l'aide d'un grattoir.
+
+- Pour les tissus, il est possible d'utiliser un rouleau antipeluche.
+- Utiliser une lingette sans alcool.
+- Lavage au savon à l'eau froide et séchage à l'air.
+
+:::alerte{type="info" titre="Ressources en ligne"}
+<https://www.daydreamintoreality.com/cricut-mats/>
+:::
+
+## Lames et outils
+
+### Les lames
+
+#### Lame à pointe fine
+
+La lame à pointe fine effectue des découpes standard. Elle est munie d'un angle de 45 degrés.
+
+**Matériaux compatibles**
+
+- Faux cuir - épaisseur d'une feuille de papier
+- Papier
+- Papier cartonné
+- Papier parchemin
+- Ruban adhésif de type Washi tape
+- Vinyle (temporaire ou permanent)
+
+#### Lame à pointe profonde
+
+La lame à pointe profonde est munie d'un angle plus prononcé de 60 degrés. Elle découpe des matériaux plus épais (1,5mm) comparativement à la lame pointe fine.
+
+**Matériaux compatibles**
+
+- Carton ondulé (*corrugated paper*)
+- Cuir
+- Étampe
+- Feutre synthétique
+- Feuille magnétisée 0,6mm
+- Papier aluminium
+
+#### Lame pour tissus non-tissés
+
+Type de découpe : standard
+
+Cette lame est l'équivalent de la lame à pointe fine, mais réservée aux tissus. Elle permet une découpe plus détaillée que la lame rotative sur des tissus collés (*bonded fabric*).
+
+**Matériaux compatibles**
+
+- Coton
+- Feutre de laine
+- Denim
+- Papier ciré
+- Polyester
+- Soie
+- Toile de jute
+- Etc.
+
+#### Lame de découpe
+
+Découpe des matériaux plus résistants que la lame à pointe profonde jusqu'à 2,4mm. Elle effectue des découpes moins précises que les lames à pointes fines.
+
+**Matériaux compatibles**
+
+- Bois : Balsa Tilleul
+- Matboard 4 plis
+- Planche cartonné 2,0mm
+
+#### Lame rotative
+
+Découpe pratiquement tous les types de tissus. Cette lame nécessite un motif d'une largeur minimale de 19mm (3/4 de pouce). Elle permet des découpes précises sur le tissu. Cette lame est utilisée avec le tapis de découpe FabricGrip.
+
+**Matériaux compatibles**
+
+- Bambou (Tissu)
+- Bengaline
+- Cachemire
+- Corduroy
+- Coton
+- Denim
+- Feutre de laine
+- Flanelle
+- Gaze
+- Liège
+- Lycra
+- Microfibre
+- Nylon
+- Soie
+- Et bien plus...
+
+### Autres embouts
+
+#### Pointe de gravure
+
+Idéal pour les gravures de plus de 2,5 cm. Ne convient pas au verre. Permet la gravure sur les surfaces suivantes :
+
+- Acétate
+- Acrylique
+- Disque vinyle
+- Faux cuir/cuir (incluant les cuirs métallisés)
+- Métaux mous (de 12 à 40 ga.)
+  - Feuille d'aluminium
+  - Feuille de cuivre
+- Papier cartonné
+- Papier métallisé
+- Papier à aquarelle
+- Papier avec paillettes
+- Plastique
+
+#### Pointe de débossage
+
+Permet la mise en relief des matériaux, en créant une concavité.
+
+- Acétate
+- Bois de Balsa – 1/16″ (1,6mm) ou  3/32″ (2,4mm)
+- Carton de construction
+- Carton épais de type Chipboard – 2,0mm
+- Carton mince de type Chipboard – 0,37mm
+- Faux cuir/cuir (épaisseur du papier)
+- Kraft Board
+- Matboard 4 Plis
+- Panneau de mousse
+- Papier cartonné épais
+- Velin
+
+#### Pointe de transfert pour feuille métallisée
+
+Permet le transfert de feuilles métallisées sur une surface. Cet outil est muni de trois pointes différentes afin de fournir un trait du plus fin au plus épais.
+
+- Papier cartonné
+- Papier
+- Pearl paper
+- Vélin
+- Vinyl
+- Papier autocollant
+- Matboard
+- Posterboard
+- Papier à photo
+- Faux cuir
+
+#### Embout de compatibilité pour crayons à dessin
+
+Il existe une multitude de crayons compatibles avec la Cricut Maker. Cette fonction permet, à l'aide du logiciel, de dessiner automatiquement sur une surface ou un matériau où il est possible d'écrire.
+
+Noter qu'il est aussi possible d'utiliser des crayons qui ne sont pas de la marque Cricut. Cependant, plusieurs tests sont encore nécessaires. Nous vous demandons donc de **ne pas utiliser de crayons provenant de marques autres que Cricut pour le moment**.
+
+#### Crayon de rainures/stries
+
+Cet outil permet d'effectuer des rainures sur les matériaux. Ceci permet ensuite de les plier plus facilement.
+
+:::alerte{type="info" titre="Ressources en ligne"}
+[Blades, Tools and Accessories -  Cricut Design](https://help.cricut.com/hc/en-us/categories/360000821854-Blades-Tools-and-Accessories)
+:::
+
+---

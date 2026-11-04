@@ -1,0 +1,349 @@
+---
+/*
+ * Champ de recherche dans le site, repris de RechercheGuides de
+ * boite-outils-astro : suggestions au fil de la frappe (motif « combobox
+ * avec liste » de l'APG), l'index n'étant chargé qu'au premier focus
+ * (src/lib/recherche.ts). Sans suggestion choisie, Entrée mène à la page
+ * /search?q=… (même adresse que techno, que cite l'action SearchAction des
+ * données structurées).
+ *
+ * Sert dans le rideau de l'en-tête et sur la page de résultats.
+ */
+import { MagnifyingGlassIcon } from '@phosphor-icons/react/dist/ssr/MagnifyingGlass'
+
+interface Props {
+  id: string
+  /** Valeur initiale (page de résultats) */
+  valeur?: string
+  /** Nom du repère « search » : deux champs dans la page (en-tête et résultats) doivent se distinguer */
+  nom?: string
+}
+
+const { id, valeur, nom = 'Rechercher dans le site' } = Astro.props
+---
+
+<form class="recherche-site" role="search" aria-label={nom} action="/search" method="get" data-recherche-site>
+  <label class="visuellement-masque" for={`${id}-champ`}>Rechercher dans studio·bib</label>
+  <MagnifyingGlassIcon className="loupe" size={22} aria-hidden="true" />
+  <input
+    id={`${id}-champ`}
+    type="search"
+    name="q"
+    value={valeur}
+    maxlength="200"
+    placeholder="Studios, logiciels, impression 3D…"
+    autocomplete="off"
+    role="combobox"
+    aria-autocomplete="list"
+    aria-expanded="false"
+    aria-controls={`${id}-suggestions`}
+  />
+  <button type="submit" class="action-douce"><MagnifyingGlassIcon size={22} weight="bold" aria-hidden="true" /><span>Rechercher</span></button>
+  <ul id={`${id}-suggestions`} role="listbox" aria-label="Suggestions" hidden></ul>
+  <p class="visuellement-masque" role="status"></p>
+</form>
+
+<script>
+  import { chargerIndex, suggerer } from '@/lib/recherche'
+
+  const SUGGESTIONS_MAX = 8
+
+  document.querySelectorAll<HTMLFormElement>('[data-recherche-site]').forEach((formulaire) => {
+    const champ = formulaire.querySelector<HTMLInputElement>('input[type="search"]')!
+    const liste = formulaire.querySelector('ul')!
+    const annonce = formulaire.querySelector('[role="status"]')!
+    let actif = -1
+    // Une réponse lente ne doit pas remplacer celle d'une frappe plus récente
+    let demande = 0
+
+    const options = () => [...liste.children] as HTMLElement[]
+
+    function fermer() {
+      liste.hidden = true
+      actif = -1
+      champ.setAttribute('aria-expanded', 'false')
+      champ.removeAttribute('aria-activedescendant')
+    }
+
+    function option(i: number | string, url: string, contenu: Node[], classe?: string) {
+      const li = document.createElement('li')
+      li.id = `${liste.id}-${i}`
+      li.role = 'option'
+      li.setAttribute('aria-selected', 'false')
+      if (classe) li.className = classe
+      li.dataset.url = url
+      li.append(...contenu)
+      return li
+    }
+
+    const span = (classe: string, texte: string, decoratif = false) => {
+      const s = document.createElement('span')
+      s.className = classe
+      s.textContent = texte
+      if (decoratif) s.setAttribute('aria-hidden', 'true')
+      return s
+    }
+
+    async function afficher() {
+      const requete = champ.value.trim()
+      const numero = ++demande
+      if (!requete) {
+        liste.replaceChildren()
+        annonce.textContent = ''
+        return fermer()
+      }
+      let trouves: Awaited<ReturnType<typeof suggerer>> = []
+      try {
+        trouves = suggerer(await chargerIndex(), requete).slice(0, SUGGESTIONS_MAX)
+      } catch {
+        // Index injoignable : Entrée mène quand même à la page de résultats
+      }
+      if (numero !== demande) return
+      liste.replaceChildren(
+        // Lu « Espaces : Studios vidéo » ; la flèche est visuelle
+        ...trouves.map((r, i) => option(i, r.url, [span('option-source', r.section), span('option-fleche', '→', true), span('visuellement-masque', ' : '), span('option-titre', r.titre)])),
+        option('tous', `${formulaire.getAttribute('action')}?q=${encodeURIComponent(requete)}`, [document.createTextNode(`Tous les résultats pour « ${requete} »`)], 'suggestion-tous'),
+      )
+      fermer()
+      liste.hidden = false
+      champ.setAttribute('aria-expanded', 'true')
+      const nombre = trouves.length === 1 ? '1 suggestion' : `${trouves.length} suggestions`
+      annonce.textContent = trouves.length ? nombre : 'Aucune suggestion : Entrée lance la recherche dans tout le site'
+    }
+
+    function activer(i: number) {
+      options()[actif]?.setAttribute('aria-selected', 'false')
+      actif = i
+      const choisie = options()[i]
+      choisie.setAttribute('aria-selected', 'true')
+      choisie.scrollIntoView({ block: 'nearest' })
+      champ.setAttribute('aria-activedescendant', choisie.id)
+    }
+
+    // Le premier focus suffit à préparer l'index : la première frappe ne l'attend pas
+    champ.addEventListener('focus', () => chargerIndex().catch(() => {}), { once: true })
+    champ.addEventListener('input', afficher)
+    champ.addEventListener('blur', fermer)
+    champ.addEventListener('keydown', (e) => {
+      const nombre = options().length
+      if (e.key === 'Escape') {
+        if (!liste.hidden) {
+          // Liste ouverte : Échap la ferme seule, sans effacer la saisie (navigateur) ni fermer le rideau (Entete.astro)
+          e.preventDefault()
+          e.stopPropagation()
+        }
+        fermer()
+      } else if (e.key === 'ArrowDown' && nombre) {
+        e.preventDefault()
+        if (liste.hidden) afficher()
+        else activer((actif + 1) % nombre)
+      } else if (e.key === 'ArrowUp' && !liste.hidden && nombre) {
+        e.preventDefault()
+        activer((actif - 1 + nombre) % nombre)
+      } else if (e.key === 'Enter' && actif >= 0) {
+        e.preventDefault()
+        location.href = options()[actif].dataset.url!
+      }
+    })
+    // mousedown : avant le blur du champ, qui fermerait la liste
+    liste.addEventListener('mousedown', (e) => {
+      e.preventDefault()
+      const choisie = (e.target as Element).closest<HTMLElement>('[role="option"]')
+      if (choisie) location.href = choisie.dataset.url!
+    })
+  })
+</script>
+
+<style>
+  .recherche-site {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    padding: 0.375rem 0.375rem 0.375rem var(--espace-2);
+    /* studio·bib : même contour gris que le bouton (--action-contour, 3,7:1, WCAG 1.4.11) ; le jaune
+       n'apparaît qu'au focus */
+    border: 1px solid var(--action-contour);
+    border-radius: var(--rayon-plein);
+    background: var(--couleur-surface);
+  }
+
+  .recherche-site > :global(.loupe) {
+    flex: none;
+    color: var(--couleur-texte-secondaire);
+  }
+
+  /* Le contour de focus englobe tout le champ, bouton compris, comme dans la Boîte à outils : double anneau
+     (jaune à l'extérieur, filet bleu foncé collé) sur la capsule, et rien dans le champ lui-même */
+  .recherche-site:has(input:focus-visible) {
+    outline: 2px solid var(--couleur-focus);
+    outline-offset: 1px;
+    box-shadow: 0 0 0 1px var(--couleur-focus-contour);
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    min-height: var(--taille-cible);
+    border: 0;
+    outline: 0;
+    background: none;
+    color: var(--couleur-texte);
+    font: inherit;
+    /* 16 px au moins : Safari iOS n'agrandit pas la page au focus */
+    font-size: max(1rem, 16px);
+  }
+
+  /* Le focus est dessiné sur la capsule : aucun anneau (ni contour ni filet) dans le champ */
+  input:focus-visible {
+    outline: 0;
+    box-shadow: none;
+  }
+
+  input::placeholder {
+    color: var(--couleur-texte-secondaire);
+    opacity: 1;
+  }
+
+  input:placeholder-shown {
+    text-overflow: ellipsis;
+  }
+
+  button {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    min-width: var(--taille-cible);
+    min-height: var(--taille-cible);
+    padding: 0;
+    /* studio·bib : bouton secondaire, apparence de .action-douce (global.css) */
+    border-radius: var(--rayon-plein);
+    font: inherit;
+    font-size: 0.9375rem;
+    font-weight: var(--graisse-moyenne);
+    cursor: pointer;
+  }
+
+  /* Téléphone : le bouton se réduit à sa loupe, et celle du champ disparaît (un seul pictogramme).
+     Masquage visuel propre à ce bouton (et non .visuellement-masque) : il est levé dès 600 px */
+  button span {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+  }
+
+  .recherche-site > :global(.loupe) {
+    display: none;
+  }
+
+  @media (width >= 600px) {
+    .recherche-site > :global(.loupe) {
+      display: block;
+    }
+
+    button {
+      padding-inline: var(--espace-3);
+    }
+
+    button :global(svg) {
+      display: none;
+    }
+
+    button span {
+      position: static;
+      width: auto;
+      height: auto;
+      overflow: visible;
+      clip: auto;
+    }
+  }
+
+  button:focus-visible {
+    outline: 3px solid var(--couleur-focus);
+    outline-offset: 2px;
+  }
+
+  ul {
+    position: absolute;
+    top: calc(100% + 0.5rem);
+    inset-inline: 0;
+    z-index: 2;
+    max-height: min(70vh, 30rem);
+    margin: 0;
+    padding: 0.5rem;
+    border: 1px solid var(--couleur-bordure);
+    border-radius: var(--rayon-petit);
+    background: var(--couleur-surface);
+    box-shadow: var(--ombre-2);
+    list-style: none;
+    overflow-y: auto;
+  }
+
+  /* Les options sont créées par le script : hors de la portée des styles scopés */
+  ul :global(li) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0.125rem var(--espace-1);
+    max-inline-size: none;
+    padding: 0.625rem 0.75rem;
+    border-radius: var(--rayon-tres-petit);
+    color: var(--couleur-texte);
+    cursor: pointer;
+  }
+
+  ul :global(li[aria-selected='true']) {
+    background: var(--couleur-teinte-forte);
+  }
+
+  ul :global(.option-source),
+  ul :global(.option-fleche) {
+    flex-shrink: 0;
+    color: var(--couleur-texte-secondaire);
+    font-size: 0.875rem;
+    font-weight: var(--graisse-forte);
+  }
+
+  ul :global(.option-titre) {
+    flex: 1 1 10rem;
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  /* Toujours visible, même quand la liste défile : c'est la suite de la recherche */
+  ul :global(li.suggestion-tous) {
+    position: sticky;
+    bottom: -0.5rem;
+    margin-block-start: 0.25rem;
+    padding-block: 0.75rem;
+    border-block-start: 1px solid var(--couleur-bordure);
+    border-radius: 0;
+    background: var(--couleur-surface);
+    color: var(--couleur-lien);
+    font-weight: var(--graisse-moyenne);
+  }
+
+  ul :global(li.suggestion-tous[aria-selected='true']) {
+    background: var(--couleur-teinte-forte);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    ul :global(li:hover) {
+      background: var(--couleur-teinte);
+    }
+  }
+
+  /* Couleurs forcées : le fond de l'option active disparaît, un contour la remplace */
+  @media (forced-colors: active) {
+    ul :global(li[aria-selected='true']) {
+      outline: 2px solid Highlight;
+      outline-offset: -2px;
+    }
+  }
+</style>

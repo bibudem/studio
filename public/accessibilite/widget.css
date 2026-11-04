@@ -1,0 +1,467 @@
+/*
+ * studio·bib — Outil d’accessibilité (Readability Widget)
+ * Adapté style UdeM / Docusaurus :
+ * - Couleurs/typos via variables du thème Docusaurus (IFM)
+ * - Comportements conservés (fond chaud, dyslexic, liens, images)
+ */
+
+/* ---------------------------
+   Police OpenDyslexic (local)
+---------------------------- */
+@font-face {
+  font-family: "Open Dyslexic";
+  src:
+    url("./fonts/OpenDyslexic-Regular.otf") format("opentype"),
+    url("./fonts/OpenDyslexic-Bold.otf") format("opentype");
+  font-display: swap;
+}
+
+body.open-dyslexic {
+  font-family: "Open Dyslexic";
+}
+body.open-dyslexic *:not(i, code, pre, kbd, samp, pre *, code *) {
+  font-family: "Open Dyslexic" !important;
+}
+
+/* Agrandissement global modéré pour préserver la mise en page */
+html.readability-large-text {
+  font-size: 112.5%;
+}
+
+:root {
+  --widget-panel-bg: #ffffff;
+  --widget-panel-border: var(--ifm-color-emphasis-300, #cfd3d7);
+  --widget-panel-text: #1c1e21;
+  --widget-switch-track: var(--ifm-color-emphasis-200, #e6e8ea);
+  --widget-switch-thumb: #ffffff;
+  --widget-toggle-bg: var(--bleu-500, #0057ac);
+  --widget-toggle-bg-hover: var(--bleu-600, #00407f);
+  --widget-toggle-text: #ffffff;
+}
+
+[data-theme="dark"] {
+  --widget-panel-bg: #18263c;
+  --widget-panel-border: #32465f;
+  --widget-panel-text: #f2f6fb;
+  --widget-switch-track: #30435b;
+  --widget-switch-thumb: #f6f9fd;
+  --widget-toggle-bg: var(--bleu-500, #0057ac);
+  --widget-toggle-bg-hover: var(--bleu-600, #00407f);
+  --widget-toggle-text: #ffffff;
+}
+
+/* ============================================================
+   MASQUER IMAGES (scopé au contenu seulement)
+   - Ne touche PAS navbar / logos / footer
+   - Corrige le texte blanc sur image (overlay)
+============================================================ */
+
+/* 1) Retirer les images de fond uniquement dans <main> */
+body.readability-hide-images main * {
+  background-image: none !important;
+}
+
+/* 2) Masquer les images uniquement dans <main>
+   (opacity=0 pour éviter des shifts de mise en page) */
+body.readability-hide-images main img,
+body.readability-hide-images main picture,
+body.readability-hide-images main svg image {
+  opacity: 0 !important;
+}
+
+/* 3) Cas courant : hero/banner (texte souvent blanc) → fond clair + texte sombre */
+body.readability-hide-images main .hero,
+body.readability-hide-images main .hero--primary,
+body.readability-hide-images main .heroBanner,
+body.readability-hide-images main [class*="heroBanner"],
+body.readability-hide-images main [class*="HeroBanner"] {
+  background: #fff !important;
+  color: var(--ifm-font-color-base, #1c1e21) !important;
+}
+
+/* Titres/sous-titres dans ces zones */
+body.readability-hide-images main .hero__title,
+body.readability-hide-images main .hero__subtitle,
+body.readability-hide-images main .heroBanner *,
+body.readability-hide-images main [class*="heroBanner"] * {
+  color: var(--ifm-font-color-base, #1c1e21) !important;
+}
+
+/* 4) Correction plus générique : texte blanc -> sombre
+   (utile pour des composants custom avec style inline / classes utilitaires) */
+body.readability-hide-images main [style*="color: white"],
+body.readability-hide-images main [style*="color:#fff"],
+body.readability-hide-images main [style*="color: #fff"],
+body.readability-hide-images main [style*="color:#ffffff"],
+body.readability-hide-images main [style*="color: #ffffff"],
+body.readability-hide-images main .text-white,
+body.readability-hide-images main .is-white,
+body.readability-hide-images main .font-white,
+body.readability-hide-images main .color-white {
+  color: var(--ifm-font-color-base, #1c1e21) !important;
+}
+
+/* 5) Si tu as des zones "overlay" (texte posé sur image) :
+   On donne un fond clair minimal pour garder le contraste (prudence). */
+body.readability-hide-images main [class*="overlay"],
+body.readability-hide-images main [class*="Overlay"],
+body.readability-hide-images main [class*="banner"],
+body.readability-hide-images main [class*="Banner"] {
+  background-color: #fff !important;
+}
+
+/* Liens visibles même quand on force les couleurs
+body.readability-hide-images main a {
+  color: var(--ifm-link-color, var(--ifm-color-primary)) !important;
+} */
+
+/* ---------------------------
+   Overlay fond chaud
+---------------------------- */
+#readability-warm-overlay {
+  top: -10% !important;
+  right: -10% !important;
+  width: 120% !important;
+  height: 120% !important;
+  position: fixed !important;
+  display: block !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 0 !important;
+  pointer-events: none !important;
+
+  /* au-dessus du contenu, sous le widget */
+  z-index: 2147483640 !important;
+
+  opacity: 1 !important;
+  transition: opacity 0.1s !important;
+  mix-blend-mode: multiply !important;
+  background: rgba(245, 229, 209, 0.7) !important;
+}
+
+/* ---------------------------
+   Mise en évidence des liens
+   (Ne touche pas aux couleurs du widget, seulement au contenu de page)
+---------------------------- */
+body.readability-highlight-links-on :is(a, button):not(#readability-widget *),
+body.readability-highlight-links-on :is(a, button):not(#readability-widget *) * {
+  background: #fac800 !important;
+  color: #000 !important;
+  text-decoration: none !important;
+}
+body.readability-highlight-links-on a:not(#readability-widget *) {
+  border-bottom: 2px solid #000 !important;
+}
+body.readability-highlight-links-on button:not(#readability-widget *) {
+  border: 2px solid #000 !important;
+}
+body.readability-highlight-links-on a:not(#readability-widget *):hover {
+  border-bottom-color: rgba(0, 0, 0, 0) !important;
+}
+body.readability-highlight-links-on button:not(#readability-widget *):hover {
+  border-color: rgba(0, 0, 0, 0) !important;
+}
+
+/* ============================================================
+   WIDGET UI — style UdeM via variables Docusaurus
+============================================================ */
+
+#readability-widget {
+  /* Posé sur le haut du pied de page : ne suit pas le défilement (voir widget.js) */
+  position: absolute;
+  right: 12px;
+  width: 360px;
+
+  max-width: calc(100vw - 24px);
+
+  /* Derrière l'onglet LibChat (z-index: 1000) */
+  z-index: 999;
+}
+
+#readability-widget:not(.is-ready) {
+  opacity: 0;
+  visibility: hidden;
+}
+
+/* Zone toggle */
+#readability-widget #widget-toggle {
+  text-align: right;
+}
+
+#readability-widget #widget-toggle svg {
+  fill: currentColor;
+  width: 18px;
+  margin: 0 8px 0 0;
+  position: relative;
+  top: 3px;
+}
+
+/* Bouton principal (UdeM : couleur primaire du thème) */
+#readability-widget #widget-toggle button {
+  border: 0;
+  cursor: pointer;
+  position: relative;
+
+  font-family: var(--ifm-font-family-base, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif);
+  font-size: 1rem;
+  line-height: 1.2;
+
+  background: var(--widget-toggle-bg);
+  color: var(--widget-toggle-text);
+
+  padding: 10px 36px 10px 12px;
+  border-radius: 12px 12px 0 0;
+
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+}
+
+#readability-widget #widget-toggle button:hover {
+  background: var(--widget-toggle-bg-hover);
+  filter: none;
+}
+
+/* Focus visible (UdeM/Docusaurus) */
+#readability-widget #widget-toggle button:focus,
+#readability-widget #widget-toggle button:focus-visible {
+  outline: var(--focus-ring, 3px solid #0B113A);
+  outline-offset: 2px;
+  box-shadow: var(--focus-ring-shadow, 0 0 0 3px #FFCA40);
+}
+
+/* Caret (flèche) */
+#readability-widget.open #widget-toggle button::after {
+  content: "";
+  width: 0;
+  height: 0;
+  position: absolute;
+  top: 18px;
+  right: 12px;
+  border-left: 10px solid transparent;
+  border-right: 10px solid transparent;
+  border-top: 10px solid #fff;
+}
+
+#readability-widget.closed #widget-toggle button.closed::after {
+  content: "";
+  width: 0;
+  height: 0;
+  position: absolute;
+  top: 24px;
+  right: 12px;
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 8px solid #fff;
+}
+
+/* Panneau */
+#readability-widget.open #widget-content {
+  display: block;
+  /* margin-top: 8px; */
+}
+
+#readability-widget:not(.open) #widget-content {
+  display: none;
+}
+
+#readability-widget #widget-content {
+  background: var(--widget-panel-bg);
+  border: 1px solid var(--widget-panel-border);
+  border-radius: 0px;
+
+  font-family: var(--ifm-font-family-base, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif);
+  font-size: 1rem;
+  font-weight: 400;
+
+  padding: 16px;
+  margin-top: 0;
+  box-shadow: 0 16px 44px rgba(0, 0, 0, 0.18);
+
+  max-width: 400px;
+}
+
+#readability-widget #widget-content p {
+  font-size: 0.95rem;
+  margin: 10px 0;
+  color: var(--widget-panel-text);
+}
+
+#readability-widget #widget-content p a {
+  color: var(--ifm-link-color, var(--ifm-color-primary, #0057ac));
+  text-decoration: none;
+}
+#readability-widget #widget-content p a:hover {
+  text-decoration: underline;
+}
+
+/* Bouton “Masquer cet outil” */
+#readability-widget #widget-content #hide-widget-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+
+  color: var(--widget-panel-text);
+  font-size: 0.95rem;
+  opacity: 0.85;
+}
+#readability-widget #widget-content #hide-widget-button:hover {
+  text-decoration: underline;
+  opacity: 1;
+}
+
+/* Dernier élément sans marge */
+#readability-widget #widget-content *:last-child {
+  margin-bottom: 0;
+}
+
+/* Etat widget-hidden (le widget se range sur le côté) */
+#readability-widget.widget-hidden {
+  right: -154px;
+}
+#readability-widget.widget-hidden #widget-toggle button {
+  background-color: var(--gris-600, #475A6B);
+  transition: transform 0.25s ease-out, background-color 0.25s;
+}
+#readability-widget.widget-hidden #widget-toggle button:hover,
+#readability-widget.widget-hidden #widget-toggle button:focus-visible {
+  transform: translateX(-156px);
+  background-color: var(--bleu-500);
+}
+
+/* ---------------------------
+   Switches (toggles)
+---------------------------- */
+#readability-widget #widget-content label.readability-switch {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+
+  min-height: 36px;
+  margin: 10px 0;
+  width: 100%;
+}
+
+#readability-widget #widget-content label.readability-switch span.readability-switch-label {
+  font-size: 1rem;
+  line-height: 1.25;
+  padding-right: 12px;
+}
+
+#readability-widget #widget-content label.readability-switch span.switch-toggle-container {
+  height: 36px;
+  justify-self: end;
+  position: relative;
+  width: 64px;
+}
+
+/* Hide default checkbox */
+#readability-widget #widget-content label.readability-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+#readability-widget #widget-content label.readability-switch input:focus + span.toggle-switch,
+#readability-widget #widget-content label.readability-switch input:focus-visible + span.toggle-switch {
+  outline: var(--focus-ring, 3px solid #0B113A);
+  outline-offset: 2px;
+  box-shadow: var(--focus-ring-shadow, 0 0 0 3px #FFCA40);
+}
+
+/* The switch track */
+#readability-widget #widget-content label.readability-switch span.toggle-switch {
+  background-color: var(--widget-switch-track);
+  border-radius: 999px;
+  bottom: 0;
+  cursor: pointer;
+
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 100%;
+  left: 0;
+  position: absolute;
+  right: 0;
+  top: 0;
+  transition: background-color 0.2s;
+}
+
+/* ON/OFF labels */
+#readability-widget #widget-content label.readability-switch span.toggle-switch .label-on,
+#readability-widget #widget-content label.readability-switch span.toggle-switch .label-off {
+  align-self: center;
+  font-size: 0.75rem;
+  text-align: center;
+  z-index: 0;
+  user-select: none;
+}
+
+#readability-widget #widget-content label.readability-switch span.toggle-switch .label-on {
+  display: none;
+}
+#readability-widget #widget-content label.readability-switch span.toggle-switch .label-off {
+  padding-left: 32px;
+  padding-right: 6px;
+}
+
+/* Thumb */
+#readability-widget #widget-content label.readability-switch span.toggle-switch:before {
+  content: "";
+  position: absolute;
+  left: 6px;
+  bottom: 6px;
+
+  width: 24px;
+  height: 24px;
+
+  border-radius: 50%;
+  background: var(--widget-switch-thumb);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+
+  transition: transform 0.2s ease-out;
+}
+
+/* Checked state */
+#readability-widget #widget-content label.readability-switch input:checked + .toggle-switch {
+  /* bleu-600 : « OUI » en blanc à 10:1, dans les deux thèmes */
+  background-color: var(--bleu-600, #00407F);
+  color: #ffffff;
+}
+
+#readability-widget #widget-content label.readability-switch input:checked + .toggle-switch .label-off {
+  display: none;
+}
+#readability-widget #widget-content label.readability-switch input:checked + .toggle-switch .label-on {
+  display: block;
+}
+
+#readability-widget #widget-content label.readability-switch input:checked + .toggle-switch:before {
+  transform: translateX(28px);
+}
+
+/* ============================================================
+   CardMedia studio·bib — correction accessibilité
+   ============================================================ */
+
+body.readability-hide-images main [data-sb-cardmedia] {
+  background: #fff !important;
+  color: var(--ifm-font-color-base, #1c1e21) !important;
+}
+
+/* texte interne */
+body.readability-hide-images main [data-sb-cardmedia] * {
+  color: var(--ifm-font-color-base, #1c1e21) !important;
+}
+
+/* liens */
+body.readability-hide-images main [data-sb-cardmedia] a {
+  color: var(--ifm-link-color, var(--ifm-color-primary)) !important;
+}
+
+/* ---------------------------
+   Impression
+---------------------------- */
+@media print {
+  #readability-widget {
+    display: none !important;
+  }
+}

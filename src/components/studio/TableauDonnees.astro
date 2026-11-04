@@ -1,0 +1,56 @@
+---
+/*
+ * Tableau tiré d'un CSV de public/.
+ *
+ * Le CSV est lu au build : le tableau est dans le HTML (aucun chargement,
+ * aucun état d'erreur à l'écran), rendu par les composants Table du site,
+ * comme les tableaux GFM des pages (TableauConteneur sur Paper, en-têtes de
+ * colonne, défilement horizontal au besoin). Une cellule `[texte](adresse)`
+ * devient un lien.
+ */
+import Surface from '@/components/contenu/primitives/Surface.astro'
+import TableauConteneur from '@/components/contenu/primitives/TableauConteneur.astro'
+import Tableau from '@/components/contenu/primitives/Tableau.astro'
+import TableauEntete from '@/components/contenu/primitives/TableauEntete.astro'
+import TableauCorps from '@/components/contenu/primitives/TableauCorps.astro'
+import TableauLigne from '@/components/contenu/primitives/TableauLigne.astro'
+import TableauCellule from '@/components/contenu/primitives/TableauCellule.astro'
+import Lien from '@/components/contenu/primitives/Lien.astro'
+import { lireCsvPublic } from '@/lib/csv'
+
+interface Props {
+  source: string
+  /** Nom du tableau (lecteurs d'écran) ; par défaut, celui de TableauConteneur */
+  titre?: string
+  [attribut: string]: unknown
+}
+
+const { source, titre } = Astro.props
+const [entetes = [], ...rangees] = lireCsvPublic(source)
+const lien = (cellule: string) => cellule.match(/^\[([^\]]+)\]\(([^)\s]+)\)$/)
+// Même règle que les tableaux GFM (RenduDirectives) : largeur minimale dès trois colonnes
+const style = entetes.length > 2 ? { minWidth: '650px' } : undefined
+---
+
+<TableauConteneur component={Surface}>
+  <Tableau style={style} aria-label={titre}>
+    <TableauEntete>
+      <TableauLigne>
+        {entetes.map((entete) => <TableauCellule>{entete}</TableauCellule>)}
+      </TableauLigne>
+    </TableauEntete>
+    <TableauCorps>
+      {
+        rangees.map((rangee) => (
+          <TableauLigne>
+            {entetes.map((_, i) => {
+              const cellule = rangee[i] ?? ''
+              const trouve = lien(cellule)
+              return <TableauCellule>{trouve ? <Lien to={trouve[2]}>{trouve[1]}</Lien> : cellule}</TableauCellule>
+            })}
+          </TableauLigne>
+        ))
+      }
+    </TableauCorps>
+  </Tableau>
+</TableauConteneur>

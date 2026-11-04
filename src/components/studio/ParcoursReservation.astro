@@ -1,0 +1,420 @@
+---
+/*
+ * Directive `parcours-reservation` : deux
+ * voies pour réserver un studio.
+ * - Première utilisation : réserver d'abord le studio (créneaux plus rares),
+ *   puis un technicien au même créneau. Bouton qui déplie les deux étapes
+ *   (motif Dévoilement de l'APG : aria-expanded, aria-controls).
+ * - Je connais déjà le studio : lien direct vers la réservation.
+ * Le slot donne la conduite à tenir si aucun technicien n'est libre.
+ *
+ * Sans JS, les étapes sont affichées et le bouton, qui ne ferait rien,
+ * est absent. La CSS (`scripting: enabled`) donne dès le premier affichage
+ * l'apparence finale, sans saut au chargement.
+ *
+ * Les réservations s'ouvrent dans un nouvel onglet : la
+ * page reste ouverte pour l'étape suivante, et l'étape 1 se coche au clic.
+ */
+import { ArrowRightIcon } from '@phosphor-icons/react/dist/ssr/ArrowRight'
+import { ArrowSquareOutIcon } from '@phosphor-icons/react/dist/ssr/ArrowSquareOut'
+import { BookOpenTextIcon } from '@phosphor-icons/react/dist/ssr/BookOpenText'
+import { CalendarCheckIcon } from '@phosphor-icons/react/dist/ssr/CalendarCheck'
+import { CheckCircleIcon } from '@phosphor-icons/react/dist/ssr/CheckCircle'
+import { UserFocusIcon } from '@phosphor-icons/react/dist/ssr/UserFocus'
+import { idUnique } from '@/lib/ids'
+
+interface Props {
+  reservation: string
+  accompagnement: string
+  guide: string
+}
+
+const { reservation, accompagnement, guide } = Astro.props
+const id = idUnique('parcours')
+const sansTechnicien = Astro.slots.has('default') ? (await Astro.slots.render('default')).trim() : ''
+const NOUVEL_ONGLET = ' (nouvel onglet)'
+---
+
+<div class="parcours" data-parcours>
+  <p class="question">Avez-vous déjà utilisé ce studio?</p>
+
+  <div class="options">
+    <button type="button" class="option option-premiere" aria-expanded="false" aria-controls={`${id}-etapes`} data-parcours-ouvrir>
+      <UserFocusIcon size={26} weight="duotone" className="option-icone" aria-hidden="true" focusable="false" />
+      <span class="option-titre">Première utilisation</span>
+      <span class="option-texte">Réservez le studio, puis un technicien qui vous accompagnera.</span>
+    </button>
+
+    <a class="option" href={reservation} target="_blank" rel="noopener">
+      <CalendarCheckIcon size={26} weight="duotone" className="option-icone" aria-hidden="true" focusable="false" />
+      <span class="option-titre">
+        Je connais déjà le studio
+        <ArrowSquareOutIcon size={16} className="option-externe" aria-hidden="true" focusable="false" />
+      </span>
+      <span class="option-texte">Réservez directement le studio.<span class="visuellement-masque">{NOUVEL_ONGLET}</span></span>
+    </a>
+  </div>
+
+  <ol class="etapes" id={`${id}-etapes`} data-parcours-etapes>
+    <li class="etape" data-etape-studio>
+      <span class="etape-numero" aria-hidden="true">
+        <span class="numero">1</span>
+        <CheckCircleIcon size={22} weight="fill" className="coche" aria-hidden="true" focusable="false" />
+      </span>
+      <div class="etape-contenu">
+        <p class="etape-titre">Réservez le studio<span class="visuellement-masque etat-fait"> (fait)</span></p>
+        <p class="etape-texte">
+          Les créneaux du studio partent vite : commencez par là. <strong>Notez la date et l’heure choisies.</strong>
+        </p>
+        <a class="action action-studio" href={reservation} target="_blank" rel="noopener" data-parcours-studio>
+          Réserver le studio<span class="visuellement-masque">{NOUVEL_ONGLET}</span>
+          <ArrowSquareOutIcon size={16} aria-hidden="true" focusable="false" />
+        </a>
+      </div>
+    </li>
+
+    <li class="etape etape-technicien">
+      <span class="etape-numero" aria-hidden="true"><span class="numero">2</span></span>
+      <div class="etape-contenu">
+        <p class="etape-titre">Réservez un technicien au même créneau</p>
+        <p class="etape-texte">
+          La réservation du studio n’inclut pas de technicien. Choisissez la même date et la même heure dans l’horaire des techniciens.
+        </p>
+        <a class="action action-technicien" href={accompagnement} target="_blank" rel="noopener">
+          Réserver un technicien<span class="visuellement-masque">{NOUVEL_ONGLET}</span>
+          <ArrowSquareOutIcon size={16} aria-hidden="true" focusable="false" />
+        </a>
+        {
+          sansTechnicien && (
+            <div class="etape-note">
+              <p><strong>Aucun technicien libre à ce créneau?</strong></p>
+              <Fragment set:html={sansTechnicien} />
+            </div>
+          )
+        }
+      </div>
+    </li>
+  </ol>
+
+  <a class="guide action-douce" href={guide}>
+    <BookOpenTextIcon size={24} weight="duotone" className="guide-icone" aria-hidden="true" focusable="false" />
+    <span class="guide-titre">Guide d’utilisation pas à pas</span>
+    <ArrowRightIcon size={18} className="guide-fleche" aria-hidden="true" focusable="false" />
+  </a>
+</div>
+
+<script>
+  for (const parcours of document.querySelectorAll<HTMLElement>('[data-parcours]')) {
+    const bouton = parcours.querySelector<HTMLButtonElement>('[data-parcours-ouvrir]')
+    const etapes = parcours.querySelector<HTMLElement>('[data-parcours-etapes]')
+    if (!bouton || !etapes) continue
+    etapes.hidden = true
+    parcours.setAttribute('data-parcours-pret', '')
+    bouton.addEventListener('click', () => {
+      const ouvert = bouton.getAttribute('aria-expanded') !== 'true'
+      bouton.setAttribute('aria-expanded', String(ouvert))
+      etapes.hidden = !ouvert
+    })
+    // Le studio est réservé (dans l'autre onglet) : l'étape 2 devient l'action principale
+    parcours.querySelector('[data-parcours-studio]')?.addEventListener('click', () => {
+      parcours.setAttribute('data-studio-reserve', '')
+    })
+  }
+</script>
+
+<style>
+  .parcours {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espace-2);
+    margin-block: var(--espace-element);
+  }
+
+  .parcours p {
+    max-inline-size: none;
+  }
+
+  .question {
+    margin: 0;
+    font-weight: var(--graisse-forte);
+  }
+
+  /* Deux voies côte à côte, empilées quand la place manque (texte agrandi,
+     fiche étroite) : minimum en rem, qui grandit avec le texte */
+  .options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(12rem, 100%), 1fr));
+    gap: var(--espace-2);
+  }
+
+  .option {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: var(--espace-2);
+    row-gap: 0.15rem;
+    align-items: start;
+    align-content: start;
+    box-sizing: border-box;
+    width: 100%;
+    padding: var(--espace-2);
+    border: 1px solid var(--couleur-bordure);
+    border-radius: var(--rayon-carte);
+    background-color: var(--couleur-surface);
+    color: var(--couleur-texte);
+    font: inherit;
+    text-align: start;
+    text-decoration: none;
+    cursor: pointer;
+    transition:
+      border-color var(--duree-courte-4) var(--courbe-standard),
+      background-color var(--duree-courte-4) var(--courbe-standard);
+  }
+
+  /* Sans JS, le bouton ne ferait rien : absent, les étapes sont affichées */
+  .option-premiere {
+    display: none;
+  }
+
+  @media (scripting: enabled) {
+    .option-premiere {
+      display: grid;
+    }
+
+    .etapes {
+      display: none;
+    }
+  }
+
+  .parcours[data-parcours-pret] .option-premiere {
+    display: grid;
+  }
+
+  .parcours[data-parcours-pret] .etapes:not([hidden]) {
+    display: flex;
+  }
+
+  /* studio·bib : option ouverte (état) : fond gris pâle, contour bleu foncé doublé */
+  .option[aria-expanded='true'] {
+    border-color: var(--navigation-courant);
+    background-color: var(--navigation-fond-survol);
+    box-shadow: inset 0 0 0 1px var(--navigation-courant);
+  }
+
+  .option :global(.option-icone) {
+    grid-row: 1 / span 2;
+    color: var(--couleur-accent);
+  }
+
+  /* studio·bib : titre en ligne, l'icône de lien externe suit le dernier mot (en flex, elle
+     tombait seule sur sa ligne dès que le titre passait sur deux lignes) */
+  .option-titre {
+    display: block;
+    font-weight: var(--graisse-forte);
+    line-height: 1.3;
+  }
+
+  .option-titre :global(.option-externe) {
+    display: inline-block;
+    margin-inline-start: 0.3em;
+    vertical-align: -0.15em;
+    color: var(--couleur-accent);
+  }
+
+  .option-texte {
+    grid-column: 2;
+    color: var(--couleur-texte-secondaire);
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+
+  /* ---- Étapes ---- */
+  .etapes {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espace-2);
+    margin: 0;
+    padding: var(--espace-2);
+    border-radius: var(--rayon-carte);
+    background-color: var(--couleur-teinte);
+    list-style: none;
+  }
+
+  .etapes[hidden] {
+    display: none;
+  }
+
+  .etape {
+    display: flex;
+    gap: var(--espace-2);
+    margin: 0;
+  }
+
+  .etape-numero {
+    display: inline-grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 1.9rem;
+    height: 1.9rem;
+    border: 1px solid var(--couleur-accent);
+    border-radius: var(--rayon-plein);
+    background-color: var(--couleur-surface);
+    font-weight: var(--graisse-forte);
+  }
+
+  .etape-numero :global(.coche),
+  .etat-fait {
+    display: none;
+  }
+
+  .etape-contenu {
+    min-width: 0;
+  }
+
+  .etape-titre {
+    margin: 0.2rem 0;
+    font-weight: var(--graisse-forte);
+    line-height: 1.3;
+  }
+
+  .etape-texte {
+    margin: 0 0 var(--espace-1);
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+
+  .etape-note {
+    margin-top: var(--espace-2);
+    padding-left: var(--espace-2);
+    border-left: 2px solid var(--couleur-accent);
+    font-size: 0.9rem;
+    line-height: 1.45;
+  }
+
+  .etape-note :global(p) {
+    margin: 0;
+  }
+
+  .action {
+    display: inline-flex;
+    gap: 0.4rem;
+    align-items: center;
+    box-sizing: border-box;
+    max-width: 100%;
+    min-height: var(--taille-cible);
+    padding: 0.5rem 1rem;
+    border: 1px solid var(--action-contour);
+    border-radius: var(--rayon-plein);
+    background-color: var(--action-douce-fond);
+    color: var(--action-texte);
+    font-weight: var(--graisse-moyenne);
+    text-decoration: none;
+    overflow-wrap: anywhere;
+    transition:
+      background-color var(--duree-courte-4) var(--courbe-standard),
+      color var(--duree-courte-4) var(--courbe-standard);
+  }
+
+  /* Étape courante : bouton plein. D'abord le studio, puis, une fois le
+     studio réservé, le technicien. */
+  .action-studio,
+  .parcours[data-studio-reserve] .action-technicien {
+    border-color: var(--action-fond);
+    background-color: var(--action-fond);
+    color: var(--action-texte);
+  }
+
+  .parcours[data-studio-reserve] .action-studio {
+    border-color: var(--action-contour);
+    background-color: var(--action-douce-fond);
+    color: var(--action-texte);
+  }
+
+  .parcours[data-studio-reserve] .etape-technicien .etape-numero {
+    border-color: var(--couleur-fond-fort);
+    background-color: var(--couleur-fond-fort);
+    color: var(--couleur-sur-fonce);
+  }
+
+  .parcours[data-studio-reserve] [data-etape-studio] .etape-numero {
+    border-color: transparent;
+    background-color: transparent;
+    color: var(--couleur-accent);
+  }
+
+  .parcours[data-studio-reserve] [data-etape-studio] .numero {
+    display: none;
+  }
+
+  .parcours[data-studio-reserve] [data-etape-studio] :global(.coche),
+  .parcours[data-studio-reserve] .etat-fait {
+    display: inline;
+  }
+
+  .parcours[data-studio-reserve] [data-etape-studio] .etape-titre {
+    color: var(--couleur-texte-secondaire);
+  }
+
+  /* ---- Guide : carte-lien en action douce ---- */
+  .guide {
+    display: flex;
+    gap: var(--espace-2);
+    align-items: center;
+    padding: var(--espace-2);
+    /* Apparence : .action-douce (global.css) */
+    border-radius: var(--rayon-carte);
+    text-decoration: none;
+  }
+
+  .guide-titre {
+    flex: 1;
+    min-width: 0;
+    font-weight: var(--graisse-forte);
+  }
+
+  .guide :global(.guide-fleche) {
+    flex: 0 0 auto;
+    transition: transform var(--duree-courte-4) var(--courbe-standard-deceleree);
+  }
+
+  .guide:focus-visible :global(.guide-fleche) {
+    transform: translateX(3px);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .option:hover {
+      border-color: var(--action-contour);
+      background-color: var(--action-douce-fond-survol);
+    }
+
+    .action:hover {
+      background-color: var(--action-douce-fond-survol);
+      color: var(--action-texte);
+    }
+
+    .action-studio:hover,
+    .parcours[data-studio-reserve] .action-technicien:hover {
+      background-color: var(--action-fond-survol);
+      color: var(--action-texte);
+    }
+
+    /* Une fois le studio réservé, son bouton redevient doux : survol doux */
+    .parcours[data-studio-reserve] .action-studio:hover {
+      background-color: var(--action-douce-fond-survol);
+    }
+
+    .guide:hover :global(.guide-fleche) {
+      transform: translateX(3px);
+    }
+  }
+
+  @media (forced-colors: active) {
+    .option[aria-expanded='true'] {
+      outline: 2px solid Highlight;
+    }
+
+    .etapes,
+    .guide {
+      border: 1px solid CanvasText;
+    }
+  }
+</style>

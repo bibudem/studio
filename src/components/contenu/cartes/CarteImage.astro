@@ -1,0 +1,238 @@
+---
+/*
+ * Carte-lien avec photo.
+ *
+ * 280 × 400 px : photo de 170 px en cover, titre de style h4 limité à trois
+ * lignes, texte d'appel et pastille fléchée en bas. Corrigés :
+ * - un seul lien, sur le titre, dont le ::after couvre la carte ; nom
+ *   accessible = titre ; moreText devient sa description et n'est pas relu ;
+ * - la photo est décorative (alt="") : son alt valait le titre, lu deux fois ;
+ * - les flèches étaient inversées (interne ↗, externe →) et choisies après
+ *   l'hydratation ;
+ * - le titre était un h4 en dur : niveauTitre (3 par défaut) fixe la balise,
+ *   l'apparence reste celle du h4.
+ * studio·bib : titre en police sans empattement, plus petit ;
+ * photo recadrée au format de la carte ; fond blanc et contour ; pastille jaune.
+ * Texte et flèche bleu principal sur le fond : 6,8:1.
+ */
+import type { ImageMetadata } from 'astro'
+import { Image as ImageAstro } from 'astro:assets'
+import RenduJsx from '@/components/partage/RenduJsx.astro'
+import { classes, fusionnerStyles, type Style } from '@/lib/styles'
+import Pastille from '@/components/contenu/dynamiques/Pastille.astro'
+import { lienCarte } from '@/lib/liens'
+import { idUnique } from '@/lib/ids'
+
+interface Props {
+  title: unknown
+  Image: ImageMetadata | string
+  href: string
+  moreText?: unknown
+  /** Texte de remplacement de la photo ; décorative par défaut */
+  alt?: string
+  niveauTitre?: 2 | 3 | 4 | 5 | 6
+  target?: string
+  rel?: string
+  id?: string
+  class?: string
+  className?: string
+  style?: Style
+  [attribut: string]: unknown
+}
+
+const { title, Image, href, moreText = 'En savoir plus', alt = '', niveauTitre = 3, target, rel, class: classe, className, style, sx: _sx, ...reste } = Astro.props
+
+if (title === undefined) throw new Error('CarteImage : la propriété `title` est obligatoire.')
+if (!Image) throw new Error('CarteImage : la propriété `Image` est obligatoire.')
+if (typeof href !== 'string') throw new Error('CarteImage : la propriété `href` doit être une chaîne.')
+
+const { externe, rel: relFinal, annonce } = lienCarte(href, target, rel)
+const idPlus = moreText ? idUnique('carte-plus') : undefined
+const Titre = `h${niveauTitre}`
+---
+
+<div class:list={['carte', 'surface-claire', classes(classe, className)]} style={fusionnerStyles(style)} {...reste}>
+  {
+    typeof Image === 'string' ? (
+      <img class="photo" src={Image} alt={alt} loading="lazy" decoding="async" />
+    ) : (
+      <ImageAstro class="photo" src={Image} alt={alt} widths={[280, 560, 840]} width={560} height={340} quality={85} sizes="280px" formats={['avif', 'webp']} loading="lazy" />
+    )
+  }
+  <div class="contenu">
+    <Titre class="titre">
+      <a class="lien-carte" href={href} target={target} rel={relFinal} aria-describedby={idPlus}
+        >{typeof title === 'string' ? title : <RenduJsx valeur={title} />}{annonce && <span class="visuellement-masque">{annonce}</span>}</a
+      >
+    </Titre>
+    <div class="pied">
+      {
+        moreText && (
+          <div class="plus" id={idPlus} aria-hidden="true">
+            {typeof moreText === 'string' ? moreText : <RenduJsx valeur={moreText} />}
+          </div>
+        )
+      }
+      <Pastille grande externe={externe} />
+    </div>
+  </div>
+</div>
+
+<style>
+  .carte {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    width: 280px;
+    /* Jamais plus large que sa colonne (320 px, WCAG 1.4.10) */
+    max-width: 100%;
+    /* Hauteur minimale (voir CarteIcone) : la carte grandit avec le texte
+       agrandi au lieu de le rogner */
+    min-height: 400px;
+    overflow: hidden;
+    border-radius: var(--rayon-carte);
+    /* studio·bib : fond blanc, contour et ombre légère pour se détacher du fond de la page */
+    border: 1px solid var(--couleur-bordure);
+    background-color: var(--couleur-surface);
+    box-shadow: var(--ombre-1);
+  }
+
+  /* Focus sur toute la carte ; liseré blanc puis contour, lisible sur tout fond */
+  .carte:has(.lien-carte:focus-visible) {
+    overflow: visible;
+    outline: 3px solid var(--couleur-focus);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px var(--couleur-focus-contour);
+  }
+
+  .lien-carte:focus-visible {
+    outline: none;
+    box-shadow: none; /* le focus est dessiné sur la carte entière (studio·bib : double anneau) */
+  }
+
+  .photo {
+    display: block;
+    flex-shrink: 0;
+    width: 100%;
+    height: 170px;
+    object-fit: cover;
+    border-start-start-radius: inherit;
+    border-start-end-radius: inherit;
+  }
+
+  .contenu {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-height: 0;
+    /* Marge réduite (et non --espace-carte) : la photo prend 170 px sur 400 et
+       le titre a jusqu'à trois lignes */
+    padding: var(--espace-element);
+  }
+
+  /* Apparence du h4 du thème, quelle que soit la balise. Plus de limite à
+     trois lignes : le titre entier reste lisible avec le texte agrandi */
+  .titre {
+    margin: 0.5em 0 0.5rem;
+    /* studio·bib : police sans empattement, comme le reste du site */
+    font-family: var(--police-sans);
+    font-size: 1.125rem;
+    font-weight: var(--graisse-forte);
+    line-height: 1.2;
+    overflow-wrap: break-word;
+  }
+
+  @media (min-width: 900px) {
+    .titre {
+      font-size: 1.375rem;
+    }
+  }
+
+  .lien-carte {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .lien-carte::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: var(--rayon-carte);
+  }
+
+  /* studio·bib : la description suit le titre ; seule la pastille descend en bas à droite */
+  .pied {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    gap: var(--espace-2);
+    color: var(--couleur-lien);
+  }
+
+  .pied > :global(.pastille) {
+    align-self: flex-end;
+    margin-top: auto;
+  }
+
+  .plus {
+    /* studio·bib : texte courant, et non la couleur de lien du pied */
+    color: var(--couleur-texte);
+    font-size: 0.875rem;
+  }
+
+  /* studio·bib : la pastille est le composant Pastille (action douce : blanche à contour gris,
+     flèche bleu foncé) ; elle passe au jaune au survol et au focus, et la flèche avance d'un cran */
+  .carte :global(.pastille rect) {
+    transition: fill var(--duree-courte-4) var(--courbe-standard);
+  }
+
+  .carte:has(.lien-carte:focus-visible) :global(.pastille rect) {
+    fill: var(--action-douce-fond-survol);
+  }
+
+  .carte:has(.lien-carte:focus-visible) :global(.pastille .fleche) {
+    transform: translateX(3px);
+  }
+
+  .carte:has(.lien-carte:focus-visible) :global(.pastille.externe .fleche) {
+    transform: translate(2px, -2px);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .carte:hover :global(.pastille rect) {
+      fill: var(--action-douce-fond-survol);
+    }
+
+    .carte:hover :global(.pastille .fleche) {
+      transform: translateX(3px);
+    }
+
+    .carte:hover :global(.pastille.externe .fleche) {
+      transform: translate(2px, -2px);
+    }
+  }
+
+  /* Survol : léger voile (opacité 0,04) */
+  .carte::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+    background-color: currentColor;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--duree-moyenne-1) var(--courbe-standard);
+  }
+
+  .carte:hover::before {
+    opacity: 0.04;
+  }
+
+  @media (forced-colors: active) {
+    .carte {
+      border: 1px solid CanvasText;
+    }
+  }
+</style>

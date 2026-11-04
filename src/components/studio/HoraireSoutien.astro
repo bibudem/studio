@@ -1,0 +1,390 @@
+---
+/*
+ * Horaire de la semaine du soutien informatique.
+ *
+ * Les horaires viennent de l'API horaires dans le navigateur (ils changent
+ * plus souvent que le site n'est reconstruit) : huit semaines en une
+ * requête, service « soutien-informatique » de la bibliothèque `bibliotheque`.
+ * Les composants d'horaires généraux ne servent pas ici : ils montrent l'horaire du jour de tous les services d'une fiche, et
+ * reposent sur data/horaires/ (lieux du réseau), absent de studio·bib.
+ *
+ * - Motif Onglets de l'APG : un onglet par jour (flèches, Début, Fin),
+ *   activation automatique ; Précédente et Suivante changent de semaine.
+ * - Les dates suivent le fuseau de Montréal, pas celui du visiteur.
+ * - Sans JS, ou si l'API ne répond pas : le lien vers les heures
+ *   d'ouverture des bibliothèques.
+ */
+import { CaretLeftIcon } from '@phosphor-icons/react/dist/ssr/CaretLeft'
+import { CaretRightIcon } from '@phosphor-icons/react/dist/ssr/CaretRight'
+import EtatErreur from '@/components/contenu/dynamiques/EtatErreur.astro'
+import { idUnique } from '@/lib/ids'
+
+interface Props {
+  /** Code de la bibliothèque dans l'API horaires (ss = Lettres et sciences humaines) */
+  bibliotheque: string
+  [attribut: string]: unknown
+}
+
+const { bibliotheque } = Astro.props
+const id = idUnique('horaire')
+---
+
+<section class="horaire" data-revelation="unite" aria-labelledby={`${id}-titre`} data-horaire-soutien={bibliotheque} data-id={id}>
+  <div class="entete">
+    <div>
+      <h3 id={`${id}-titre`}>Horaire de la semaine</h3>
+      <p class="periode" data-periode aria-live="polite"></p>
+    </div>
+    <div class="navigation" data-navigation hidden>
+      <button type="button" class="semaine action-douce" data-precedente aria-label="Semaine précédente">
+        <CaretLeftIcon size={20} weight="bold" aria-hidden="true" focusable="false" />
+      </button>
+      <button type="button" class="semaine action-douce" data-suivante aria-label="Semaine suivante">
+        <CaretRightIcon size={20} weight="bold" aria-hidden="true" focusable="false" />
+      </button>
+    </div>
+  </div>
+
+  <p class="repli" data-repli>Consultez les <a href="https://bib.umontreal.ca/horaires">heures d’ouverture des bibliothèques</a> ou écrivez-nous par clavardage.</p>
+  <p class="repli" role="status" data-chargement hidden>Chargement de l’horaire…</p>
+  <EtatErreur message="L’horaire n’a pas pu être chargé." etat="" />
+
+  <div class="vue" data-vue hidden>
+    <div class="jours" role="tablist" aria-label="Jours de la semaine" data-onglets></div>
+    <div class="panneau" role="tabpanel" id={`${id}-panneau`} data-panneau>
+      <p class="date" data-date></p>
+      <p class="valeur" data-valeur></p>
+    </div>
+  </div>
+</section>
+
+<script>
+  import { brancherReessayer } from '@/components/contenu/dynamiques/chargement'
+
+  const NB_SEMAINES = 8
+  // Même fuseau que src/lib/dates.ts (America/Montreal en est un alias)
+  const FUSEAU = 'America/Toronto'
+  const API = 'https://api.bib.umontreal.ca/horaires'
+
+  // Dates « AAAA-MM-JJ » ; l'arithmétique se fait à midi UTC, sans effet de l'heure d'été
+  const enDate = (jour: string) => new Date(`${jour}T12:00:00Z`)
+  const enJour = (date: Date) => date.toISOString().slice(0, 10)
+  const ajouter = (jour: string, n: number) => {
+    const d = enDate(jour)
+    d.setUTCDate(d.getUTCDate() + n)
+    return enJour(d)
+  }
+  const lundiDe = (jour: string) => ajouter(jour, -((enDate(jour).getUTCDay() + 6) % 7))
+  const jourMontreal = (date: Date) => new Intl.DateTimeFormat('en-CA', { timeZone: FUSEAU, year: 'numeric', month: '2-digit', day: '2-digit' }).format(date)
+  // Une date seule (« AAAA-MM-JJ ») est déjà le jour local : lue en Date, elle tomberait à minuit UTC, la veille à Montréal
+  const jourDe = (date: string) => (/^\d{4}-\d{2}-\d{2}$/.test(date) ? date : jourMontreal(new Date(date)))
+  const formater = (jour: string, options: Intl.DateTimeFormatOptions) => enDate(jour).toLocaleDateString('fr-CA', { timeZone: 'UTC', ...options })
+  // « 9h à 19h » → « 9 h à 19 h »
+  const heures = (sommaire: string) => sommaire.replace(/(\d+)\s*h(\d{2})?/g, (_, h, m) => (m ? `${h} h ${m}` : `${h} h`))
+
+  type Evenement = { date: string; bibliotheque: string; service: string; sommaire: string }
+
+  for (const racine of document.querySelectorAll<HTMLElement>('[data-horaire-soutien]')) {
+    const code = racine.dataset.horaireSoutien!
+    const id = racine.dataset.id!
+    const periode = racine.querySelector<HTMLElement>('[data-periode]')!
+    const navigation = racine.querySelector<HTMLElement>('[data-navigation]')!
+    const precedente = racine.querySelector<HTMLButtonElement>('[data-precedente]')!
+    const suivante = racine.querySelector<HTMLButtonElement>('[data-suivante]')!
+    const repli = racine.querySelector<HTMLElement>('[data-repli]')!
+    const chargement = racine.querySelector<HTMLElement>('[data-chargement]')!
+    const erreur = racine.querySelector<HTMLElement>('.etat-erreur')!
+    const vue = racine.querySelector<HTMLElement>('[data-vue]')!
+    const onglets = racine.querySelector<HTMLElement>('[data-onglets]')!
+    const panneau = racine.querySelector<HTMLElement>('[data-panneau]')!
+
+    const aujourdhui = jourMontreal(new Date())
+    const lundi0 = lundiDe(aujourdhui)
+    let horaires = new Map<string, string>()
+    let semaine = 0
+    let choisi = 0
+
+    const jours = () => Array.from({ length: 7 }, (_, i) => ajouter(lundi0, semaine * 7 + i))
+
+    const choisir = (index: number, focaliser = false) => {
+      choisi = index
+      const boutons = [...onglets.querySelectorAll<HTMLButtonElement>('[role="tab"]')]
+      boutons.forEach((b, i) => {
+        b.setAttribute('aria-selected', String(i === index))
+        b.tabIndex = i === index ? 0 : -1
+      })
+      const jour = jours()[index]
+      const valeur = horaires.get(jour)
+      const ferme = !valeur || /\bfermé\b/i.test(valeur)
+      panneau.setAttribute('aria-labelledby', boutons[index].id)
+      panneau.toggleAttribute('data-aujourdhui', jour === aujourdhui)
+      panneau.querySelector('[data-date]')!.textContent = formater(jour, { weekday: 'long', day: 'numeric', month: 'long' })
+      const champ = panneau.querySelector<HTMLElement>('[data-valeur]')!
+      champ.textContent = valeur ? heures(valeur).replace(/^\p{Ll}/u, (c) => c.toUpperCase()) : 'Fermé'
+      champ.toggleAttribute('data-ferme', ferme)
+      if (focaliser) boutons[index].focus()
+    }
+
+    const afficherSemaine = () => {
+      const liste = jours()
+      periode.textContent = `du ${formater(liste[0], { day: 'numeric', month: 'long', year: 'numeric' })} au ${formater(liste[6], { day: 'numeric', month: 'long', year: 'numeric' })}`
+      precedente.disabled = semaine === 0
+      suivante.disabled = semaine === NB_SEMAINES - 1
+      onglets.replaceChildren(
+        ...liste.map((jour, i) => {
+          const bouton = document.createElement('button')
+          bouton.type = 'button'
+          bouton.role = 'tab'
+          bouton.id = `${id}-jour-${i}`
+          bouton.className = 'jour'
+          bouton.setAttribute('aria-controls', `${id}-panneau`)
+          bouton.toggleAttribute('data-aujourdhui', jour === aujourdhui)
+          // Abréviation à l'écran, nom complet pour les lecteurs d'écran : « lundi 2 novembre »
+          const span = (classe: string, texte: string, decoratif = false) => {
+            const element = Object.assign(document.createElement('span'), { className: classe, textContent: texte })
+            if (decoratif) element.setAttribute('aria-hidden', 'true')
+            return element
+          }
+          bouton.append(
+            span('nom', formater(jour, { weekday: 'short' }).replace('.', ''), true),
+            span('visuellement-masque', `${formater(jour, { weekday: 'long' })} `),
+            span('numero', String(enDate(jour).getUTCDate())),
+            span('visuellement-masque', ` ${formater(jour, { month: 'long' })}${jour === aujourdhui ? ' (aujourd’hui)' : ''}`),
+          )
+          bouton.addEventListener('click', () => choisir(i))
+          return bouton
+        }),
+      )
+      const index = liste.indexOf(aujourdhui)
+      choisir(index >= 0 ? index : 0)
+    }
+
+    onglets.addEventListener('keydown', (e) => {
+      const cibles: Record<string, number> = { ArrowRight: (choisi + 1) % 7, ArrowLeft: (choisi + 6) % 7, Home: 0, End: 6 }
+      if (!(e.key in cibles)) return
+      e.preventDefault()
+      choisir(cibles[e.key], true)
+    })
+    // Le bouton qui vient de servir peut se désactiver (première ou dernière semaine) : le focus
+    // passe alors à l'autre bouton au lieu de retomber sur la page (WCAG 2.4.3)
+    const changerSemaine = (pas: number, bouton: HTMLButtonElement, autre: HTMLButtonElement) => {
+      const avaitFocus = document.activeElement === bouton
+      semaine = Math.min(NB_SEMAINES - 1, Math.max(0, semaine + pas))
+      afficherSemaine()
+      if (avaitFocus && bouton.disabled) autre.focus()
+    }
+    precedente.addEventListener('click', () => changerSemaine(-1, precedente, suivante))
+    suivante.addEventListener('click', () => changerSemaine(1, suivante, precedente))
+
+    const charger = async () => {
+      repli.hidden = true
+      erreur.hidden = true
+      chargement.hidden = false
+      try {
+        const url = `${API}?bibs=${encodeURIComponent(code)}&debut=${lundi0}&fin=${ajouter(lundi0, NB_SEMAINES * 7 - 1)}&format=json`
+        const reponse = await fetch(url, { signal: AbortSignal.timeout(10000) })
+        if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`)
+        const donnees = await reponse.json()
+        const evenements: Evenement[] = Array.isArray(donnees?.evenements) ? donnees.evenements : []
+        // L'API renvoie tout le réseau : on garde la bibliothèque et le service voulus
+        horaires = new Map(evenements.filter((e) => e.service === 'soutien-informatique' && e.bibliotheque === code).map((e) => [jourDe(e.date), e.sommaire]))
+        chargement.hidden = true
+        vue.hidden = false
+        navigation.hidden = false
+        afficherSemaine()
+      } catch (e) {
+        console.error('Horaire du soutien informatique :', e)
+        chargement.hidden = true
+        erreur.hidden = false
+        repli.hidden = false
+      }
+    }
+
+    brancherReessayer(racine, charger)
+    charger()
+  }
+</script>
+
+<style>
+  /* studio·bib : l'horaire est en jaune (bleu accent à l'origine) */
+  .horaire {
+    margin-block: var(--espace-element) var(--espace-bloc);
+    padding: var(--espace-element);
+    border: 1px solid var(--couleur-bordure);
+    border-radius: var(--rayon-carte);
+    background: var(--couleur-surface);
+    box-shadow: var(--ombre-1);
+  }
+
+  .entete {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding-bottom: 0.85rem;
+    border-bottom: 1px solid var(--couleur-bordure);
+  }
+
+  .entete h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    line-height: 1.2;
+  }
+
+  .periode,
+  .repli {
+    max-inline-size: none;
+    margin: 0.3rem 0 0;
+    color: var(--couleur-texte-secondaire);
+    font-size: 0.93rem;
+  }
+
+  .periode:empty,
+  .repli[hidden],
+  .navigation[hidden],
+  .vue[hidden] {
+    display: none;
+  }
+
+  .repli {
+    margin-top: 0.9rem;
+  }
+
+  .navigation {
+    display: flex;
+    gap: var(--espace-1);
+  }
+
+  /* 44 px : cible confortable sur mobile */
+  .semaine {
+    display: grid;
+    place-items: center;
+    width: var(--taille-cible);
+    height: var(--taille-cible);
+    padding: 0;
+    /* Apparence : .action-douce (global.css) */
+    border-radius: var(--rayon-plein);
+    cursor: pointer;
+  }
+
+  .semaine:disabled {
+    border-color: var(--couleur-bordure);
+    color: var(--couleur-texte-secondaire);
+    cursor: not-allowed;
+    opacity: 0.6;
+  }
+
+  .vue {
+    margin-top: 0.9rem;
+  }
+
+  .jours {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 0.3rem;
+  }
+
+  .jours :global(.jour) {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 3.6rem;
+    padding: 0.4rem 0.1rem;
+    border: 1px solid var(--couleur-bordure);
+    border-radius: var(--rayon-tres-petit);
+    background: var(--action-douce-fond);
+    color: var(--action-texte);
+    font: inherit;
+    cursor: pointer;
+  }
+
+  .jours :global(.jour:hover) {
+    border-color: var(--action-contour);
+    background: var(--action-douce-fond-survol);
+  }
+
+  /* Le jour choisi (bleu foncé, état) reste bleu foncé au survol */
+  .jours :global(.jour[aria-selected='true']:hover) {
+    background: var(--selection-fond);
+  }
+
+  /* Jour choisi : état choisi, bleu foncé plein et texte blanc */
+  .jours :global(.jour[aria-selected='true']) {
+    border: 2px solid var(--selection-fond);
+    background: var(--selection-fond);
+    color: var(--selection-texte);
+  }
+
+  .jours :global(.nom) {
+    font-size: 0.77rem;
+    font-weight: var(--graisse-forte);
+    line-height: 1.1;
+    text-transform: capitalize;
+  }
+
+  .jours :global(.numero) {
+    margin-top: 0.16rem;
+    font-size: 1.1rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  /* Aujourd'hui : un point sous le numéro, en plus du nom annoncé */
+  .jours :global(.jour[data-aujourdhui] .numero::after) {
+    content: '';
+    display: block;
+    width: 6px;
+    height: 6px;
+    margin: 0.2rem auto 0;
+    border-radius: var(--rayon-plein);
+    background: var(--rouge-orange);
+  }
+
+  .panneau {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.25rem;
+    min-height: 5.2rem;
+    margin-top: 0.75rem;
+    padding: 0.85rem var(--espace-element);
+    border: 1px solid var(--couleur-bordure);
+    border-radius: var(--rayon-petit);
+    /* studio·bib : une information, pas une action : fond gris neutre (et non jaune pâle) */
+    background: var(--couleur-fond-neutre);
+  }
+
+  .date {
+    margin: 0;
+    color: var(--couleur-texte-secondaire);
+    font-size: 0.88rem;
+  }
+
+  .valeur {
+    margin: 0;
+    font-size: 1.15rem;
+    font-weight: 700;
+  }
+
+  .valeur[data-ferme] {
+    color: var(--rouge-orange-texte);
+  }
+
+  @media (min-width: 600px) {
+    .horaire {
+      padding: var(--espace-carte);
+    }
+
+    .jours {
+      gap: 0.45rem;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .jours :global(.jour[aria-selected='true']) {
+      border-color: Highlight;
+    }
+  }
+</style>

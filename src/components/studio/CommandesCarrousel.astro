@@ -1,0 +1,92 @@
+---
+/*
+ * Commandes d'un carrousel, sous sa rangée : flèche Précédente, un point par
+ * carte (la carte en cours est une pastille allongée), flèche Suivante, et une
+ * annonce de position pour les lecteurs d'écran. Branchées par
+ * src/lib/commandes-carrousel.ts ; masquées tant que le script n'a pas vu que
+ * la rangée défile (sans JS, la rangée se parcourt à la barre de défilement).
+ *
+ * Flèches : pastilles jaune pâle à contour jaune, de 44 px, flèche bleu foncé.
+ */
+import { CaretLeftIcon } from '@phosphor-icons/react/dist/ssr/CaretLeft'
+import { CaretRightIcon } from '@phosphor-icons/react/dist/ssr/CaretRight'
+
+interface Props {
+  /** Nombre de cartes de la rangée */
+  total: number
+}
+
+const { total } = Astro.props
+---
+
+<div class="commandes-carrousel" hidden data-cc>
+  <button type="button" class="commande action-douce" aria-label="Carte précédente" aria-disabled="true" data-cc-precedent>
+    <CaretLeftIcon size={20} weight="bold" aria-hidden="true" focusable="false" />
+  </button>
+  <ol class="points" aria-hidden="true">
+    {Array.from({ length: total }, () => <li class="point" data-cc-point />)}
+  </ol>
+  <button type="button" class="commande action-douce" aria-label="Carte suivante" data-cc-suivant>
+    <CaretRightIcon size={20} weight="bold" aria-hidden="true" focusable="false" />
+  </button>
+  <span class="visuellement-masque" role="status" data-cc-position></span>
+</div>
+
+<style>
+  .commandes-carrousel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--espace-2);
+    margin-block: var(--espace-1) var(--espace-bloc);
+  }
+
+  .commandes-carrousel[hidden] {
+    display: none;
+  }
+
+  .commande {
+    display: inline-grid;
+    place-items: center;
+    flex: none;
+    width: var(--taille-cible);
+    height: var(--taille-cible);
+    padding: 0;
+    /* Apparence : .action-douce (global.css) */
+    border-radius: var(--rayon-plein);
+    cursor: pointer;
+  }
+
+  .commande[aria-disabled='true'] {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  .points {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: 0.375rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .point {
+    width: 0.5rem;
+    height: 0.5rem;
+    margin: 0;
+    border-radius: var(--rayon-plein);
+    background: var(--couleur-bordure);
+    /* Exception voulue : le point actif s'allonge en pastille ; un scale déformerait son arrondi */
+    transition:
+      width var(--duree-courte-4) var(--courbe-standard),
+      background-color var(--duree-courte-4) var(--courbe-standard);
+  }
+
+  .point[data-actif] {
+    width: 1.25rem;
+    background: var(--selection-fond);
+  }
+</style>

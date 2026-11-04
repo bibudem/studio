@@ -1,0 +1,67 @@
+---
+/*
+ * Icône Phosphor en filigrane, derrière le contenu de l'accueil d'une section (/espaces,
+ * /medias…). Décorative : très pâle, ignorée des lecteurs d'écran.
+ *
+ * - Le calque couvre le conteneur de la page (GabaritPage, `.page-contenu`, position: relative)
+ *   et rogne l'icône à ses bords : elle ne dépasse jamais le contenu.
+ * - L'icône est « collante » : elle suit le défilement et se glisse sous l'en-tête.
+ * - Les icônes sont dans src/data/filigranes.ts ; rien ne s'affiche pour une section absente.
+ */
+import { FILIGRANES } from '@/data/filigranes'
+
+interface Props {
+  section: string
+}
+
+const { section } = Astro.props
+const chemin = FILIGRANES[section]
+---
+
+{
+  chemin && (
+    <div class:list={['decor', `decor-${section}`]} aria-hidden="true">
+      <svg class="decor-icone" aria-hidden="true" focusable="false" viewBox="0 0 256 256" fill="currentColor">
+        <path d={chemin} />
+      </svg>
+    </div>
+  )
+}
+
+<style>
+  /* Calque décoratif : couvre le conteneur et le rogne ; l'icône y suit le défilement */
+  .decor {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    /* L'icône s'arrête au bord du contenu (les cartes), pas au bord de la gouttière */
+    padding-inline: var(--gouttiere);
+    overflow: clip;
+    pointer-events: none;
+  }
+
+  /* La caméra (Prod médias) est dessinée dans la moitié basse de son cadre : on la remonte
+     du vide du haut (rogné par le calque) */
+  .decor-medias .decor-icone {
+    margin-block-start: -6rem;
+    top: calc(var(--hauteur-entete) - 9rem);
+  }
+
+  /* Idem pour À propos (les deux personnages) */
+  .decor-a-propos .decor-icone {
+    margin-block-start: -4rem;
+    top: calc(var(--hauteur-entete) - 7rem);
+  }
+
+  .decor-icone {
+    position: sticky;
+    /* Plus haut que le bas du menu : en défilant, l'icône se glisse sous l'en-tête (3 rem cachés) */
+    top: calc(var(--hauteur-entete) - 3rem);
+    display: block;
+    width: min(40rem, 60%);
+    height: auto;
+    margin-inline-start: auto;
+    /* Pâle : à peine plus foncé que le fond, dans les deux thèmes */
+    color: color-mix(in srgb, var(--couleur-texte) 7%, transparent);
+  }
+</style>

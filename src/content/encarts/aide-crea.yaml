@@ -1,0 +1,9 @@
+# Fin des pages dont le frontmatter porte « aide: crea »
+titre: Nous sommes là pour vous aider
+texte: Vous avez un projet créatif ou souhaitez de l’aide? Notre équipe est là pour vous accompagner.
+lien:
+  libelle: Soutien à la création
+  url: /a-propos/soutien-creation
+icone: hand-waving
+animation: vague
+variante: carte

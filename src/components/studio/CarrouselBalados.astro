@@ -1,0 +1,199 @@
+---
+/*
+ * Balados réalisés dans nos studios.
+ *
+ * Repose sur le carrousel Carrousel : défilement natif avec
+ * scroll-snap, utilisable sans JS (barre de défilement, Tab), boutons
+ * Précédent et Suivant, motif Carrousel de l'APG.
+ * Une description de plus de cinq lignes est coupée, avec un bouton « Lire la
+ * suite » qui la déplie (ajouté par le script ; sans JS, le texte reste coupé
+ * et le lien « Écouter » mène au reste).
+ * Commandes sous la rangée, comme les cartes à photo sur mobile (CommandesCarrousel) :
+ * flèches, un point par carte et l'annonce de la position aux lecteurs d'écran ;
+ * celles de Carrousel sont masquées.
+ * Données : src/data/balados.ts ; pochettes optimisées par astro:assets.
+ */
+import { Image } from 'astro:assets'
+import Carrousel from '@/components/contenu/mise-en-page/Carrousel.astro'
+import Lien from '@/components/contenu/primitives/Lien.astro'
+import { balados } from '@/data/balados'
+import { CaretDownIcon } from '@phosphor-icons/react/dist/ssr/CaretDown'
+import { idUnique } from '@/lib/ids'
+import CommandesCarrousel from './CommandesCarrousel.astro'
+
+interface Props {
+  [attribut: string]: unknown
+}
+---
+
+<div class="balados-carrousel" data-balados-carrousel>
+<Carrousel ariaLabel="Balados réalisés dans nos studios" class="carrousel-balados">
+  {
+    balados.map((b) => {
+      const idDescription = idUnique('balado-description')
+      return (
+      <article class="balado">
+        <Image src={b.image} alt="" widths={[300, 600]} sizes="(min-width: 900px) 300px, 68vw" class="pochette" loading="lazy" />
+        <div class="texte">
+          <h3 class="titre">{b.titre}</h3>
+          <p class="description" id={idDescription} data-description>{b.description}</p>
+          <button type="button" class="suite" aria-expanded="false" aria-controls={idDescription} hidden data-suite>
+            <span data-suite-texte>Lire la suite</span>
+            <CaretDownIcon size="0.875rem" weight="bold" className="suite-fleche" aria-hidden="true" focusable="false" />
+          </button>
+          <Lien to={b.lien} class="ecouter">
+            Écouter<span class="visuellement-masque"> : {b.titre}</span>
+          </Lien>
+        </div>
+      </article>
+      )
+    })
+  }
+</Carrousel>
+<CommandesCarrousel total={balados.length} />
+</div>
+
+<script>
+  import { brancherCommandes } from '@/lib/commandes-carrousel'
+
+  for (const racine of document.querySelectorAll<HTMLElement>('[data-balados-carrousel]')) brancherCommandes(racine)
+
+  // « Lire la suite » : seulement pour une description coupée par la limite de lignes
+  for (const carte of document.querySelectorAll<HTMLElement>('.balado')) {
+    const description = carte.querySelector<HTMLElement>('[data-description]')
+    const bouton = carte.querySelector<HTMLButtonElement>('[data-suite]')
+    if (!description || !bouton) continue
+    const verifier = () => {
+      // Dépliée, la description n'est plus coupée : le bouton reste pour la replier
+      if (description.classList.contains('ouverte')) return
+      bouton.hidden = description.scrollHeight <= description.clientHeight + 1
+    }
+    bouton.addEventListener('click', () => {
+      const ouvrir = bouton.getAttribute('aria-expanded') !== 'true'
+      description.classList.toggle('ouverte', ouvrir)
+      bouton.setAttribute('aria-expanded', String(ouvrir))
+      bouton.querySelector('[data-suite-texte]')!.textContent = ouvrir ? 'Lire moins' : 'Lire la suite'
+      if (!ouvrir) verifier()
+    })
+    new ResizeObserver(verifier).observe(description)
+    verifier()
+  }
+</script>
+
+<style>
+  /* Une carte et le bord de la suivante sur mobile, trois sur grand écran */
+  .balado {
+    /* Contient le texte masqué des liens (« (nouvel onglet) », en position absolue) :
+       sans ancêtre positionné dans la piste, il échappait à son défilement et
+       élargissait la page de plusieurs milliers de pixels */
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    width: 68cqi;
+    overflow: hidden;
+    border: 1px solid var(--couleur-bordure);
+    border-radius: var(--rayon-carte);
+    background: var(--couleur-surface);
+  }
+
+  .pochette {
+    display: block;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: cover;
+  }
+
+  .texte {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    padding: 0.85rem var(--espace-element) var(--espace-element);
+  }
+
+  .titre {
+    margin: 0 0 0.25rem;
+    font-size: 1rem;
+    line-height: 1.3;
+  }
+
+  /* Description limitée à cinq lignes : toutes les cartes ont la hauteur de la plus haute, et
+     une description de quinze lignes les allongeait toutes. Le lien « Écouter » mène au reste. */
+  .description {
+    flex: 1;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 5;
+    line-clamp: 5;
+    margin: 0 0 var(--espace-1);
+    overflow: hidden;
+    font-size: 0.9rem;
+  }
+
+  .description.ouverte {
+    display: block;
+    overflow: visible;
+  }
+
+  /* Bouton texte, comme un lien : sous la description, avant « Écouter » */
+  .suite {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3em;
+    align-self: flex-start;
+    margin: 0 0 var(--espace-1);
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--couleur-lien);
+    font: inherit;
+    font-size: 0.9rem;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+
+  .suite[hidden] {
+    display: none;
+  }
+
+  /* Flèche vers le bas pour déplier, vers le haut pour replier */
+  .suite :global(.suite-fleche) {
+    flex: none;
+    transition: transform var(--duree-courte-4) var(--courbe-standard);
+  }
+
+  .suite[aria-expanded='true'] :global(.suite-fleche) {
+    transform: rotate(180deg);
+  }
+
+  /* Les boutons Précédent et Suivant de Carrousel (en haut, à droite) sont remplacés par les commandes
+     sous la rangée. Sans titre, son en-tête est vide : l'écart d'avant les cartes disparaît. */
+  :global(div.carrousel.carrousel-balados .commandes) {
+    display: none;
+  }
+
+  :global(div.carrousel.carrousel-balados .entete) {
+    display: none;
+  }
+
+  :global(div.carrousel.carrousel-balados) {
+    gap: 0;
+  }
+
+  .texte :global(.ecouter) {
+    align-self: flex-start;
+    font-weight: var(--graisse-forte);
+  }
+
+  @media (min-width: 600px) {
+    .balado {
+      width: 38cqi;
+    }
+  }
+
+  @media (min-width: 900px) {
+    .balado {
+      width: calc(100cqi / 3 - var(--espace-grille) * 2 / 3);
+    }
+  }
+</style>

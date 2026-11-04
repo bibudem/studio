@@ -1,0 +1,103 @@
+---
+/*
+ * Directive `disponibilites` : une fiche par
+ * bibliothèque, avec le nombre d'exemplaires disponibles d'un document
+ * (API Atrium : /atrium/docs/<oclc>/statut-circulation).
+ *
+ * Amélioration progressive : le HTML du serveur donne, pour chaque
+ * bibliothèque, un lien vers la notice dans Sofia. Le script demande les
+ * disponibilités et remplace le texte de chaque fiche ; une erreur laisse le
+ * lien vers Sofia, avec un message. Une seule région status annonce la fin
+ * du chargement, plutôt qu'une annonce par fiche.
+ */
+import { ArrowUpRightIcon } from '@phosphor-icons/react/dist/ssr/ArrowUpRight'
+import { directivesNommees, type NoeudDirective } from '@/lib/directives'
+import '@/styles/fiches.css'
+
+interface Props {
+  enfants: NoeudDirective[]
+}
+
+const { enfants } = Astro.props
+const fiches = directivesNommees(enfants, 'disponibilite').map((n) => n.attributs as { libelle: string; oclc: string })
+const notice = (oclc: string) => `https://umontreal.on.worldcat.org/oclc/${oclc}`
+---
+
+<div class="disponibilites" data-disponibilites>
+  <ul class="fiches-etat" data-revelation="groupe">
+    {
+      fiches.map(({ libelle, oclc }) => (
+        <li>
+          <a class="fiche-etat" href={notice(oclc)} target="_blank" rel="noopener" data-oclc={oclc}>
+            <span class="libelle">{libelle}</span>
+            <span class="etat" data-etat>Vérifier la disponibilité dans Sofia</span>
+            <span class="visuellement-masque"> (nouvel onglet)</span>
+            <ArrowUpRightIcon size="1.25rem" className="fleche" aria-hidden="true" focusable="false" />
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+  <p class="visuellement-masque" role="status" data-annonce></p>
+</div>
+
+<script>
+  import { pluriel } from '@/lib/texte'
+
+  const API = 'https://api.bib.umontreal.ca/atrium/docs'
+
+  type Statut = { permalien: string; disponibles: number }
+
+  async function statut(oclc: string): Promise<Statut> {
+    // Délai de 8 s : une API muette ne laisse pas la liste « en chargement » indéfiniment
+    const reponse = await fetch(`${API}/${encodeURIComponent(oclc)}/statut-circulation`, { signal: AbortSignal.timeout(8000) })
+    if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`)
+    const json = await reponse.json()
+    if (!json?.permalien) throw new Error('Réponse incomplète')
+    return { permalien: json.permalien, disponibles: Number(json['total-exemplaires-disponibles']) || 0 }
+  }
+
+  const texteDisponibles = (n: number) => (n > 0 ? pluriel(n, 'disponible') : 'Aucun exemplaire disponible pour le moment')
+
+  for (const bloc of document.querySelectorAll<HTMLElement>('[data-disponibilites]')) {
+    const liste = bloc.querySelector('.fiches-etat')
+    const annonce = bloc.querySelector<HTMLElement>('[data-annonce]')
+    const fiches = Array.from(bloc.querySelectorAll<HTMLAnchorElement>('[data-oclc]'))
+    liste?.setAttribute('aria-busy', 'true')
+    for (const fiche of fiches) {
+      fiche.querySelector('[data-etat]')!.textContent = 'Chargement de la disponibilité…'
+      fiche.dataset.statut = 'chargement'
+    }
+    Promise.all(
+      fiches.map(async (fiche) => {
+        const etat = fiche.querySelector('[data-etat]')!
+        try {
+          const { permalien, disponibles } = await statut(fiche.dataset.oclc!)
+          fiche.href = permalien
+          etat.textContent = texteDisponibles(disponibles)
+          fiche.dataset.statut = disponibles > 0 ? 'disponible' : 'indisponible'
+          return true
+        } catch {
+          // Le lien vers la notice Sofia reste : on peut y vérifier soi-même
+          etat.textContent = 'Disponibilité impossible à afficher pour le moment. Vérifier dans Sofia'
+          fiche.dataset.statut = 'erreur'
+          return false
+        }
+      }),
+    ).then((resultats) => {
+      liste?.removeAttribute('aria-busy')
+      if (annonce) {
+        annonce.textContent = resultats.every(Boolean)
+          ? 'Disponibilités à jour.'
+          : 'Disponibilités à jour, sauf pour certaines bibliothèques : leur lien mène à Sofia.'
+      }
+    })
+  }
+</script>
+
+<style>
+  /* Grille et fiches : src/styles/fiches.css (communes avec PostesDisponibles) */
+  .disponibilites {
+    margin-block: var(--espace-bloc);
+  }
+</style>

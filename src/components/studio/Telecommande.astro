@@ -1,0 +1,257 @@
+---
+/*
+ * Télécommande d'un appareil (contrôleur du prompteur, page
+ * medias/teleprompteur) : le dessin de l'appareil, puis une carte par touche.
+ *
+ * Le contenu reste dans le Markdown (directive-studio.mjs, « telecommande ») :
+ *
+ *   :::telecommande[Prompteur]
+ *   - :icone[copy] **Changer d'affichage** : bascule entre…
+ *   - (touche non utilisée)
+ *   - :icone[arrow-up] **Défiler vers le haut** : fait défiler…
+ *   :::
+ *
+ * Un élément = une touche, dans l'ordre de la grille (deux rangées) ; les
+ * touches nommées sont numérotées dans cet ordre. Le plugin retire l'icône
+ * du texte et la passe dans `touches` ; le nom (gras) et l'effet viennent de
+ * la liste rendue dans le slot.
+ *
+ * Le dessin est une image (role="img") décrite en texte : position des
+ * touches. Les cartes sont une liste ordonnée (pas de titres : la directive
+ * peut se placer sous un titre de n'importe quel niveau).
+ */
+import { noeudsDePremierNiveau } from '@/lib/decoupage'
+import { composantIcone } from '@/lib/icones'
+import { texteBrut } from '@/lib/texte'
+
+interface Props {
+  titre?: string
+  touches: ({ icone: string } | { vide: true })[]
+  [attribut: string]: unknown
+}
+
+const { titre, touches } = Astro.props
+const html = Astro.slots.has('default') ? await Astro.slots.render('default') : ''
+
+// Éléments de la liste rendue : <ul><li>…</li>…</ul>
+const liste = noeudsDePremierNiveau(html).find((n) => n.type === 'element' && /^[uo]l$/.test(n.nom))
+const interieur = liste ? liste.html.replace(/^<[uo]l[^>]*>/, '').replace(/<\/[uo]l>$/, '') : ''
+const elements = noeudsDePremierNiveau(interieur)
+  .filter((n) => n.type === 'element' && n.nom === 'li')
+  .map((n) => n.html.replace(/^<li[^>]*>/, '').replace(/<\/li>$/, '').replace(/<\/?p>/g, '').trim())
+if (elements.length !== touches.length) throw new Error(`Telecommande : ${touches.length} touches attendues, ${elements.length} éléments de liste rendus.`)
+
+let numero = 0
+const grille = await Promise.all(
+  touches.map(async (touche, i) => {
+    if ('vide' in touche) return { vide: true as const }
+    numero++
+    // « <strong>Nom</strong> : effet »
+    const trouve = elements[i].match(/^<strong>([\s\S]*?)<\/strong>\s*:?\s*([\s\S]*)$/)
+    if (!trouve) throw new Error(`Telecommande : la touche ${numero} doit commencer par son nom en gras.`)
+    const effet = trouve[2].replace(/^\p{Ll}/u, (c) => c.toUpperCase())
+    return { vide: false as const, numero, Icone: await composantIcone(touche.icone), nom: trouve[1], effet }
+  }),
+)
+const colonnes = touches.length <= 3 ? touches.length : Math.ceil(touches.length / 2)
+const rangees = Math.ceil(touches.length / colonnes)
+const texte = texteBrut
+const description = [
+  `${titre ? `Contrôleur « ${titre} »` : 'Contrôleur'} : ${touches.length} touches sur ${rangees} rangée${rangees > 1 ? 's' : ''}.`,
+  ...Array.from({ length: rangees }, (_, r) => {
+    const morceau = grille.slice(r * colonnes, (r + 1) * colonnes).map((t) => (t.vide ? 'une touche non utilisée' : `${t.numero} (${texte(t.nom)})`))
+    return `${r === 0 ? 'En haut' : r === rangees - 1 ? 'En bas' : `Rangée ${r + 1}`} : ${morceau.join(', ')}.`
+  }),
+].join(' ')
+---
+
+<div class="telecommande">
+  <div class="appareil" role="img" aria-label={description}>
+    {titre && <div class="etiquette">{titre}</div>}
+    <div class="grille" style={`--colonnes: ${colonnes}`}>
+      {
+        grille.map((t) =>
+          t.vide ? (
+            <span class="touche vide" />
+          ) : (
+            <span class="touche">
+              <t.Icone size={34} weight="bold" aria-hidden="true" focusable="false" />
+              <span class="numero">{t.numero}</span>
+            </span>
+          ),
+        )
+      }
+    </div>
+  </div>
+
+  <ol class="cartes">
+    {
+      grille.map(
+        (t) =>
+          !t.vide && (
+            <li class="carte">
+              <p class="entete">
+                <span class="pastille" aria-hidden="true">
+                  {t.numero}
+                </span>
+                <span class="visuellement-masque">Touche {t.numero} : </span>
+                <strong set:html={t.nom} />
+              </p>
+              <span class="icone" aria-hidden="true">
+                <t.Icone size={28} weight="bold" focusable="false" />
+              </span>
+              <p class="effet" set:html={t.effet} />
+            </li>
+          ),
+      )
+    }
+  </ol>
+</div>
+
+<style>
+  .telecommande {
+    margin-block: var(--espace-4);
+  }
+
+  /* L'appareil garde ses couleurs dans les deux thèmes : palette, pas rôles */
+  .appareil {
+    max-width: 630px;
+    margin: 0 auto var(--espace-bloc);
+    padding: var(--espace-element) var(--espace-element) 1.2rem;
+    border-radius: var(--rayon-grand);
+    background: var(--bleu-fonce);
+    box-shadow: var(--ombre-2);
+  }
+
+  .etiquette {
+    width: fit-content;
+    margin: 0 auto 1.2rem;
+    padding: 0.25rem 1.1rem;
+    background: var(--blanc-casse);
+    color: var(--bleu-fonce);
+    font-size: 1.15rem;
+    font-weight: var(--graisse-forte);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .grille {
+    display: grid;
+    grid-template-columns: repeat(var(--colonnes), minmax(0, 1fr));
+    gap: 0.6rem;
+    max-width: 390px;
+    margin: 0 auto;
+  }
+
+  .touche {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    aspect-ratio: 1;
+    border: 1px solid var(--gris-700);
+    border-radius: var(--rayon-petit);
+    background: linear-gradient(145deg, var(--gris-700), var(--bleu-fonce));
+    color: var(--blanc-casse);
+  }
+
+  .touche.vide {
+    opacity: 0.45;
+  }
+
+  .numero {
+    position: absolute;
+    top: -9px;
+    right: -9px;
+    display: grid;
+    place-items: center;
+    width: 25px;
+    height: 25px;
+    border: 2px solid var(--bleu-fonce);
+    border-radius: var(--rayon-plein);
+    background: var(--bleu-principal);
+    color: var(--blanc-casse);
+    font-size: 0.75rem;
+    font-weight: 700;
+  }
+
+  .cartes {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+    gap: var(--espace-element);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .carte {
+    max-inline-size: none;
+    margin: 0;
+    padding: 1.2rem;
+    border: 1px solid var(--couleur-bordure);
+    border-radius: var(--rayon-carte);
+    background: var(--couleur-surface);
+  }
+
+  .entete {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0 0 var(--espace-element);
+    line-height: 1.25;
+  }
+
+  .pastille {
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 30px;
+    height: 30px;
+    border-radius: var(--rayon-plein);
+    background: var(--bleu-principal);
+    color: var(--blanc-casse);
+    font-size: 0.85rem;
+    font-weight: 700;
+  }
+
+  .icone {
+    display: grid;
+    place-items: center;
+    width: 58px;
+    height: 58px;
+    margin-bottom: var(--espace-element);
+    border-radius: var(--rayon-tres-petit);
+    background: var(--bleu-fonce);
+    color: var(--blanc-casse);
+  }
+
+  .effet {
+    margin: 0;
+    color: var(--couleur-texte-secondaire);
+    font-size: 0.95rem;
+    line-height: 1.45;
+  }
+
+  @media (min-width: 600px) {
+    .appareil {
+      padding: 1.5rem 1.5rem 1.7rem;
+    }
+
+    .etiquette {
+      font-size: 1.6rem;
+    }
+
+    .grille {
+      gap: 0.9rem;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .touche,
+    .icone,
+    .pastille,
+    .numero {
+      border: 1px solid CanvasText;
+    }
+  }
+</style>

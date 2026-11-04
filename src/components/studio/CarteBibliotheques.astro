@@ -1,0 +1,723 @@
+---
+/*
+ * Bibliothèques qui offrent un service (impression 3D, postes AVA), en liste
+ * et sur une carte.
+ *
+ * - La liste des lieux est le contenu : rendue au build, lisible sans
+ *   JavaScript et sans la carte (nom, emplacement, pastilles, précisions,
+ *   itinéraire). Données : src/data/ (bibliotheques.ts, ateliers.ts, ava.ts, impression3d.ts).
+ * - La carte est un complément : Leaflet (et les tuiles d'OpenStreetMap)
+ *   n'est chargé qu'à la demande, par « Afficher la carte » ou « Voir sur la
+ *   carte » d'un lieu. Sans JS, ces boutons restent masqués.
+ * - Les marqueurs portent le numéro du lieu dans la liste ; ouvrir la bulle
+ *   d'un marqueur met le lieu en évidence dans la liste.
+ * - Les props historiques (service, etiquetteTags, libelleJsonLd,
+ *   sousTitre) sont des données associées à `lieux`.
+ */
+import { ArrowSquareOutIcon } from '@phosphor-icons/react/dist/ssr/ArrowSquareOut'
+import { MapPinIcon } from '@phosphor-icons/react/dist/ssr/MapPin'
+import { MapTrifoldIcon } from '@phosphor-icons/react/dist/ssr/MapTrifold'
+import { REGION_DEFAUT, type ServiceCarte } from '@/data/bibliotheques'
+import { ateliers } from '@/data/ateliers'
+import { ava } from '@/data/ava'
+import { impression3d } from '@/data/impression3d'
+import { idUnique } from '@/lib/ids'
+import { markdownEnLigne } from '@/lib/markdown'
+import { jsonLd } from '@/lib/json-ld'
+import { texteBrut } from '@/lib/texte'
+
+interface Props {
+  lieux: 'ateliers' | 'ava' | 'impression3d'
+}
+
+const SERVICES: Record<Props['lieux'], ServiceCarte> = { ateliers, ava, impression3d }
+const donnees = SERVICES[Astro.props.lieux]
+if (!donnees) throw new Error(`CarteBibliotheques : lieux=${Astro.props.lieux} inconnu (ateliers, ava ou impression3d).`)
+
+const id = idUnique('carte-bib')
+const regionDe = (lieu: { region?: string }) => lieu.region ?? REGION_DEFAUT
+const regions = [...new Set(donnees.lieux.map(regionDe))]
+// Peu de lieux : la liste se montre en entier, et la carte prend sa hauteur (pas de défilement)
+const listeComplete = donnees.lieux.length <= 3
+const lieux = await Promise.all(
+  donnees.lieux.map(async (lieu) => ({
+    ...lieu,
+    region: regionDe(lieu),
+    emplacementHtml: lieu.emplacement ? await markdownEnLigne(lieu.emplacement) : '',
+    detailsHtml: await Promise.all((lieu.details ?? []).map(markdownEnLigne)),
+  })),
+)
+const texte = texteBrut
+
+// Liste des lieux en données structurées (schema.org)
+const donneesStructurees = {
+  '@context': 'https://schema.org',
+  '@type': 'ItemList',
+  name: `Bibliothèques de l’Université de Montréal offrant ${donnees.service}`,
+  numberOfItems: lieux.length,
+  itemListElement: lieux.map((lieu, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    item: {
+      '@type': 'Library',
+      name: lieu.nom,
+      url: lieu.lien,
+      description: [texte(lieu.emplacementHtml), ...(lieu.pastilles.length ? [`${donnees.libelleJsonLd} : ${lieu.pastilles.map((p) => p.libelle).join(', ')}.`] : []), ...lieu.detailsHtml.map((d) => `${texte(d)}.`)]
+        .filter(Boolean)
+        .join(' '),
+      hasMap: lieu.itineraire,
+      geo: { '@type': 'GeoCoordinates', latitude: lieu.coords[0], longitude: lieu.coords[1] },
+      address: { '@type': 'PostalAddress', addressLocality: lieu.region === 'Saint-Hyacinthe' ? 'Saint-Hyacinthe' : 'Montréal', addressRegion: 'QC', addressCountry: 'CA' },
+      parentOrganization: { '@type': 'Library', name: 'Bibliothèques de l’Université de Montréal', url: 'https://bib.umontreal.ca/' },
+    },
+  })),
+}
+---
+
+<div class="carte-bibliotheques" data-revelation="unite" data-carte-bibliotheques data-service={donnees.service}>
+  <script is:inline type="application/ld+json" set:html={jsonLd(donneesStructurees)} />
+
+  {
+    regions.length > 1 && (
+      <div class="regions" role="group" aria-label="Afficher la région" hidden data-regions>
+        {regions.map((nom, i) => (
+          <button type="button" class="region action-douce" aria-pressed={String(i === 0)} data-region={nom}>
+            {nom}
+          </button>
+        ))}
+      </div>
+    )
+  }
+
+  <div class:list={['disposition', { 'liste-complete': listeComplete }]}>
+    <div class="zone-carte" data-zone-carte hidden>
+      <div class="carte" data-carte role="region" aria-label={`Carte des bibliothèques offrant ${donnees.service}`}>
+        <div class="invite" data-invite>
+          <MapTrifoldIcon size={40} weight="light" aria-hidden="true" focusable="false" />
+          <p>La carte s’affiche à la demande : elle charge les fonds d’OpenStreetMap.</p>
+          <button type="button" class="bouton-carte" data-afficher>Afficher la carte</button>
+        </div>
+      </div>
+      <p class="etat" role="status" data-etat-carte></p>
+    </div>
+
+    <div class="panneau">
+      <p class="entete" id={`${id}-entete`}>
+        <strong>
+          {lieux.length} bibliothèques{donnees.sousTitre && <span class="sous-titre"> · {donnees.sousTitre}</span>}
+        </strong>
+        <span class="defiler" aria-hidden="true">Faites défiler ↓</span>
+      </p>
+      <ol class="liste" aria-labelledby={`${id}-entete`}>
+        {
+          lieux.map((lieu, i) => (
+            <li class="lieu" data-lieu={lieu.nom} data-lat={lieu.coords[0]} data-lng={lieu.coords[1]} data-region={lieu.region} data-itineraire={lieu.itineraire}>
+              <span class="numero" aria-hidden="true">
+                {i + 1}
+              </span>
+              <div class="corps">
+                <h3 class="titre">
+                  <a href={lieu.lien}>{lieu.nom}</a>
+                </h3>
+                {(lieu.emplacementHtml || lieu.region !== REGION_DEFAUT) && (
+                  <p class="emplacement">
+                    <MapPinIcon size={14} weight="fill" aria-hidden="true" focusable="false" />
+                    <span>
+                      {lieu.region !== REGION_DEFAUT && (
+                        <>
+                          {lieu.region}
+                          {lieu.emplacementHtml && ' · '}
+                        </>
+                      )}
+                      <Fragment set:html={lieu.emplacementHtml} />
+                    </span>
+                  </p>
+                )}
+                {lieu.pastilles.length > 0 && (
+                  <ul class="pastilles" aria-label={donnees.etiquettePastilles} data-pastilles>
+                    {lieu.pastilles.map((p) => (
+                      <li>{p.lien ? <a class="pastille" href={p.lien}>{p.libelle}</a> : <span class="pastille">{p.libelle}</span>}</li>
+                    ))}
+                  </ul>
+                )}
+                {lieu.detailsHtml.length > 0 && (
+                  <ul class="details" data-details>
+                    {lieu.detailsHtml.map((d) => (
+                      <li set:html={d} />
+                    ))}
+                  </ul>
+                )}
+                <div class="actions">
+                  <button type="button" class="bouton-lien" data-voir hidden>
+                    Voir sur la carte<span class="visuellement-masque"> : {lieu.nom}</span>
+                  </button>
+                  <a class="bouton-lien" href={lieu.itineraire}>
+                    Itinéraire<span class="visuellement-masque"> vers {lieu.nom} (Google Maps)</span>
+                    <ArrowSquareOutIcon size={14} aria-hidden="true" focusable="false" />
+                  </a>
+                </div>
+              </div>
+            </li>
+          ))
+        }
+      </ol>
+    </div>
+  </div>
+</div>
+
+<script>
+  type Lieu = { element: HTMLElement; nom: string; region: string; coords: [number, number] }
+
+  const reduit = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+  for (const racine of document.querySelectorAll<HTMLElement>('[data-carte-bibliotheques]')) {
+    const zone = racine.querySelector<HTMLElement>('[data-zone-carte]')!
+    const conteneur = racine.querySelector<HTMLElement>('[data-carte]')!
+    const etat = racine.querySelector<HTMLElement>('[data-etat-carte]')!
+    const regions = racine.querySelector<HTMLElement>('[data-regions]')
+    const lieux: Lieu[] = [...racine.querySelectorAll<HTMLElement>('[data-lieu]')].map((element) => ({
+      element,
+      nom: element.dataset.lieu!,
+      region: element.dataset.region!,
+      coords: [Number(element.dataset.lat), Number(element.dataset.lng)],
+    }))
+
+    zone.hidden = false
+    if (regions) regions.hidden = false
+    for (const bouton of racine.querySelectorAll<HTMLElement>('[data-voir]')) bouton.hidden = false
+
+    let carte: any
+    let chargement: Promise<void> | undefined
+    const groupes = new Map<string, any>()
+    const marqueurs = new Map<string, any>()
+
+    const mettreEnEvidence = (nom: string | null) => {
+      for (const lieu of lieux) lieu.element.toggleAttribute('data-actif', lieu.nom === nom)
+    }
+
+    const cadrer = (region: string) => {
+      const groupe = groupes.get(region)
+      if (carte && groupe) carte.fitBounds(groupe.getBounds(), { padding: [40, 40], maxZoom: 15, animate: !reduit() })
+      for (const bouton of regions?.querySelectorAll<HTMLElement>('[data-region]') ?? []) bouton.setAttribute('aria-pressed', String(bouton.dataset.region === region))
+    }
+
+    // Contenu de la bulle, construit en DOM à partir de la liste (aucun HTML injecté)
+    const bulle = (lieu: Lieu) => {
+      const div = document.createElement('div')
+      const titre = document.createElement('strong')
+      titre.className = 'bulle-titre'
+      titre.textContent = lieu.nom
+      div.append(titre)
+      const pastilles = [...lieu.element.querySelectorAll('[data-pastilles] li')].map((li) => li.textContent!.trim())
+      if (pastilles.length) {
+        const ul = document.createElement('ul')
+        ul.className = 'bulle-liste'
+        for (const texte of pastilles) ul.append(Object.assign(document.createElement('li'), { textContent: texte }))
+        div.append(ul)
+      }
+      const details = [...lieu.element.querySelectorAll('[data-details] li')].map((li) => li.textContent!.trim())
+      if (details.length) div.append(Object.assign(document.createElement('p'), { className: 'bulle-details', textContent: details.join(' · ') }))
+      const lien = Object.assign(document.createElement('a'), { href: lieu.element.dataset.itineraire!, textContent: 'Itinéraire Google Maps' })
+      div.append(lien)
+      return div
+    }
+
+    const charger = () =>
+      (chargement ??= (async () => {
+        etat.textContent = 'Chargement de la carte…'
+        try {
+          const [{ default: L }] = await Promise.all([import('leaflet'), import('leaflet/dist/leaflet.css')])
+          conteneur.replaceChildren()
+          // La carte prend sa hauteur avant que Leaflet la mesure
+          racine.toggleAttribute('data-carte-active', true)
+          carte = L.map(conteneur, { scrollWheelZoom: false, zoomControl: false })
+          L.control.zoom({ zoomInTitle: 'Zoom avant', zoomOutTitle: 'Zoom arrière' }).addTo(carte)
+          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+          }).addTo(carte)
+          carte.attributionControl.setPrefix(false)
+
+          lieux.forEach((lieu, i) => {
+            if (!groupes.has(lieu.region)) groupes.set(lieu.region, L.featureGroup().addTo(carte))
+            const icone = L.divIcon({ className: 'marqueur', html: `<span aria-hidden="true">${i + 1}</span>`, iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -13] })
+            const marqueur = L.marker(lieu.coords, { icon: icone, title: `${i + 1}. ${lieu.nom}`, alt: lieu.nom }).bindPopup(bulle(lieu)).addTo(groupes.get(lieu.region))
+            marqueurs.set(lieu.nom, marqueur)
+            // Clavier : à l'ouverture, le focus entre dans la bulle ; à la fermeture, il revient au marqueur
+            marqueur.on('popupopen', (e: any) => {
+              const element = e.popup.getElement() as HTMLElement | null
+              const fermer = element?.querySelector('.leaflet-popup-close-button')
+              fermer?.setAttribute('aria-label', 'Fermer')
+              fermer?.setAttribute('title', 'Fermer')
+              element?.querySelector<HTMLElement>('a[href]:not(.leaflet-popup-close-button)')?.focus({ preventScroll: true })
+              mettreEnEvidence(lieu.nom)
+            })
+            marqueur.on('popupclose', (e: any) => {
+              const element = e.popup.getElement() as HTMLElement | null
+              if (!element || element.contains(document.activeElement) || document.activeElement === document.body) marqueur.getElement()?.focus({ preventScroll: true })
+            })
+          })
+          // Échap dans une bulle la ferme (Leaflet ne l'écoute que sur le fond de carte)
+          conteneur.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && (e.target as HTMLElement).closest('.leaflet-popup')) carte.closePopup()
+          })
+          cadrer(lieux[0].region)
+          etat.textContent = ''
+          racine.toggleAttribute('data-carte-prete', true)
+        } catch (erreur) {
+          console.error('Carte des bibliothèques :', erreur)
+          chargement = undefined
+          etat.textContent = 'La carte n’a pas pu être chargée. La liste des bibliothèques reste à jour.'
+        }
+      })())
+
+    racine.querySelector('[data-afficher]')?.addEventListener('click', async () => {
+      await charger()
+      // Le bouton a disparu avec l'invite : le focus passe à la carte
+      conteneur.focus({ preventScroll: true })
+    })
+
+    // Un onglet de région charge la carte si elle ne l'est pas encore, puis la cadre
+    regions?.addEventListener('click', async (e) => {
+      const bouton = (e.target as HTMLElement).closest<HTMLElement>('[data-region]')
+      if (!bouton) return
+      await charger()
+      cadrer(bouton.dataset.region!)
+    })
+
+    for (const lieu of lieux) {
+      lieu.element.querySelector('[data-voir]')!.addEventListener('click', async () => {
+        await charger()
+        const marqueur = marqueurs.get(lieu.nom)
+        if (!carte || !marqueur) return
+        cadrer(lieu.region)
+        mettreEnEvidence(lieu.nom)
+        // Sur mobile, la carte est au-dessus de la liste : la ramener à l'écran
+        const r = zone.getBoundingClientRect()
+        if (r.top < 0 || r.bottom > window.innerHeight) zone.scrollIntoView({ block: 'nearest', behavior: reduit() ? 'auto' : 'smooth' })
+        // Zoom 17 : sépare les bibliothèques voisines du campus principal
+        carte.setView(marqueur.getLatLng(), Math.max(carte.getZoom(), 17), { animate: !reduit() })
+        marqueur.openPopup()
+      })
+    }
+  }
+</script>
+
+<style>
+  .carte-bibliotheques {
+    container: carte-bibliotheques / inline-size;
+    margin-block: var(--espace-element) var(--espace-bloc);
+  }
+
+  .regions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--espace-1);
+    margin-bottom: var(--espace-element);
+  }
+
+  .regions[hidden] {
+    display: none;
+  }
+
+  .region {
+    min-height: var(--taille-cible);
+    padding: 0 var(--espace-2);
+    /* Apparence : .action-douce (global.css) ; état choisi ci-dessous */
+    border-radius: var(--rayon-plein);
+    font: inherit;
+    font-weight: var(--graisse-forte);
+    cursor: pointer;
+  }
+
+  /* Région choisie : état choisi, bleu foncé plein et texte blanc */
+  .region[aria-pressed='true'] {
+    background: var(--selection-fond);
+    border-color: var(--selection-fond);
+    color: var(--selection-texte);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .region[aria-pressed='true']:hover {
+      background: var(--selection-fond);
+    }
+  }
+
+  /* Mobile d'abord : la carte, puis la liste complète */
+  .disposition {
+    --hauteur-carte: 300px;
+
+    display: grid;
+    gap: var(--espace-element);
+    align-items: start;
+  }
+
+  .zone-carte {
+    min-width: 0;
+    scroll-margin-top: var(--hauteur-entete);
+  }
+
+  .zone-carte[hidden] {
+    display: none;
+  }
+
+  .carte {
+    position: relative;
+    z-index: 0; /* sous l'en-tête et les menus */
+    overflow: hidden;
+    border: 1px solid var(--couleur-bordure);
+    border-radius: var(--rayon-carte);
+    /* studio·bib : gris neutre avant le chargement (une information, ni bleu ni jaune) */
+    background: var(--couleur-fond-neutre);
+  }
+
+  /* studio·bib : la carte garde sa hauteur avant d'être chargée (l'invite est centrée
+     dedans) : la mise en page ne bouge pas, et la liste a la même hauteur */
+  .carte {
+    height: var(--hauteur-carte);
+  }
+
+  .invite {
+    box-sizing: border-box;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--espace-1);
+    padding: var(--espace-carte);
+    color: var(--couleur-texte-secondaire);
+    text-align: center;
+  }
+
+  .invite p {
+    margin: 0;
+    color: var(--couleur-texte-secondaire);
+    font-size: 0.875rem;
+  }
+
+  .bouton-carte {
+    min-height: var(--taille-cible);
+    padding: 0 var(--espace-3);
+    border: 0;
+    border-radius: var(--rayon-plein);
+    background: var(--action-fond);
+    color: var(--action-texte);
+    font: inherit;
+    font-weight: var(--graisse-forte);
+    cursor: pointer;
+  }
+
+  .bouton-carte:hover {
+    background: var(--action-fond-survol);
+  }
+
+  .etat {
+    margin: var(--espace-1) 0 0;
+    color: var(--couleur-texte-secondaire);
+    font-size: 0.875rem;
+  }
+
+  .etat:empty {
+    display: none;
+  }
+
+  /* Fond monochrome : seules les tuiles sont filtrées, les marqueurs gardent leur couleur */
+  .carte :global(.leaflet-tile-pane) {
+    filter: grayscale(1) contrast(0.9) brightness(1.05);
+  }
+
+  /* studio·bib : marqueurs et numéros neutres (blancs cernés de bleu foncé) : le jaune est
+     réservé au bouton de la carte */
+  .carte :global(.marqueur) {
+    display: grid;
+    place-items: center;
+    border: 2px solid var(--bleu-fonce);
+    border-radius: var(--rayon-plein);
+    background: var(--couleur-surface);
+    box-shadow: var(--ombre-1);
+    color: var(--bleu-fonce);
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .carte :global(.bulle-titre) {
+    display: block;
+    margin-bottom: 0.25rem;
+    font-size: 0.95rem;
+  }
+
+  .carte :global(.bulle-liste) {
+    margin: 0 0 0.4rem;
+    padding-left: 1.1rem;
+  }
+
+  .carte :global(.bulle-details) {
+    margin: 0 0 0.4rem;
+    font-size: 0.85rem;
+  }
+
+  .carte :global(.leaflet-container a) {
+    color: var(--couleur-lien);
+  }
+
+  /* Liste des lieux */
+  .panneau {
+    overflow: hidden;
+    border: 1px solid var(--couleur-bordure);
+    border-radius: var(--rayon-carte);
+    background: var(--couleur-surface);
+  }
+
+  .entete {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: var(--espace-1);
+    max-inline-size: none;
+    margin: 0;
+    padding: var(--espace-1) var(--espace-2);
+    border-bottom: 1px solid var(--couleur-bordure);
+    background: var(--couleur-fond-neutre);
+    font-size: 0.875rem;
+  }
+
+  /* Seulement quand la liste a sa propre hauteur (carte à côté) */
+  .defiler {
+    display: none;
+    color: var(--couleur-texte-secondaire);
+    font-size: 0.8125rem;
+  }
+
+  .sous-titre {
+    font-weight: var(--graisse-normale);
+  }
+
+  .liste {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .lieu {
+    display: flex;
+    gap: 0.75rem;
+    max-inline-size: none;
+    margin: 0;
+    padding: 0.75rem var(--espace-2);
+    border-bottom: 1px solid var(--couleur-bordure);
+    transition: background-color var(--duree-courte-4) var(--courbe-standard);
+  }
+
+  .lieu:last-child {
+    border-bottom: 0;
+  }
+
+  /* studio·bib : lieu choisi comme la page en cours du menu : fond gris pâle, filet bleu foncé */
+  .lieu[data-actif] {
+    background: var(--navigation-fond-survol);
+    box-shadow: inset 4px 0 0 var(--navigation-courant);
+  }
+
+  /* Numéro du lieu, le même que celui du marqueur */
+  .numero {
+    display: grid;
+    flex: 0 0 auto;
+    place-items: center;
+    width: 1.6rem;
+    height: 1.6rem;
+    border: 2px solid var(--bleu-fonce);
+    border-radius: var(--rayon-plein);
+    background: var(--couleur-surface);
+    color: var(--bleu-fonce);
+    font-size: 0.75rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .corps {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .titre {
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.3;
+  }
+
+  /* Cible de 24 px au moins (WCAG 2.5.8) : le nom d'une bibliothèque tient sur une ligne de 21 px */
+  .titre a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 24px;
+    color: var(--couleur-texte);
+    text-decoration: none;
+  }
+
+  .titre a:hover {
+    text-decoration: underline;
+  }
+
+  .emplacement {
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    margin: 0.2rem 0 0.45rem;
+    color: var(--couleur-texte-secondaire);
+    font-size: 0.875rem;
+    line-height: 1.4;
+  }
+
+  .emplacement :global(svg) {
+    position: relative;
+    top: 2px;
+    flex: 0 0 auto;
+    color: var(--couleur-texte-secondaire);
+  }
+
+  .emplacement :global(.insecable) {
+    white-space: nowrap;
+  }
+
+  .pastilles {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.35rem;
+    margin: 0 0 0.5rem;
+    padding: 0;
+    list-style: none;
+  }
+
+  .pastilles li {
+    margin: 0;
+  }
+
+  .pastille {
+    display: inline-block;
+    padding: 0.15rem 0.55rem;
+    border: 1px solid var(--couleur-bordure);
+    border-radius: var(--rayon-plein);
+    background: var(--couleur-fond-neutre);
+    color: var(--couleur-texte);
+    font-size: 0.8rem;
+    font-weight: var(--graisse-forte);
+    line-height: 1.5;
+    text-decoration: none;
+  }
+
+  a.pastille:hover {
+    border-color: var(--action-contour);
+    text-decoration: underline;
+  }
+
+  .details {
+    margin: 0 0 0.5rem;
+    padding-left: 1.1rem;
+    color: var(--couleur-texte-secondaire);
+    font-size: 0.875rem;
+    line-height: 1.45;
+  }
+
+  .details li {
+    margin: 0;
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0 var(--espace-2);
+    font-size: 0.875rem;
+  }
+
+  /* Cible de 24 px au moins (WCAG 2.5.8) */
+  .bouton-lien {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.25rem;
+    min-height: 24px;
+    padding: 0;
+    border: 0;
+    background: none;
+    color: var(--couleur-lien);
+    font: inherit;
+    font-weight: var(--graisse-forte);
+    text-decoration: underline;
+    text-underline-offset: 0.15em;
+    cursor: pointer;
+  }
+
+  .bouton-lien[hidden] {
+    display: none;
+  }
+
+  /* Carte à gauche, liste à droite, dès que la colonne de contenu le permet
+     (requête de conteneur : la page a une colonne de navigation) */
+  @container carte-bibliotheques (width >= 700px) {
+    .disposition {
+      --hauteur-carte: 460px;
+
+      grid-template-columns: minmax(0, 1.2fr) minmax(300px, 1fr);
+    }
+
+    /* studio·bib : la liste a la hauteur de la carte et défile dedans (carte et
+       liste restent côte à côte, comme sur le site en ligne) */
+    .disposition {
+      align-items: stretch;
+    }
+
+    .panneau {
+      display: flex;
+      flex-direction: column;
+      height: var(--hauteur-carte);
+    }
+
+    .liste {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      overscroll-behavior: contain;
+    }
+
+    .defiler {
+      display: inline;
+    }
+
+    /* Peu de lieux (ateliers) : la liste entière, sans défilement ; la carte s'étire à sa hauteur */
+    .liste-complete .panneau {
+      height: auto;
+    }
+
+    .liste-complete .liste {
+      overflow-y: visible;
+    }
+
+    .liste-complete .defiler {
+      display: none;
+    }
+
+    .liste-complete .zone-carte {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .liste-complete .zone-carte[hidden] {
+      display: none;
+    }
+
+    .liste-complete .carte {
+      flex: 1;
+      height: auto;
+      min-height: var(--hauteur-carte);
+    }
+  }
+
+  @media (forced-colors: active) {
+    .lieu[data-actif] {
+      outline: 2px solid Highlight;
+      outline-offset: -2px;
+    }
+  }
+</style>

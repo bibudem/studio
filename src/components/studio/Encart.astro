@@ -1,0 +1,298 @@
+---
+/*
+ * Encart réutilisé d'une page à l'autre (collection `encarts`,
+ * src/content/encarts/<nom>.yaml) : directive `::encart{nom=…}`, fin de page
+ * (GabaritPage, frontmatter `aide`) et accueil.
+ *
+ * Variantes :
+ * - centree : bloc centré, grande icône au-dessus (accueil) ;
+ * - ligne : encadré teinté, icône à gauche dès 600 px (pages de documentation) ;
+ * - carte : bande de fin de page (studio·bib), cadre gris clair à filet jaune,
+ *   petite icône animée, titre, texte et bouton principal (jaune).
+ * Le bouton est le composant Button du site.
+ *
+ * L'icône s'anime une fois, quand l'encart entre à l'écran (vague de la main,
+ * cloche) : elle attire l'œil sans rien cacher. Sans
+ * JS ou avec le mouvement réduit, elle reste immobile.
+ */
+import { getEntry } from 'astro:content'
+import Bouton from '@/components/contenu/primitives/Bouton.astro'
+import { composantIcone } from '@/lib/icones'
+
+interface Props {
+  nom: string
+  /** Niveau du titre : h2 en fin de page et dans le texte */
+  niveauTitre?: 2 | 3 | 4
+}
+
+const { nom, niveauTitre = 2 } = Astro.props
+const entree = await getEntry('encarts', nom)
+if (!entree) throw new Error(`Encart : aucun encart « ${nom} » dans src/content/encarts/.`)
+const { titre, texte, lien, icone, animation, couleur, variante } = entree.data
+const Icone = await composantIcone(icone)
+const Titre = `h${niveauTitre}`
+const COULEURS = { jaune: 'var(--jaune)', 'rouge-orange': 'var(--rouge-orange)', bleu: 'var(--bleu-principal)' }
+---
+
+{
+  variante === 'carte' ? (
+    <div class="encart bande" data-revelation="unite" data-encart-animation={animation}>
+      <div class="bande-texte">
+        <span class="icone" aria-hidden="true">
+          <Icone size="2.75rem" weight="duotone" aria-hidden="true" focusable="false" />
+        </span>
+        <div class="contenu">
+          <Titre class="titre">{titre}</Titre>
+          <p class="texte">{texte}</p>
+        </div>
+      </div>
+      <Bouton href={lien.url}>
+        {lien.libelle}
+      </Bouton>
+    </div>
+  ) : (
+    <div class:list={['encart', variante]} data-encart-animation={animation} style={`--_couleur-icone: ${COULEURS[couleur]}`}>
+      <span class="icone" aria-hidden="true">
+        <Icone size="8rem" weight="duotone" aria-hidden="true" focusable="false" />
+      </span>
+      <div class="contenu">
+        <Titre class="titre">{titre}</Titre>
+        <p class="texte">{texte}</p>
+        <Bouton href={lien.url}>{lien.libelle}</Bouton>
+      </div>
+    </div>
+  )
+}
+
+<script>
+  // Une seule fois, à l'entrée dans l'écran ; le mouvement réduit coupe
+  // l'animation (règle globale de global.css)
+  const encarts = document.querySelectorAll<HTMLElement>('[data-encart-animation]')
+  if (encarts.length && 'IntersectionObserver' in window) {
+    const observateur = new IntersectionObserver(
+      (entrees) => {
+        for (const entree of entrees) {
+          if (!entree.isIntersecting) continue
+          entree.target.setAttribute('data-anime', '')
+          observateur.unobserve(entree.target)
+        }
+      },
+      { threshold: 0.6 },
+    )
+    encarts.forEach((encart) => observateur.observe(encart))
+  }
+</script>
+
+<style>
+  .encart {
+    margin-block: var(--espace-bloc);
+  }
+
+  .icone {
+    display: flex;
+    flex: 0 0 auto;
+    justify-content: center;
+    color: var(--_couleur-icone, var(--jaune));
+  }
+
+  .icone > :global(svg) {
+    transform-origin: 70% 70%;
+  }
+
+  .titre {
+    margin: 0 0 var(--espace-element);
+    font-weight: var(--graisse-moyenne);
+    line-height: 1.2;
+  }
+
+  /* Le texte garde ses retours à la ligne (accueil) */
+  .texte {
+    margin: 0;
+    white-space: pre-line;
+  }
+
+  .contenu :global(.bouton) {
+    margin-top: var(--espace-element);
+  }
+
+  /* ---- Centrée (accueil) ---- */
+  .centree {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espace-element);
+    align-items: center;
+    padding: var(--espace-6) var(--espace-2);
+    text-align: center;
+  }
+
+  .centree .contenu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .centree .titre {
+    font-size: clamp(1.75rem, 1.2rem + 2vw, 2.75rem);
+    line-height: 1.25;
+  }
+
+  .centree .texte {
+    max-inline-size: 40rem;
+    font-size: 1.125rem;
+    line-height: 1.7;
+  }
+
+  /* ---- En ligne (documentation) ---- */
+  .ligne {
+    display: flex;
+    flex-direction: column;
+    gap: var(--espace-element);
+    align-items: center;
+    padding: var(--espace-carte);
+    border-radius: var(--rayon-carte);
+    background-color: var(--couleur-teinte);
+    text-align: center;
+  }
+
+  .ligne .titre {
+    font-size: 1.75rem;
+  }
+
+  .ligne .icone > :global(svg) {
+    width: 6rem;
+    height: 6rem;
+  }
+
+  @media (min-width: 600px) {
+    .ligne {
+      flex-direction: row;
+      gap: var(--espace-bloc);
+      justify-content: center;
+      text-align: start;
+    }
+
+    .ligne .contenu {
+      flex: 0 1 40rem;
+      min-width: 0;
+    }
+
+    .ligne .icone > :global(svg) {
+      width: 8rem;
+      height: 8rem;
+    }
+  }
+
+  /* ---- Bande (fin de page) ---- */
+  /* studio·bib : pas de carte foncée cliquable ; un cadre gris clair à filet jaune net à
+     gauche, comme les fiches de disponibilité, le titre, le texte et un bouton principal jaune */
+  .bande {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--espace-2);
+    padding: var(--espace-3);
+    border-left: 4px solid var(--jaune);
+    border-radius: 0 var(--rayon-carte) var(--rayon-carte) 0;
+    /* Gris clair, juste pour se distinguer du fond de la page */
+    background-color: color-mix(in srgb, var(--couleur-bordure) 35%, var(--couleur-surface));
+  }
+
+  /* La petite icône (main, cloche) garde son animation d'entrée */
+  .bande-texte {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    gap: var(--espace-2);
+    min-width: 0;
+  }
+
+  .bande .icone {
+    color: var(--couleur-texte);
+  }
+
+  .bande .titre {
+    margin-block-end: 0.25rem;
+    font-size: 1.25rem;
+  }
+
+  .bande .contenu :global(.bouton),
+  .bande > :global(.bouton) {
+    margin-top: 0;
+  }
+
+  @media (min-width: 900px) {
+    .bande {
+      flex-direction: row;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--espace-4);
+    }
+
+    .bande .contenu {
+      min-width: 0;
+    }
+
+    .bande > :global(.bouton) {
+      flex: none;
+    }
+  }
+
+  /* ---- Animation de l'icône ---- */
+  @keyframes vague {
+    50% {
+      transform: rotate(15deg);
+    }
+  }
+
+  @keyframes cloche {
+    10% {
+      transform: rotate(25deg);
+    }
+    20% {
+      transform: rotate(-20deg);
+    }
+    30% {
+      transform: rotate(15deg);
+    }
+    40% {
+      transform: rotate(-10deg);
+    }
+    50% {
+      transform: rotate(6deg);
+    }
+    60% {
+      transform: rotate(-4deg);
+    }
+    70% {
+      transform: rotate(2deg);
+    }
+    80% {
+      transform: rotate(-1deg);
+    }
+  }
+
+  [data-encart-animation='vague'][data-anime] .icone > :global(svg) {
+    animation: vague calc(var(--duree-moyenne-2) * 2) var(--courbe-standard) 2;
+  }
+
+  [data-encart-animation='cloche'] .icone > :global(svg) {
+    transform-origin: top center;
+  }
+
+  [data-encart-animation='cloche'][data-anime] .icone > :global(svg) {
+    animation: cloche calc(var(--duree-longue-2) * 3) var(--courbe-standard);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-anime] .icone > :global(svg) {
+      animation: none;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .ligne,
+    .bande {
+      border: 1px solid CanvasText;
+    }
+  }
+</style>

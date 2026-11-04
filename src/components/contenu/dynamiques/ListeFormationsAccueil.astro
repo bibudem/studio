@@ -1,0 +1,185 @@
+---
+/*
+ * Colonne « Formations » de la section Quoi de neuf, au même gabarit que les événements : vignette, « date ·
+ * début–fin », titre. Données de l'API JSON des formations, chargées dans le
+ * navigateur (5 s), avec un squelette de même hauteur, un message clair en
+ * cas d'échec et, sans JavaScript, un renvoi vers le calendrier.
+ * `colonnes={2}` (bloc « formations » d'Études) : les éléments se rangent
+ * en deux colonnes côte à côte dès 900 px, la moitié dans chacune (de haut
+ * en bas, puis à droite), une seule colonne en dessous.
+ */
+import ColonneQuoiDeNeuf from './ColonneQuoiDeNeuf.astro'
+import Element from './Element.astro'
+import EtatErreur from './EtatErreur.astro'
+import type { Style } from '@/lib/styles'
+
+interface Props {
+  title?: string
+  id?: string
+  limit?: number
+  moreText?: string
+  moreLink?: string
+  colonnes?: 1 | 2
+  titreMasque?: boolean
+  plusCentre?: boolean
+  /** Flux de l'API des formations (par défaut, toutes les formations) */
+  service?: string
+  /** Affiche le lieu (ou « En ligne ») de chaque formation */
+  lieu?: boolean
+  niveauTitre?: 2 | 3
+  /** studio·bib : sous 900 px, seuls les n premiers éléments sont montrés (le bouton mène au reste) */
+  limiteMobile?: number
+  class?: string
+  style?: Style
+}
+
+const SERVICE_URL = 'https://api.bib.umontreal.ca/formations/'
+const MORE_LINK = 'https://calendrier.bib.umontreal.ca/calendar?cid=7690&t=m&d=0000-00-00&cal=7690&inc=0'
+
+const { title = 'Formations', id, limit: limiteDemandee = 4, moreText = 'Toutes nos formations', moreLink = MORE_LINK, colonnes = 1, titreMasque, plusCentre, service = SERVICE_URL, lieu = false, niveauTitre, limiteMobile, class: classe, style } = Astro.props
+const limite = typeof limiteDemandee === 'number' && limiteDemandee > 0 ? limiteDemandee : 4
+---
+
+<ColonneQuoiDeNeuf title={title} id={id} moreText={moreText} moreLink={moreLink} externe titreMasque={titreMasque} plusCentre={plusCentre} niveauTitre={niveauTitre} class={classe} style={style}>
+  <div class:list={{ 'deux-colonnes': colonnes === 2 }} style={`--rangees: ${Math.ceil(limite / 2)}`} data-liste-formations-accueil data-service={`${service}?limit=${limite}`} data-limite={limite} data-limite-mobile={limiteMobile} aria-busy="true">
+    <ul data-etat="chargement">
+      {
+        Array.from({ length: limite }, () => (
+          <Element vignette compact squelette>
+            {lieu && <span slot="apres" class="lieu lieu-squelette" />}
+          </Element>
+        ))
+      }
+    </ul>
+    <p class="visuellement-masque" data-etat="chargement">Chargement des formations…</p>
+    <ul data-etat="pret" data-liste hidden></ul>
+    <EtatErreur message="Les formations ne sont pas disponibles pour le moment." />
+    <p data-etat="vide" hidden>Aucune formation à venir pour le moment.</p>
+    <p class="sans-js">
+      Les formations s'affichent avec JavaScript. Consultez-les dans le <a href={moreLink} target="_blank" rel="noopener noreferrer"
+        >calendrier des formations<span class="visuellement-masque"> (nouvel onglet)</span></a
+      >.
+    </p>
+    <template data-gabarit>
+      <Element href="#" externe vignette calendrier compact>
+        <span slot="ligne" data-champ="date"></span>
+        {lieu && <span slot="apres" class="lieu" data-champ="lieu"></span>}
+      </Element>
+    </template>
+  </div>
+</ColonneQuoiDeNeuf>
+
+<script>
+  import { brancherReessayer, chargerAvecDelai, cloner, montrerEtat, remplir } from './chargement'
+
+  type Formation = { url: string; titre: string; date: string; debut?: string; fin?: string; imageVedette?: string; lieu?: string; typeLocalisation?: string }
+
+  for (const racine of document.querySelectorAll<HTMLElement>('[data-liste-formations-accueil]')) {
+    const liste = racine.querySelector<HTMLElement>('[data-liste]')!
+    const gabarit = racine.querySelector<HTMLTemplateElement>('template[data-gabarit]')!
+    const limite = Number(racine.dataset.limite) || 4
+    const limiteMobile = Number(racine.dataset.limiteMobile) || Infinity
+
+    function charger() {
+      montrerEtat(racine, 'chargement')
+      chargerAvecDelai<Formation[]>(racine.dataset.service!, (r) => r.json(), { delai: 8000, tentatives: 3 })
+        .then((formations) => {
+          const items = (Array.isArray(formations) ? formations : []).slice(0, limite)
+          liste.replaceChildren(
+            ...items.map(({ url, titre, date, debut, fin, imageVedette, lieu, typeLocalisation }) => {
+              const element = cloner(gabarit)
+              remplir(element, { url, titre, image: imageVedette })
+              const champDate = element.querySelector('[data-champ="date"]')
+              if (champDate) champDate.textContent = `${date}${debut ? ` · ${debut}${fin ? `–${fin}` : ''}` : ''}`
+              const champLieu = element.querySelector('[data-champ="lieu"]')
+              if (champLieu) champLieu.textContent = typeLocalisation === 'en-ligne' ? 'En ligne' : lieu || 'Lieu non précisé'
+              return element
+            }),
+          )
+          // Au-delà de la limite mobile : masqués sous 900 px (voir le CSS)
+          liste.querySelectorAll('li').forEach((li, i) => li.toggleAttribute('data-hors-mobile', i >= limiteMobile))
+          montrerEtat(racine, items.length ? 'pret' : 'vide')
+        })
+        .catch(() => montrerEtat(racine, 'erreur'))
+    }
+
+    brancherReessayer(racine, charger)
+    charger()
+  }
+</script>
+
+<style>
+  /* Deux colonnes : la moitié des éléments dans chacune, de haut en bas */
+  @media (min-width: 900px) {
+    .deux-colonnes > ul {
+      display: grid;
+      grid-auto-flow: column;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: repeat(var(--rangees), auto);
+      /* Pas d'écart entre les rangées : le filet de chaque élément les
+         sépare déjà */
+      gap: 0 var(--espace-6);
+    }
+
+    .deux-colonnes > ul[hidden] {
+      display: none;
+    }
+  }
+
+  /* Liste en deux colonnes (bloc formations des vitrines) : rangées plus
+     serrées. La hauteur minimale d'Element (8,75rem) sert à aligner la
+     colonne de l'accueil ; ici elle laissait un grand blanc sous chaque
+     vignette. */
+  .deux-colonnes :global(li.element) {
+    padding-block: var(--espace-element);
+  }
+
+  @media (min-width: 900px) {
+    .deux-colonnes :global(li.element.compact) {
+      min-height: 0;
+    }
+  }
+
+  /* studio·bib, limiteMobile : sous 900 px, les éléments au-delà sont masqués, et le dernier
+     élément montré perd son filet */
+  @media (width < 900px) {
+    [data-liste] > :global([data-hors-mobile]) {
+      display: none;
+    }
+
+    [data-liste] > :global(li:has(+ [data-hors-mobile])) {
+      border-bottom: 0;
+    }
+  }
+
+  /* Lieu (studio·bib), sous le titre ; la pastille est ancrée en bas à droite */
+  .lieu {
+    padding-right: 2.75rem;
+    color: var(--couleur-texte-secondaire);
+    font-size: 0.875rem;
+    line-height: 1.3;
+  }
+
+  /* Même hauteur que la ligne remplie : la liste ne saute pas au chargement */
+  .lieu-squelette {
+    display: block;
+    width: 9rem;
+    height: 1.3em;
+    border-radius: var(--rayon-minuscule);
+    background-color: var(--couleur-squelette);
+  }
+
+  .sans-js {
+    display: none;
+  }
+
+  @media (scripting: none) {
+    .sans-js {
+      display: block;
+    }
+
+    [data-etat] {
+      display: none;
+    }
+  }
+</style>

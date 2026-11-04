@@ -1,0 +1,122 @@
+---
+/*
+ * Squelette HTML commun : <head> (SEO,
+ * partage, données structurées), lien d'évitement, coquille commune aux sites
+ * des Bibliothèques (avis institutionnels, en-tête, pied de page, consentement,
+ * retour en haut) et outils de studio·bib (clavardage, outil d'accessibilité).
+ */
+import '@/styles/global.css'
+import '@/styles/animations.css'
+import figtreeLatin from '@fontsource-variable/figtree/files/figtree-latin-wght-normal.woff2?url'
+import Entete from '@/components/coquille/Entete.astro'
+import PiedDePage from '@/components/coquille/PiedDePage.astro'
+import ServicesInstitutionnels from '@/components/coquille/ServicesInstitutionnels.astro'
+import RetourHaut from '@/components/coquille/RetourHaut.astro'
+import { SITE } from '@/data/site'
+import { normaliser } from '@/lib/contenu'
+import { jsonLd } from '@/lib/json-ld'
+
+interface Props {
+  titre?: string
+  description?: string
+  noindex?: boolean
+  /** Niveau de page (0 = accueil) : règle la place de la bannière d'avis */
+  niveau?: number
+  /** Image de partage (URL absolue ou à la racine du site) */
+  image?: string
+  /** Données structurées propres à la page (schema.org) */
+  donnees?: object
+}
+
+const { titre, description = SITE.description, noindex = false, niveau = 0, image = '/img/miniature.jpg', donnees } = Astro.props
+// Accueil (niveau 0) : le titre complet décrit le site ; ailleurs « Titre de la page | studio·bib »
+const titreComplet = niveau === 0 ? SITE.titreAccueil : titre && titre !== SITE.nom ? `${titre} | ${SITE.nom}` : SITE.nom
+const imageAbsolue = new URL(image, Astro.site).href
+const canonique = new URL(normaliser(Astro.url.pathname), Astro.site)
+// Hors production, rien n'est indexé : le site actuel reste la référence (voir astro.config.mjs)
+const indexable = !noindex && process.env.SITE_ENV === 'production'
+---
+
+<!doctype html>
+<html lang="fr-CA">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="preload" href={figtreeLatin} as="font" type="font/woff2" crossorigin />
+    <title>{titreComplet}</title>
+    <meta name="description" content={description} />
+    {!noindex && <link rel="canonical" href={canonique} />}
+    {!indexable && <meta name="robots" content="noindex" />}
+    <meta property="og:type" content="website" />
+    <meta property="og:locale" content="fr_CA" />
+    <meta property="og:site_name" content={SITE.nom} />
+    <meta property="og:title" content={niveau === 0 ? SITE.titreAccueil : (titre ?? SITE.nom)} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonique} />
+    {/* Image de partage (Teams, réseaux sociaux) : le logo studio·bib, 1200 × 630 (public/img/miniature.jpg) */}
+    <meta property="og:image" content={imageAbsolue} />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Logo de studio·bib, services technologiques et créatifs des bibliothèques de l'Université de Montréal" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={niveau === 0 ? SITE.titreAccueil : (titre ?? SITE.nom)} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={imageAbsolue} />
+    <meta name="twitter:image:alt" content="Logo de studio·bib" />
+    {/* Icône du site : logo studio·bib. SVG pour les navigateurs récents, .ico en repli, PNG pour iOS et Android */}
+    <link rel="icon" href="/img/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#0b113a" />
+    <link rel="alternate" type="text/plain" title="Sommaire pour les assistants d'IA" href="/llms.txt" />
+    <script is:inline type="application/ld+json" set:html={jsonLd(SITE.donneesStructurees)} />
+    {donnees && <script is:inline type="application/ld+json" set:html={jsonLd(donnees)} />}
+    {/* Outil d'accessibilité désactivé pour l'instant ; réactiver ces deux lignes :
+    <link rel="stylesheet" href="/accessibilite/widget.css" />
+    <script is:inline defer src="/accessibilite/widget.js"></script> */}
+    {/* Sens du glissement entre deux pages */}
+    <script is:inline>
+      window.addEventListener('pagereveal', (e) => {
+        if (!e.viewTransition) return
+        const profondeur = (url) => new URL(url).pathname.split('/').filter(Boolean).length
+        const a = window.navigation?.activation
+        let retour = false
+        if (a?.navigationType === 'traverse' && a.from) retour = a.entry.index < a.from.index
+        else if (a?.from?.url) retour = profondeur(location.href) < profondeur(a.from.url)
+        e.viewTransition.types.add(retour ? 'retour' : 'avance')
+        if (a?.navigationType === 'traverse') {
+          document.documentElement.dataset.vtHistorique = ''
+          e.viewTransition.finished.finally(() => delete document.documentElement.dataset.vtHistorique)
+        }
+      })
+    </script>
+    <slot name="head" />
+  </head>
+  <body>
+    <a class="lien-evitement" href="#contenu-principal">Aller au contenu principal</a>
+    <ServicesInstitutionnels position="haut" niveau={niveau} />
+    <Entete />
+    <slot name="avant-contenu" />
+    <ServicesInstitutionnels position="avis" niveau={niveau} />
+    <slot />
+    <PiedDePage />
+    <ServicesInstitutionnels position="bas" niveau={niveau} />
+    <RetourHaut />
+    {/* Onglet flottant du clavardage (LibChat), sur toutes les pages */}
+    <div id={`libchat_${SITE.clavardage}`}></div>
+    <script is:inline async src={`https://unequestion.bib.umontreal.ca/load_chat.php?hash=${SITE.clavardage}`}></script>
+    <script>
+      import '@/lib/animations'
+      import { focaliserTemporairement } from '@/lib/focus'
+      import { copierLienAncre } from '@/lib/ancres-copie'
+
+      document.querySelector('.lien-evitement')?.addEventListener('click', () => {
+        const principal = document.getElementById('contenu-principal')
+        if (principal) focaliserTemporairement(principal, { preventScroll: true })
+      })
+      copierLienAncre()
+    </script>
+  </body>
+</html>

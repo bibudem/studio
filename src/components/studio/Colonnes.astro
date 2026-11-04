@@ -1,0 +1,73 @@
+---
+/*
+ * Directive `colonnes` : ses `colonne` côte à côte, à parts égales, quand la
+ * place le permet ; empilées sinon. Chaque colonne est rendue par
+ * RenduStudio (div.colonne).
+ *
+ * Requête de conteneur plutôt que d'écran : la colonne de texte n'a pas la
+ * même largeur selon que le menu et le sommaire sont affichés (CONVENTIONS,
+ * « Points de rupture »). 40rem : deux fiches de lieu y tiennent à l'aise,
+ * et le texte agrandi fait passer la grille à une colonne.
+ */
+import { directivesNommees, type NoeudDirective } from '@/lib/directives'
+
+interface Props {
+  enfants: NoeudDirective[]
+}
+
+const { enfants } = Astro.props
+const nombre = Math.max(1, directivesNommees(enfants, 'colonne').length)
+---
+
+<div class="colonnes-conteneur">
+  <div class="colonnes" style={`--_colonnes: ${nombre}`}><slot /></div>
+</div>
+
+<style>
+  .colonnes-conteneur {
+    container-type: inline-size;
+    margin-block: var(--espace-bloc);
+  }
+
+  .colonnes {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--espace-grille);
+  }
+
+  @container (width >= 40rem) {
+    .colonnes {
+      grid-template-columns: repeat(var(--_colonnes), minmax(0, 1fr));
+    }
+  }
+
+  /* Une fiche (lieu) remplit sa colonne : les fiches voisines ont la même hauteur */
+  .colonnes > :global(.colonne) {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .colonnes > :global(.colonne > *) {
+    flex: 0 0 auto;
+  }
+
+  .colonnes > :global(.colonne > .lieu) {
+    flex-grow: 1;
+  }
+
+  /* Titre de colonne en police sans empattement, plus petit que apparence-h4 */
+  .colonnes > :global(.colonne > .titre-ancre) {
+    font-family: var(--police-sans);
+    font-size: 1.25rem;
+    font-weight: var(--graisse-forte);
+  }
+
+  .colonnes > :global(.colonne > :first-child) {
+    margin-top: 0;
+  }
+
+  .colonnes > :global(.colonne > :last-child) {
+    margin-bottom: 0;
+  }
+</style>

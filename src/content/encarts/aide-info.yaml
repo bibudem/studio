@@ -1,0 +1,9 @@
+# Fin des pages dont le frontmatter porte « aide: info »
+titre: Nous sommes là pour vous aider
+texte: Vous avez besoin d’une assistance informatique? Notre équipe est disponible pour vous guider à distance et en personne.
+lien:
+  libelle: Soutien informatique
+  url: /a-propos/soutien-informatique
+icone: hand-waving
+animation: vague
+variante: carte

@@ -1,0 +1,80 @@
+# Page d'accueil (src/pages/index.astro). Une seule entrée, « accueil ».
+# Les images sont dans src/content/accueil/images/ (chemins relatifs à ce
+# fichier) ; les icônes se nomment comme sur phosphoricons.com.
+accueil:
+  titre: Accueil
+  description: "studio·bib, services technologiques et créatifs des bibliothèques de l'UdeM : studios balado et vidéo, impression 3D, ateliers, postes d'édition et soutien."
+
+  # Une image tirée au hasard à chaque visite (sans JavaScript, la première).
+  # « phrase » (facultative) ajoute une ligne de texte fixe dans la bannière.
+  banniere:
+    images:
+      - ./accueil/images/homepage1.webp
+      - ./accueil/images/homepage2.webp
+      - ./accueil/images/homepage3.webp
+      - ./accueil/images/homepage4.webp
+      - ./accueil/images/homepage5.webp
+    # Slogans mis de côté (ils étaient tirés au hasard sous le logo ; non affichés) :
+    # - Là où les idées prennent vie.
+    # - Imaginez. Réalisez. Partagez.
+    # - La créativité en action.
+    # - L’innovation au service de la communauté.
+    # - Faites vibrer vos idées.
+    # - L’étincelle de vos projets.
+    # - Les bibliothèques en mode création numérique.
+    # - Connectés par la créativité.
+    # - La créativité comme moteur de recherche.
+
+  # Six tâches, deux rangées de trois (deux par rangée sur mobile)
+  raccourcis:
+    - titre: Enregistrer un balado
+      url: /espaces/studiosbalado
+      icone: microphone
+      appel: Studios d’enregistrement
+    - titre: Filmer une vidéo
+      url: /espaces/studiosvideo
+      icone: video-camera
+      appel: Studios de tournage
+    - titre: Imprimer en 3D
+      url: /creatives/impression3d
+      icone: cube
+      appel: Imprimer vos objets
+    - titre: Utiliser un logiciel
+      url: /informatique/logiciels
+      icone: app-window
+      appel: Sur place ou à distance
+    - titre: Accéder hors campus
+      url: /informatique/hors-campus
+      icone: network
+      appel: Proxy et VPN
+    - titre: Obtenir de l’aide
+      url: /a-propos/nous-joindre
+      icone: user
+      appel: Soutien informatique et création
+
+  # Quatre cartes à photo, sous les tâches
+  cartes:
+    - titre: Postes Apportez Votre Appareil
+      description: Étendez votre horizon de travail.
+      url: /informatique/ava
+      image: ./accueil/images/ordinateurs.webp
+    - titre: Réalité virtuelle
+      description: Explorez des expériences immersives avec les casques Meta Quest 3.
+      url: /creatives/vr
+      image: ./accueil/images/vr.webp
+    - titre: Postes d’édition
+      description: Montez vos projets vidéo, audio et graphiques avec des logiciels spécialisés.
+      url: /medias/postes-edition
+      image: ./accueil/images/edition.webp
+    - titre: Ateliers de fabrication
+      description: Initiez-vous à l’impression 3D, à l’électronique et à la fabrication numérique.
+      url: /espaces/ateliers
+      image: ./pages/images/cover/ateliers.webp
+
+  formations:
+    titre: Prochaines formations
+    source: https://api.bib.umontreal.ca/formations/discipline/informatique-creation-medias
+    toutes:
+      titre: Voir toutes les formations
+      url: https://calendrier.bib.umontreal.ca/calendar?cid=7690&t=m&d=0000-00-00&cal=7690&inc=0
+

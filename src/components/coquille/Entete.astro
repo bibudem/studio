@@ -1,0 +1,742 @@
+---
+/*
+ * En-tête de studio·bib, repris de celui de boite-outils-astro (Base.astro et
+ * guide.css) : bandeau jaune, barre blanche avec le logo
+ * des Bibliothèques, le nom du site et le menu principal (les cinq sections).
+ *
+ * Sous 1200 px : barre
+ * compacte collante, loupe et burger, rideau qui descend sous l'en-tête. Dès
+ * 1200 px, la loupe seule ouvre le même rideau, réduit à la recherche. Sous
+ * 1200 px, la loupe l'ouvre aussi en mode « recherche » (data-mode) : la
+ * recherche seule, le focus dans le champ, et « Afficher le menu », qui
+ * déplie le reste. Elle devient un X tant que ce mode est ouvert, le burger
+ * une fois le menu entier affiché ; la loupe replie alors le menu sur la
+ * recherche. Motif « disclosure navigation » de l'APG : aria-expanded, Échap
+ * ferme et rend le focus au bouton. Sans JavaScript, le menu complet reste
+ * affiché dans la barre (sur plusieurs lignes au besoin) et les boutons
+ * n'existent pas.
+ *
+ * La section courante est marquée : aria-current="page" sur sa page
+ * d'accueil, "true" sur ses autres pages (on est dans la section, pas sur
+ * la page du lien).
+ */
+import { ArrowRightIcon } from '@phosphor-icons/react/dist/ssr/ArrowRight'
+import { CaretDownIcon } from '@phosphor-icons/react/dist/ssr/CaretDown'
+import { MENU_PRINCIPAL } from '@/data/navigation'
+import { SITE } from '@/data/site'
+import { sansBase } from '@/lib/chemin'
+import { normaliser } from '@/lib/contenu'
+import LogoBibliotheques from './LogoBibliotheques.astro'
+import LogoStudio from './LogoStudio.astro'
+import RechercheSite from './RechercheSite.astro'
+
+const RIDEAU_ID = 'menu-rideau'
+const chemin = normaliser(sansBase(Astro.url.pathname))
+const courant = (url: string) => {
+  const racine = normaliser(url)
+  if (chemin === racine) return 'page'
+  return racine !== '/' && chemin.startsWith(`${racine}/`) ? 'true' : undefined
+}
+---
+
+<header class="entete" data-entete>
+  <div class="entete-barre">
+    <div class="marque">
+      <a class="logo-bib" href="https://bib.umontreal.ca/" aria-label="Les bibliothèques de l’Université de Montréal"><LogoBibliotheques /></a>
+      <a class="nom-site" href="/" aria-label={`${SITE.nom}, accueil`}><LogoStudio /></a>
+    </div>
+    <nav class="menu-barre" aria-label="Menu principal">
+      <ul>
+        {MENU_PRINCIPAL.map(({ titre, url }) => <li><a href={url} aria-current={courant(url)}>{titre}</a></li>)}
+      </ul>
+    </nav>
+    <div class="outils" hidden data-outils>
+      <button type="button" class="bouton-icone bouton-loupe" aria-label="Rechercher" aria-expanded="false" aria-controls={RIDEAU_ID} data-loupe>
+        {/* Loupe → croix : le manche de la loupe s'allonge en première diagonale, le verre s'efface, la seconde diagonale se trace */}
+        <svg class="loupe-x" viewBox="0 0 34 34" width="28" height="28" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round">
+          <circle class="verre" cx="14" cy="14" r="8"></circle>
+          <line class="diag-a" x1="7" y1="7" x2="27" y2="27" pathLength="1"></line>
+          <line class="diag-b" x1="27" y1="7" x2="7" y2="27" pathLength="1"></line>
+        </svg>
+      </button>
+      <button type="button" class="bouton-icone bouton-menu" aria-label="Menu" aria-expanded="false" aria-controls={RIDEAU_ID} data-bouton-menu>
+        {/* Trois traits qui se transforment en croix (aria-expanded pilote l'animation, voir .burger) */}
+        <svg class="burger" viewBox="0 0 34 34" width="34" height="34" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round">
+          <line class="trait haut" x1="6" y1="10" x2="28" y2="10"></line>
+          <line class="trait milieu" x1="6" y1="17" x2="28" y2="17"></line>
+          <line class="trait bas" x1="6" y1="24" x2="28" y2="24"></line>
+        </svg>
+      </button>
+    </div>
+  </div>
+  <div class="voile-menu" hidden data-voile-menu></div>
+  <div class="rideau" id={RIDEAU_ID} hidden data-mode="complet" data-rideau>
+    <div class="feuille">
+      <div class="rideau-recherche">
+        <p class="surtitre">Rechercher</p>
+        <RechercheSite id="recherche-menu" />
+      </div>
+      <div class="deplier">
+        <button type="button" class="deplier-bouton" data-deplier-menu>
+          Afficher le menu
+          <CaretDownIcon className="deplier-fleche" size={22} weight="bold" aria-hidden="true" />
+        </button>
+      </div>
+      <p class="surtitre surtitre-explorer" id="menu-explorer">Explorer</p>
+      <nav class="menu-rideau" aria-labelledby="menu-explorer">
+        <ul class="pages-menu">
+          {
+            [{ titre: 'Accueil', url: '/' }, ...MENU_PRINCIPAL].map(({ titre, url }) => (
+              <li>
+                <a href={url} aria-current={courant(url)}>
+                  {titre}
+                  <ArrowRightIcon size={24} aria-hidden="true" />
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+      <button type="button" class="poignee" aria-label="Fermer le menu" data-fermer-menu><span aria-hidden="true"></span></button>
+    </div>
+  </div>
+</header>
+{/* Mode « JavaScript actif » posé dès l'analyse, avant le premier affichage : sinon la barre
+    s'affiche d'abord dans sa forme sans JS (menu sur plusieurs lignes) puis se compacte,
+    et tout le contenu remonte (CLS mesuré : 0,11 à 390 px). */}
+<script is:inline>
+  document.documentElement.setAttribute('data-menu-js', '')
+  document.querySelector('[data-outils]').hidden = false
+</script>
+
+<script>
+  import './entete-menu'
+</script>
+
+<style>
+  /* Hauteur réelle de cet en-tête (mesurée : 76 px sur mobile, 89 px dès 1200 px),
+     plus basse que la valeur par défaut de tokens.css : sert au scroll-padding des ancres
+     et aux colonnes collantes. En rem, elle suit le texte agrandi. */
+  :global(:root) {
+    --hauteur-entete: 4.5rem;
+  }
+
+  @media (min-width: 1200px) {
+    :global(:root) {
+      --hauteur-entete: 5rem;
+    }
+  }
+
+  /* ---- Barre (mobile d'abord : barre compacte, collante) ---- */
+  .entete {
+    position: relative;
+    z-index: var(--z-entete);
+    padding-block-start: var(--espace-1);
+    background: var(--jaune);
+  }
+
+  /* Collant seulement quand la barre est compacte : sans JavaScript, le menu
+     déplié sur plusieurs lignes masquerait trop de contenu (WCAG 2.4.11) */
+  :global(:root[data-menu-js]) .entete {
+    position: sticky;
+    top: 0;
+  }
+
+  .entete-barre {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--espace-1) var(--espace-3);
+    padding: 0.5rem 0.5rem 0.5rem var(--espace-2);
+    background: var(--couleur-surface);
+  }
+
+  /* Avec JavaScript, le menu passe dans le rideau : la barre tient sur une rangée */
+  :global(:root[data-menu-js]) .entete-barre {
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+  }
+
+  :global(:root[data-menu-js]) .menu-barre {
+    display: none;
+  }
+
+  .marque {
+    display: flex;
+    align-items: center;
+    gap: 0.625rem;
+    min-width: 0;
+  }
+
+  .logo-bib,
+  .nom-site {
+    display: block;
+    flex: none;
+    color: var(--couleur-texte);
+  }
+
+  /* En vw sur téléphone : à 320 px, les deux marques laissent la place à la loupe et au burger */
+  .logo-bib :global(svg) {
+    display: block;
+    width: min(5.75rem, 26vw);
+    height: auto;
+  }
+
+  /* studio·bib : au survol, chaque marque baisse légèrement d'opacité, séparément */
+  .logo-bib,
+  .nom-site {
+    transition: opacity var(--duree-courte-4) var(--courbe-standard);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .logo-bib:hover,
+    .nom-site:hover {
+      opacity: 0.7;
+    }
+  }
+
+  /* Filet entre les deux marques */
+  .nom-site {
+    padding-inline-start: 0.625rem;
+    border-inline-start: 1px solid var(--couleur-texte);
+  }
+
+  .nom-site :global(svg) {
+    display: block;
+    width: min(5.5rem, 24vw);
+    height: auto;
+  }
+
+  .menu-barre ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0 var(--espace-2);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .menu-barre a {
+    display: inline-block;
+    padding-block: 0.5rem;
+    color: var(--couleur-texte);
+    font-size: 0.875rem;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  /* studio·bib : navigation neutre, soulignement seul (le jaune est réservé aux actions) */
+  .menu-barre a:hover,
+  .menu-barre a[aria-current] {
+    color: var(--couleur-texte);
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    text-underline-offset: 0.35em;
+  }
+
+  .logo-bib:focus-visible,
+  .nom-site:focus-visible,
+  .menu-barre a:focus-visible,
+  .bouton-icone:focus-visible {
+    outline: 3px solid var(--couleur-focus);
+    outline-offset: 2px;
+    border-radius: var(--rayon-minuscule);
+  }
+
+  /* ---- Outils : loupe et burger ---- */
+  .outils {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 0.25rem;
+  }
+
+  .outils[hidden],
+  .voile-menu[hidden],
+  .rideau[hidden] {
+    display: none;
+  }
+
+  .bouton-icone {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: var(--taille-cible);
+    height: var(--taille-cible);
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--couleur-texte);
+    cursor: pointer;
+  }
+
+  .bouton-icone:focus-visible {
+    border-radius: 50%;
+  }
+
+  .bouton-menu {
+    width: 50px;
+    height: 50px;
+  }
+
+  /* Burger → croix : les traits du haut et du bas se rejoignent au centre (translate), puis
+     pivotent à ±45° (rotate) pendant que celui du milieu s'efface. À la fermeture, l'ordre
+     s'inverse. Propriétés individuelles (translate, rotate, scale) : elles se décalent dans le temps. */
+  .burger .trait {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition:
+      translate 280ms cubic-bezier(0.77, 0, 0.175, 1) 120ms,
+      rotate 280ms cubic-bezier(0.77, 0, 0.175, 1),
+      scale 200ms cubic-bezier(0.77, 0, 0.175, 1) 120ms,
+      opacity 200ms ease 120ms;
+  }
+
+  .bouton-menu[aria-expanded='true'] .burger .trait {
+    transition-delay: 0ms, 140ms, 0ms, 0ms;
+  }
+
+  .bouton-menu[aria-expanded='true'] .haut {
+    translate: 0 7px;
+    rotate: 45deg;
+  }
+
+  .bouton-menu[aria-expanded='true'] .bas {
+    translate: 0 -7px;
+    rotate: -45deg;
+  }
+
+  .bouton-menu[aria-expanded='true'] .milieu {
+    scale: 0 1;
+    opacity: 0;
+  }
+
+  /* Loupe → croix. Le manche (diag-a) est la partie de la première diagonale qui sort du verre
+     (pathLength=1 : le trait visible commence à 63,5 %). Il s'allonge jusqu'à la croix pendant que
+     le verre se réduit, puis la seconde diagonale se trace. À la fermeture, l'ordre s'inverse. */
+  .loupe-x * {
+    transition-timing-function: cubic-bezier(0.77, 0, 0.175, 1);
+    transition-duration: 260ms;
+  }
+
+  .loupe-x .verre {
+    transform-box: fill-box;
+    transform-origin: center;
+    transition-property: scale, opacity;
+    transition-delay: 140ms;
+  }
+
+  .loupe-x .diag-a {
+    stroke-dasharray: 0.365 2;
+    stroke-dashoffset: -0.635;
+    transition-property: stroke-dasharray, stroke-dashoffset;
+    transition-delay: 140ms;
+  }
+
+  .loupe-x .diag-b {
+    stroke-dasharray: 0 2;
+    opacity: 0;
+    transition-property: stroke-dasharray, opacity;
+    transition-delay: 0ms;
+  }
+
+  .bouton-loupe[aria-expanded='true'] .verre {
+    scale: 0.2;
+    opacity: 0;
+    transition-delay: 0ms;
+  }
+
+  .bouton-loupe[aria-expanded='true'] .diag-a {
+    stroke-dasharray: 1 2;
+    stroke-dashoffset: 0;
+    transition-delay: 0ms;
+  }
+
+  .bouton-loupe[aria-expanded='true'] .diag-b {
+    stroke-dasharray: 1 2;
+    opacity: 1;
+    transition-delay: 140ms;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .bouton-icone:hover {
+      /* studio·bib : jaune pâle de l'action douce, au lieu de la teinte bleue */
+      background: var(--action-douce-fond-survol);
+    }
+  }
+
+  /* ---- Rideau ---- */
+  :global(html[data-menu-ouvert]) {
+    overflow: hidden;
+  }
+
+  .voile-menu {
+    position: absolute;
+    top: 100%;
+    inset-inline: 0;
+    height: 100vh;
+    background: color-mix(in srgb, var(--couleur-voile) 40%, transparent);
+  }
+
+  .rideau {
+    position: absolute;
+    top: 100%;
+    inset-inline: 0;
+    border-block-start: 1px solid var(--couleur-bordure);
+    background: var(--couleur-surface);
+  }
+
+  .feuille {
+    max-height: calc(100dvh - 4.5rem);
+    padding: var(--espace-3) var(--espace-2) 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+  }
+
+  .surtitre {
+    margin: 0 0 0.75rem;
+    color: var(--couleur-texte-secondaire);
+    font-size: 0.8125rem;
+    font-weight: var(--graisse-forte);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .surtitre-explorer {
+    margin-block-start: var(--espace-4);
+  }
+
+  .pages-menu {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .pages-menu li {
+    max-inline-size: none;
+    border-block-end: 1px solid var(--couleur-bordure);
+  }
+
+  .pages-menu a {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--espace-2);
+    min-height: 3.5rem;
+    padding-block: 0.5rem;
+    color: var(--couleur-texte);
+    font-size: 1.25rem;
+    line-height: 1.25;
+    text-decoration: none;
+  }
+
+  /* studio·bib : flèches neutres, comme le reste de la navigation */
+  .pages-menu a :global(svg) {
+    flex: none;
+    color: var(--couleur-texte-secondaire);
+  }
+
+  .pages-menu a[aria-current] {
+    color: var(--couleur-texte);
+    font-weight: var(--graisse-forte);
+  }
+
+  .pages-menu a:focus-visible {
+    outline: 3px solid var(--couleur-focus);
+    outline-offset: -3px;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .pages-menu a:hover {
+      color: var(--couleur-texte);
+      text-decoration: underline;
+      text-underline-offset: 0.2em;
+    }
+  }
+
+  .poignee {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    justify-content: center;
+    width: calc(100% + 2 * var(--espace-2));
+    margin-block-start: var(--espace-3);
+    margin-inline: calc(var(--espace-2) * -1);
+    padding-block: 1.25rem;
+    border: 0;
+    background: var(--couleur-surface);
+    cursor: pointer;
+  }
+
+  .poignee:focus-visible {
+    outline: 3px solid var(--couleur-focus);
+    outline-offset: -3px;
+  }
+
+  .poignee span {
+    width: 2.5rem;
+    height: 0.3rem;
+    border-radius: var(--rayon-plein);
+    background: var(--couleur-texte-secondaire);
+  }
+
+  /* « Afficher le menu » n'existe qu'en mode recherche, sous 1200 px */
+  .deplier {
+    display: none;
+  }
+
+  /* Mode recherche (loupe) : la recherche seule, puis « Afficher le menu » */
+  .rideau[data-mode='recherche'] .surtitre-explorer,
+  .rideau[data-mode='recherche'] nav {
+    display: none;
+  }
+
+  /* Les suggestions, plus hautes que la feuille courte, flottent sur le voile */
+  .rideau[data-mode='recherche'] .feuille {
+    overflow: visible;
+  }
+
+  .rideau[data-mode='recherche'] .deplier {
+    display: flex;
+    justify-content: center;
+    margin-block-start: var(--espace-1);
+  }
+
+  .rideau[data-mode='recherche'] .poignee {
+    margin-block-start: 0;
+    padding-block: 0.75rem 1.25rem;
+  }
+
+  .deplier-bouton {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.125rem;
+    min-height: var(--taille-cible);
+    padding: 0.375rem 1.25rem;
+    border: 0;
+    border-radius: var(--rayon-plein);
+    background: transparent;
+    color: var(--couleur-accent);
+    font: inherit;
+    font-size: 0.9375rem;
+    font-weight: var(--graisse-forte);
+    cursor: pointer;
+  }
+
+  .deplier-bouton :global(.deplier-fleche) {
+    transition: transform var(--duree-courte-4) var(--courbe-standard-deceleree);
+  }
+
+  .deplier-bouton:focus-visible {
+    outline: 3px solid var(--couleur-focus);
+    outline-offset: 2px;
+  }
+
+  .deplier-bouton:focus-visible :global(.deplier-fleche) {
+    transform: translateY(3px);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .deplier-bouton:hover {
+      background: var(--action-douce-fond-survol);
+      color: var(--action-texte);
+    }
+
+    .deplier-bouton:hover :global(.deplier-fleche) {
+      transform: translateY(3px);
+    }
+  }
+
+  /* ---- Grand écran ---- */
+  @media (width >= 600px) {
+    .logo-bib :global(svg) {
+      width: 7.25rem;
+    }
+
+    .nom-site :global(svg) {
+      width: 6.5rem;
+    }
+
+    .marque {
+      gap: 0.75rem;
+    }
+
+    .nom-site {
+      padding-inline-start: 0.75rem;
+    }
+  }
+
+  /* Barre de bureau, posée sur le bandeau : le menu dans la barre, la loupe seule ; le rideau se réduit à la recherche */
+  @media (width >= 1200px) {
+    .entete {
+      position: sticky;
+      top: 0;
+      padding-block-start: var(--espace-2);
+    }
+
+    /* Texte agrandi (WCAG 1.4.4) : le menu passe sous la marque plutôt que de la chevaucher */
+    .entete-barre,
+    :global(:root[data-menu-js]) .entete-barre {
+      flex-wrap: wrap;
+      gap: var(--espace-1) var(--espace-3);
+      width: calc(100% - 2 * var(--gouttiere));
+      max-width: calc(var(--largeur-max) - 2 * var(--gouttiere));
+      margin-inline: auto;
+      padding: 0.75rem var(--espace-3);
+      border-radius: var(--rayon-petit) var(--rayon-petit) 0 0;
+    }
+
+    :global(:root[data-menu-js]) .menu-barre {
+      display: block;
+    }
+
+    .menu-barre {
+      margin-inline-start: auto;
+    }
+
+    .marque {
+      flex: none;
+    }
+
+    .menu-barre ul {
+      gap: 0 var(--espace-2);
+    }
+
+    .menu-barre a {
+      font-size: 0.8125rem;
+    }
+
+    .logo-bib :global(svg) {
+      width: 7.25rem;
+    }
+
+    .nom-site :global(svg) {
+      width: 6.25rem;
+    }
+
+    .bouton-menu,
+    .rideau .surtitre-explorer,
+    .rideau nav,
+    .rideau .poignee,
+    .rideau[data-mode='recherche'] .deplier {
+      display: none;
+    }
+
+    :global(html[data-menu-ouvert]) {
+      overflow: visible;
+    }
+
+    .feuille {
+      max-width: 48rem;
+      max-height: none;
+      margin-inline: auto;
+      padding: var(--espace-3) var(--gouttiere) var(--espace-4);
+      overflow: visible;
+    }
+  }
+
+  /* Assez de place : tailles complètes */
+  @media (width >= 1536px) {
+    .menu-barre ul {
+      gap: 0 var(--espace-3);
+    }
+
+    .menu-barre a {
+      font-size: 0.875rem;
+    }
+
+    .logo-bib :global(svg) {
+      width: 8.5rem;
+    }
+
+    .nom-site :global(svg) {
+      width: 7rem;
+    }
+  }
+
+  /* ---- Mouvement : la feuille descend de derrière l'en-tête, puis ses groupes suivent en léger décalage.
+     Le découpage ne retient que le haut : les suggestions peuvent dépasser le bas du panneau.
+     Fermeture plus brève, par le même chemin. ---- */
+  @media (prefers-reduced-motion: no-preference) {
+    .rideau {
+      clip-path: inset(0 -100vw -200vh -100vw);
+      transition: display var(--duree-moyenne-1) allow-discrete;
+    }
+
+    .rideau[hidden] {
+      transition-duration: var(--duree-courte-4);
+    }
+
+    .feuille {
+      transition: transform var(--duree-moyenne-1) var(--courbe-emphase-deceleree);
+    }
+
+    .rideau[hidden] .feuille {
+      transform: translateY(-100%);
+      transition-duration: var(--duree-courte-4);
+      transition-timing-function: var(--courbe-standard);
+    }
+
+    @starting-style {
+      .rideau:not([hidden]) .feuille {
+        transform: translateY(-100%);
+      }
+    }
+
+    .feuille > * {
+      transition:
+        opacity var(--duree-moyenne-1) var(--courbe-emphase-deceleree),
+        translate var(--duree-moyenne-1) var(--courbe-emphase-deceleree);
+      transition-delay: var(--duree-courte-2);
+    }
+
+    .feuille > :nth-child(n + 2) {
+      transition-delay: calc(var(--duree-courte-2) + var(--duree-courte-1));
+    }
+
+    @starting-style {
+      .rideau:not([hidden]) .feuille > * {
+        opacity: 0;
+        translate: 0 -0.5rem;
+      }
+    }
+
+    .rideau[hidden] .feuille > * {
+      opacity: 0;
+      transition-delay: 0s;
+      transition-duration: var(--duree-courte-3);
+    }
+
+    .voile-menu {
+      transition:
+        opacity var(--duree-moyenne-1) var(--courbe-emphase-deceleree),
+        display var(--duree-moyenne-1) allow-discrete;
+    }
+
+    .voile-menu[hidden] {
+      opacity: 0;
+      transition-duration: var(--duree-courte-4);
+    }
+
+    @starting-style {
+      .voile-menu:not([hidden]) {
+        opacity: 0;
+      }
+    }
+  }
+
+  /* Couleurs forcées : le bandeau et la barre perdent leurs fonds, un filet garde la séparation */
+  @media (forced-colors: active) {
+    .entete-barre {
+      border-block-end: 1px solid CanvasText;
+    }
+
+    .menu-barre a[aria-current],
+    .pages-menu a[aria-current] {
+      text-decoration: underline;
+    }
+  }
+</style>

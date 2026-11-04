@@ -1,0 +1,10 @@
+# Directive ::encart{nom=droit-auteur}
+titre: Droit d’auteur et création
+texte: Protégez vos créations et respectez celles des autres.
+lien:
+  libelle: Consulter le guide
+  url: https://boite-outils.bib.umontreal.ca/c.php?g=740213&p=5341650
+icone: bell-ringing
+animation: cloche
+couleur: rouge-orange
+variante: carte

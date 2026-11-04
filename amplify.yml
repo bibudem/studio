@@ -1,0 +1,28 @@
+# Déploiement AWS Amplify, comme la boîte à outils (boite-outils-astro).
+version: 1
+applications:
+  - appRoot: .
+    frontend:
+      phases:
+        preBuild:
+          commands:
+            - nvm install 22.22
+            - nvm use 22.22
+            - npm ci
+        build:
+          commands:
+            # Branches du dépôt bibudem/studio : « production » est le site public (seul indexé :
+            # robots.txt, balise robots) ; « main » est la préproduction (noindex), où s'ouvrent aussi
+            # les pull requests du CMS. À connecter toutes deux dans la console Amplify.
+            - if [ "$AWS_BRANCH" = production ]; then export SITE_ENV=production; else export SITE_ENV=preprod; fi
+            - npm run build
+      artifacts:
+        baseDirectory: dist
+        files:
+          - '**/*'
+      cache:
+        paths:
+          - node_modules/**/*
+    environment:
+      variables:
+        NODE_OPTIONS: '--max-old-space-size=4096'

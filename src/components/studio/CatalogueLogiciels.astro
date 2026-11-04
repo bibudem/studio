@@ -1,0 +1,364 @@
+---
+/*
+ * Catalogue des logiciels.
+ *
+ * - Le CSV (public/data/logiciels.csv) est lu au build : tout le catalogue
+ *   est dans le HTML, lisible et indexable sans JavaScript.
+ * - Amélioration progressive : la recherche et le filtre par catégorie
+ *   n'apparaissent qu'avec JS ; ils masquent les fiches qui ne
+ *   correspondent pas. Le nombre de résultats est annoncé (role="status").
+ *   La recherche ignore la casse et les accents.
+ * - Corrigé : liens des bibliothèques dans le même onglet ; pas de carte qui
+ *   « saute » au survol ; « Accès à distance » et « Guides » restent des
+ *   liens, « Logiciel libre » une étiquette.
+ */
+import { LockOpenIcon } from '@phosphor-icons/react/dist/ssr/LockOpen'
+import { PlugsConnectedIcon } from '@phosphor-icons/react/dist/ssr/PlugsConnected'
+import { LinkSimpleIcon } from '@phosphor-icons/react/dist/ssr/LinkSimple'
+import { MapPinIcon } from '@phosphor-icons/react/dist/ssr/MapPin'
+import { lireCsvObjets } from '@/lib/csv'
+import { idUnique } from '@/lib/ids'
+import { SITE } from '@/data/site'
+import { LIENS_BIBLIOTHEQUES } from '@/data/logiciels'
+import { pluriel } from '@/lib/texte'
+
+interface Props {
+  [attribut: string]: unknown
+}
+
+const id = idUnique('catalogue')
+const logiciels = lireCsvObjets('/data/logiciels.csv').filter((l) => l.nom)
+const categories = [...new Set(logiciels.map((l) => l.categorie).filter(Boolean))].sort((a, b) => a.localeCompare(b, 'fr'))
+const externe = (lien: string) => /^https?:\/\//.test(lien)
+---
+
+<div class="catalogue" data-catalogue>
+  <form class="filtres" role="search" aria-label="Logiciels" data-filtres hidden>
+    <p class="consigne">Recherchez un logiciel ou filtrez par catégorie :</p>
+    <div class="champs">
+      <div class="champ">
+        <label for={`${id}-recherche`}>Rechercher</label>
+        <input id={`${id}-recherche`} type="search" placeholder="Nom ou description" autocomplete="off" data-recherche />
+      </div>
+      <div class="champ">
+        <label for={`${id}-categorie`}>Catégorie</label>
+        <select id={`${id}-categorie`} data-categorie>
+          <option value="">Toutes</option>
+          {categories.map((c) => <option value={c}>{c}</option>)}
+        </select>
+      </div>
+    </div>
+  </form>
+
+  <p class="compte" role="status" data-compte>{pluriel(logiciels.length, 'logiciel')}</p>
+
+  <ul class="liste" data-liste>
+    {
+      logiciels.map((l) => (
+        <li class="logiciel" data-categorie={l.categorie} data-texte={`${l.nom} ${l.description}`}>
+          <h3 class="nom">
+            {l.lien ? (
+              <a class="lien-nom" href={l.lien}>
+                {l.nom}
+              </a>
+            ) : (
+              l.nom
+            )}
+          </h3>
+          {l.categorie && <p class="categorie">{l.categorie}</p>}
+          {l.description && <p class="description">{l.description}</p>}
+          {(l.libre === 'Oui' || l.distance === 'Oui' || l.lien) && (
+            <ul class="etiquettes" aria-label="Caractéristiques">
+              {l.libre === 'Oui' && (
+                <li class="etiquette libre">
+                  <LockOpenIcon size={16} weight="bold" aria-hidden="true" focusable="false" />
+                  Logiciel libre
+                </li>
+              )}
+              {l.distance === 'Oui' && (
+                <li>
+                  <a class="etiquette distance" href="/informatique/connexion-distance">
+                    <PlugsConnectedIcon size={16} weight="bold" aria-hidden="true" focusable="false" />
+                    Accès à distance<span class="visuellement-masque"> : {l.nom}</span>
+                  </a>
+                </li>
+              )}
+              {l.lien && (
+                <li>
+                  <a class="etiquette guide" href={l.lien}>
+                    <LinkSimpleIcon size={16} weight="bold" aria-hidden="true" focusable="false" />
+                    Guides<span class="visuellement-masque"> : {l.nom}{externe(l.lien) && ' (site externe)'}</span>
+                  </a>
+                </li>
+              )}
+            </ul>
+          )}
+          {l.bibliotheques && (
+            <ul class="bibliotheques" aria-label="Où l’utiliser">
+              {l.bibliotheques
+                .split(';')
+                .map((b) => b.trim())
+                .filter(Boolean)
+                .map((b) => (
+                  <li>
+                    {LIENS_BIBLIOTHEQUES[b] ? (
+                      <a class="bibliotheque" href={LIENS_BIBLIOTHEQUES[b]}>
+                        <MapPinIcon size={14} aria-hidden="true" focusable="false" />
+                        {b}
+                      </a>
+                    ) : (
+                      <span class="bibliotheque">
+                        <MapPinIcon size={14} aria-hidden="true" focusable="false" />
+                        {b}
+                      </span>
+                    )}
+                  </li>
+                ))}
+            </ul>
+          )}
+        </li>
+      ))
+    }
+  </ul>
+
+  <p class="vide" data-vide hidden>
+    <span data-vide-texte></span> Vérifiez l’orthographe ou <a href={`mailto:${SITE.courriel}`}>écrivez-nous</a> si vous cherchez un logiciel précis.
+  </p>
+</div>
+
+<script>
+  import { pluriel, sansAccents } from '@/lib/texte'
+
+  const normaliser = (texte: string) => sansAccents(texte).trim()
+
+  for (const racine of document.querySelectorAll<HTMLElement>('[data-catalogue]')) {
+    const filtres = racine.querySelector<HTMLFormElement>('[data-filtres]')!
+    const recherche = racine.querySelector<HTMLInputElement>('[data-recherche]')!
+    const categorie = racine.querySelector<HTMLSelectElement>('[data-categorie]')!
+    const compte = racine.querySelector<HTMLElement>('[data-compte]')!
+    const vide = racine.querySelector<HTMLElement>('[data-vide]')!
+    const videTexte = racine.querySelector<HTMLElement>('[data-vide-texte]')!
+    const fiches = [...racine.querySelectorAll<HTMLElement>('[data-liste] > li')].map((element) => ({
+      element,
+      texte: normaliser(element.dataset.texte ?? ''),
+      categorie: element.dataset.categorie ?? '',
+    }))
+    let minuterie: number | undefined
+
+    const filtrer = () => {
+      const requete = normaliser(recherche.value)
+      const choix = categorie.value
+      let n = 0
+      for (const fiche of fiches) {
+        const visible = (!requete || fiche.texte.includes(requete)) && (!choix || fiche.categorie === choix)
+        fiche.element.hidden = !visible
+        if (visible) n++
+      }
+      vide.hidden = n > 0
+      videTexte.textContent = recherche.value.trim() ? `Aucun logiciel ne correspond à « ${recherche.value.trim()} ».` : 'Aucun logiciel dans cette catégorie.'
+      // Annonce différée : un lecteur d'écran ne répète pas le compte à chaque touche
+      clearTimeout(minuterie)
+      minuterie = window.setTimeout(() => {
+        compte.textContent = n ? pluriel(n, 'logiciel', 'trouvé') : 'Aucun logiciel trouvé'
+      }, 400)
+    }
+
+    filtres.hidden = false
+    filtres.addEventListener('submit', (e) => e.preventDefault())
+    recherche.addEventListener('input', filtrer)
+    categorie.addEventListener('change', filtrer)
+    // Valeurs restaurées par le navigateur (retour arrière)
+    if (recherche.value || categorie.value) filtrer()
+  }
+</script>
+
+<style>
+  .catalogue {
+    max-width: 960px;
+    margin-block: var(--espace-element) var(--espace-bloc);
+  }
+
+  .filtres[hidden] {
+    display: none;
+  }
+
+  .consigne {
+    margin: 0 0 var(--espace-1);
+    font-weight: var(--graisse-forte);
+  }
+
+  .champs {
+    display: grid;
+    gap: var(--espace-element);
+  }
+
+  .champ {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    min-width: 0;
+  }
+
+  .champ label {
+    font-size: 0.875rem;
+    font-weight: var(--graisse-forte);
+  }
+
+  .champ input,
+  .champ select {
+    width: 100%;
+    min-height: var(--taille-cible);
+    padding: 0.6rem 0.9rem;
+    /* Bordure de 3:1 au moins contre le fond (WCAG 1.4.11) */
+    border: 1px solid var(--couleur-texte-secondaire);
+    border-radius: var(--rayon-tres-petit);
+    background: var(--couleur-surface);
+    color: var(--couleur-texte);
+    font: inherit;
+  }
+
+
+  .champ input::placeholder {
+    color: var(--couleur-texte-secondaire);
+  }
+
+  .compte {
+    max-inline-size: none;
+    margin: var(--espace-element) 0 0.75rem;
+    color: var(--couleur-texte-secondaire);
+    font-size: 0.9rem;
+  }
+
+  .liste {
+    display: grid;
+    gap: var(--espace-element);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .logiciel {
+    max-inline-size: none;
+    margin: 0;
+    padding: var(--espace-element);
+    border: 1px solid var(--couleur-bordure);
+    border-radius: var(--rayon-carte);
+    background: var(--couleur-surface);
+    box-shadow: var(--ombre-1);
+  }
+
+  .logiciel[hidden] {
+    display: none;
+  }
+
+  .nom {
+    margin: 0 0 0.2rem;
+    font-size: 1.2rem;
+  }
+
+  .lien-nom {
+    color: inherit;
+    text-decoration: none;
+  }
+
+  .lien-nom:hover {
+    color: var(--couleur-lien);
+    text-decoration: underline;
+  }
+
+  .categorie {
+    margin: 0 0 0.55rem;
+    color: var(--couleur-texte-secondaire);
+    font-size: 0.9rem;
+  }
+
+  .description {
+    margin: 0;
+  }
+
+  .etiquettes,
+  .bibliotheques {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--espace-1);
+    margin: 0.85rem 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .etiquettes li,
+  .bibliotheques li {
+    margin: 0;
+  }
+
+  .etiquette,
+  .bibliotheque {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    min-height: 24px;
+    padding: 0.3rem 0.72rem;
+    border: 1px solid transparent;
+    border-radius: var(--rayon-plein);
+    color: var(--couleur-texte);
+    font-size: 0.85rem;
+    font-weight: var(--graisse-forte);
+    line-height: 1.2;
+    text-decoration: none;
+  }
+
+  .etiquette :global(svg),
+  .bibliotheque :global(svg) {
+    flex: 0 0 auto;
+  }
+
+  .libre {
+    background: var(--couleur-teinte-jaune);
+  }
+
+  .distance {
+    background: var(--couleur-teinte-rose-forte);
+  }
+
+  .guide {
+    background: var(--couleur-teinte-forte);
+  }
+
+  .bibliotheque {
+    border-color: var(--couleur-teinte-forte);
+    background: var(--couleur-teinte);
+  }
+
+  a.etiquette:hover,
+  a.bibliotheque:hover {
+    text-decoration: underline;
+  }
+
+  .vide {
+    max-inline-size: none;
+    margin: 0;
+    padding: var(--espace-element);
+    border: 1px dashed var(--couleur-bordure);
+    border-radius: var(--rayon-carte);
+    color: var(--couleur-texte-secondaire);
+  }
+
+  @media (min-width: 600px) {
+    .champs {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+  }
+
+  @media (min-width: 900px) {
+    .liste {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+  }
+
+  @media (forced-colors: active) {
+    .etiquette,
+    .bibliotheque {
+      border-color: CanvasText;
+    }
+  }
+</style>

@@ -1,0 +1,12 @@
+dist/
+docs/
+.astro/
+node_modules/
+.env
+.env.production
+.DS_Store
+.idea/
+npm-debug.log*
+
+# Travail ponctuel de la conversion depuis techno (Docusaurus)
+migration/

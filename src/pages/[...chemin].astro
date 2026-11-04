@@ -1,0 +1,38 @@
+---
+/*
+ * Toutes les pages de contenu (src/content/pages/**.md). Le Markdown est
+ * rendu par RenduDirectives, qui remplace les directives par
+ * leurs composants.
+ */
+import { render } from 'astro:content'
+import GabaritPage from '@/layouts/GabaritPage.astro'
+import RenduDirectives from '@/components/partage/RenduDirectives.astro'
+import { toutesLesPages, type Page } from '@/lib/contenu'
+import { derniereMiseAJour } from '@/lib/dates'
+
+export async function getStaticPaths() {
+  // L'accueil a sa propre page (src/pages/index.astro)
+  return (await toutesLesPages()).filter((page) => page.id).map((page) => ({ params: { chemin: page.id }, props: { page } }))
+}
+
+const { page } = Astro.props as { page: Page }
+const { Content, headings } = await render(page)
+const donnees = page.data
+const date = donnees.masquerDate ? undefined : derniereMiseAJour(page.filePath, donnees.derniereMaj)
+---
+
+<GabaritPage
+  titre={donnees.title}
+  description={donnees.description}
+  image={donnees.image}
+  imageAlt={donnees.imageAlt}
+  aide={donnees.aide}
+  retroaction={donnees.retroaction}
+  derniereMaj={date}
+  titres={headings}
+  sommaire={donnees.sommaire}
+  sommaireMax={donnees.sommaireMax}
+  noindex={donnees.nonListee || donnees.brouillon}
+>
+  <RenduDirectives><Content /></RenduDirectives>
+</GabaritPage>

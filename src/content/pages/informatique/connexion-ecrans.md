@@ -1,0 +1,62 @@
+---
+title: Connexion sans fil aux écrans
+description: "Projeter sans fil l'écran de son ordinateur, tablette ou téléphone sur les écrans des salles des bibliothèques de l'UdeM : procédure et emplacements."
+image: "../images/cover/ecrans-cover.webp"
+derniereMaj: 2026-10-19
+---
+
+Les bibliothèques de l’UdeM mettent à disposition plusieurs écrans équipés d’un système de projection sans fil.
+Vous pouvez y connecter votre ordinateur, tablette ou téléphone pour afficher vos contenus, que ce soit dans les salles de travail, les laboratoires ou les espaces de formation.
+
+---
+
+## Procédure {#procedure}
+
+Assurez-vous d’être connecté au réseau Wi-Fi **UdeM avec cryptage** et que le **Bluetooth** de votre appareil est activé.
+
+:::::onglets
+:::onglet[Windows]{valeur="windows"}
+- Appuyer sur les touches <kbd>Windows</kbd> + <kbd>K</kbd>
+- Sélectionner le numéro du local
+- Saisir le code PIN affiché en haut de l’écran
+:::
+
+:::onglet[macOS et iOS]{valeur="macos"}
+- Ouvrir **Centre de contrôle** situé en haut à droite
+- Choisir **Recopie de l’écran**
+- Sélectionner le numéro du local
+- Saisir le code PIN affiché en haut de l’écran
+:::
+
+::::onglet[Android]{valeur="android"}
+- Balayer vers le bas pour ouvrir les paramètres rapides
+- Choisir **Diffuser**, **Smart View** ou **Screencast**
+- Sélectionner le numéro du local
+- Saisir le code PIN affiché en haut de l’écran
+
+:::alerte{type="attention"}
+Le système de projection sans fil présente certaines difficultés de compatibilité avec les appareils de la gamme Google Pixel. Les utilisateurs de ces appareils doivent utiliser l'application [vSolution App](https://play.google.com/store/apps/details?id=com.wolfvision.phoenix)
+
+1. Ouvrir vSolution App
+2. En bas, cliquer le **2e onglet**
+3. Cliquer « + »
+4. Saisir l'adresse IP indiquée à l’écran (ex. : 10.67.246.234) → appuyer **Ajouter un appareil**
+5. Appuyer sur l’appareil voulu (ex. : BIB-BLSH-5123)
+6. Dans le Sélecteur de Mode, sélectionner **Écran de partage** (si demandé, cliquer autoriser)
+7. Appuyer **Écran de partage**
+8. Dans le champ **Nom de fenêtre** entrer le nom de la salle (ex. : BIB-BLSH-5123)
+9. Dans le champ PIN, entrer le code à 4 chiffres qui s’affiche en haut de l’écran
+10. Cliquer **Partage**
+11. Sélectionner **Partager l’intégralité de l’écran** et **Partager l’écran**
+:::
+::::
+:::::
+
+---
+
+## Emplacements
+
+- [**Bibliothèque Hubert-Reeves**](https://bib.umontreal.ca/espaces/#Hubert-reeves) : [Laboratoire de visualisation](/espaces/visualisation).
+- [**Bibliothèque de kinésiologie**](https://bib.umontreal.ca/espaces/#kinesiologie) : locaux 8245-1, 8259-1 et 8259-2. [Réserver un local](https://calendrier.bib.umontreal.ca/spaces?lid=2140\&gid=3975).
+- [**Bibliothèque des lettres et sciences humaines**](https://bib.umontreal.ca/espaces/#lsh) : Salles de travail en équipe 3023, 5113, 5120, 5123 et 6123. [Réserver un local](https://calendrier.bib.umontreal.ca/spaces?lid=2019\&gid=0\&c=0). Local 2076-4 - [Atelier de zines](/espaces/zines).
+- [**Bibliothèque de la santé**](https://bib.umontreal.ca/espaces/#sante) : L812, L840, L849, L871, L873, L875, L878, L882 et L884. [Réserver un local](https://calendrier.bib.umontreal.ca/spaces?lid=2145\&gid=0\&c=0).

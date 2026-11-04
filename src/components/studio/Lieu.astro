@@ -1,0 +1,211 @@
+---
+/*
+ * Directive `lieu` : fiche d'un lieu, sur le modèle
+ * des cartes du site (surface blanche, --rayon-carte, --espace-carte).
+ *
+ * Les enfants sont répartis : `adresse` → ligne à épingle sous le titre ;
+ * `bouton` → pied de la fiche, toujours en bas (fiches voisines alignées dans
+ * une grille) ; le reste (texte, parcours de réservation) → corps. Chaque
+ * morceau est rendu par RenduDirectives, comme le reste de la page.
+ *
+ * Données structurées Place : nom, description (adresse et
+ * texte), page, carte, université, et l'action de réserver (premier bouton
+ * principal, sinon le parcours de réservation).
+ */
+import { MapPinIcon } from '@phosphor-icons/react/dist/ssr/MapPin'
+import { ArrowSquareOutIcon } from '@phosphor-icons/react/dist/ssr/ArrowSquareOut'
+import RenduDirectives from '@/components/partage/RenduDirectives.astro'
+import { SITE } from '@/data/site'
+import { estDirective, niveauTitre, type Directive, type NoeudDirective } from '@/lib/directives'
+import { jsonLd } from '@/lib/json-ld'
+
+
+interface Props {
+  titre: string
+  /** Lien vers la carte (Google Maps) */
+  carte?: string
+  /** Page du lieu : le titre devient un lien */
+  lien?: string
+  /** Niveau du titre, juste sous le titre qui précède la fiche (calculé par rehypeDirectivesBib) */
+  niveau?: number
+  enfants: NoeudDirective[]
+}
+
+const { titre, carte, lien, niveau = 3, enfants } = Astro.props
+const Titre = `h${niveauTitre(niveau)}`
+
+const adresse = enfants.find((n): n is Directive => estDirective(n) && n.nom === 'adresse')
+const boutons = enfants.filter((n) => estDirective(n) && n.nom === 'bouton')
+const corps = enfants.filter((n) => n !== adresse && !boutons.includes(n))
+
+// Texte brut d'un morceau (pour les données structurées) : sans balises ni
+// boutons ni parcours, qui ne décrivent pas le lieu
+const ENTITES: Record<string, string> = { '&amp;': '&', '&lt;': '<', '&gt;': '>', '&quot;': '"', '&#39;': "'", '&nbsp;': ' ' }
+function texte(noeuds: NoeudDirective[]): string {
+  return noeuds
+    .map((n) => (typeof n === 'string' ? n.replace(/<[^>]*>/g, ' ').replace(/&[#\w]+;/g, (e) => ENTITES[e] ?? ' ') : n.nom === 'bouton' || n.nom === 'parcours-reservation' ? '' : texte(n.enfants)))
+    .join(' ')
+}
+const nettoyer = (t: string) => t.replace(/\s+/g, ' ').replace(/\s+([,.;:!?])/g, '$1').trim()
+const absolue = (adresse?: string) => (adresse ? new URL(adresse, SITE.url).href : undefined)
+
+const parcours = corps.find((n): n is Directive => estDirective(n) && n.nom === 'parcours-reservation')
+const principal = (boutons as Directive[]).find((b) => b.attributs.type !== 'secondaire')
+const reservation = principal?.attributs.lien ?? parcours?.attributs.reservation
+const donnees = {
+  '@context': 'https://schema.org',
+  '@type': 'Place',
+  name: titre,
+  description: nettoyer(`${adresse ? texte(adresse.enfants) : ''} ${texte(corps)}`) || undefined,
+  url: absolue(lien),
+  hasMap: carte,
+  containedInPlace: { '@type': 'CollegeOrUniversity', name: 'Université de Montréal', url: 'https://www.umontreal.ca/' },
+  potentialAction: reservation ? { '@type': 'ReserveAction', target: absolue(reservation) } : undefined,
+}
+---
+
+<article class="lieu surface-claire" data-revelation="unite">
+  <script is:inline type="application/ld+json" set:html={jsonLd(donnees)} />
+  <Titre class="titre">{lien ? <a href={lien}>{titre}</a> : titre}</Titre>
+  {
+    adresse && (
+      <p class="adresse">
+        <MapPinIcon size="1.125rem" weight="fill" aria-hidden="true" focusable="false" />
+        <span>
+          <RenduDirectives noeuds={adresse.enfants} />
+        </span>
+      </p>
+    )
+  }
+  <div class="corps">
+    {
+      carte && (
+        <a class="lien-carte" href={carte} target="_blank" rel="noopener">
+          <ArrowSquareOutIcon size="1rem" aria-hidden="true" focusable="false" />
+          <span>Localiser sur Google Maps<span class="visuellement-masque"> (nouvel onglet)</span></span>
+        </a>
+      )
+    }
+    <RenduDirectives noeuds={corps} />
+  </div>
+  {
+    boutons.length > 0 && (
+      <div class="pied">
+        <RenduDirectives noeuds={boutons} />
+      </div>
+    )
+  }
+</article>
+
+<style>
+  .lieu {
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    min-width: 0;
+    /* Pas plus large que le texte de la page (mesure de lecture) */
+    max-inline-size: var(--mesure-texte);
+    margin-block: var(--espace-bloc);
+    padding: var(--espace-carte);
+    border: 1px solid var(--couleur-bordure);
+    border-radius: var(--rayon-carte);
+    background-color: var(--couleur-surface);
+    color: var(--couleur-texte);
+  }
+
+  .titre {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: var(--graisse-forte);
+    line-height: 1.25;
+    overflow-wrap: break-word;
+  }
+
+  .titre a {
+    color: inherit;
+    text-decoration: underline;
+    text-decoration-color: transparent;
+    text-underline-offset: 0.15em;
+    transition: text-decoration-color var(--duree-courte-4) var(--courbe-standard);
+  }
+
+  .titre a:hover,
+  .titre a:focus-visible {
+    text-decoration-color: currentColor;
+  }
+
+  .adresse {
+    display: flex;
+    gap: var(--espace-1);
+    align-items: flex-start;
+    max-inline-size: none;
+    margin: var(--espace-2) 0 0;
+    padding: var(--espace-1) var(--espace-2);
+    border-radius: var(--rayon-petit);
+    /* studio·bib : adresse sur fond gris neutre (et non bleu pâle) */
+    background-color: var(--couleur-fond-neutre);
+    font-size: 0.9444rem;
+    line-height: 1.45;
+  }
+
+  .adresse > :global(svg) {
+    flex: 0 0 auto;
+    margin-top: 0.15em;
+    color: var(--couleur-texte-secondaire);
+  }
+
+  /* L'adresse est en gras */
+  .adresse > span {
+    font-weight: var(--graisse-moyenne);
+  }
+
+  .corps {
+    display: flex;
+    flex-direction: column;
+    flex: 1 0 auto;
+    gap: var(--espace-element);
+    margin-top: var(--espace-element);
+  }
+
+  .corps > :global(*) {
+    margin-block: 0;
+  }
+
+  .lien-carte {
+    display: inline-flex;
+    gap: 0.35rem;
+    align-items: center;
+    align-self: flex-start;
+    min-height: 24px;
+    color: var(--couleur-lien);
+    font-size: 0.9444rem;
+    font-weight: var(--graisse-moyenne);
+  }
+
+  /* Pied : en bas de la fiche ; sur un téléphone, boutons pleine largeur
+     (cibles de 44 px faciles à atteindre au pouce) */
+  .pied {
+    margin-top: auto;
+    padding-top: var(--espace-element);
+  }
+
+  .pied :global(.boutons) {
+    margin-block-end: 0;
+  }
+
+  .pied :global(.bouton) {
+    flex: 1 1 100%;
+  }
+
+  @media (min-width: 600px) {
+    .pied :global(.bouton) {
+      flex: 0 1 auto;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .adresse {
+      border: 1px solid CanvasText;
+    }
+  }
+</style>

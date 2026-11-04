@@ -1,0 +1,127 @@
+---
+/*
+ * Directive `onglets` : JeuOnglets en rangée (`horizontal`), avec des groupes
+ * synchronisés (onglets.ts).
+ *
+ * Chaque `onglet` du slot rend un seul élément (Onglet.astro) : JeuOnglets en
+ * fait un panneau. Libellés, valeurs et volet par défaut viennent de
+ * `enfants`, l'arbre des marqueurs.
+ *
+ * Sans JS, les panneaux se suivent, chacun sous un titre (un niveau sous le
+ * titre qui précède les onglets). Un jeu
+ * imbriqué dans un panneau a déjà rendu les titres des siens au même niveau :
+ * on les descend d'un cran pour garder la hiérarchie (h3 → h4 sous un h3).
+ */
+import JeuOnglets from '@/components/contenu/accordeons/JeuOnglets.astro'
+import { directivesNommees, niveauTitre, type NoeudDirective } from '@/lib/directives'
+
+interface Props {
+  groupe?: string
+  url?: boolean
+  /** Niveau des titres des panneaux (rendu sans JS), juste sous le titre qui précède : calculé par rehypeDirectivesBib */
+  niveau?: number
+  enfants: NoeudDirective[]
+}
+
+const { groupe, url = false, niveau = 3, enfants } = Astro.props
+const volets = directivesNommees(enfants, 'onglet')
+const libelles = volets.map((v) => String(v.attributs.libelle))
+const valeurs = volets.map((v) => String(v.attributs.valeur ?? v.attributs.libelle))
+const defaut = volets.findIndex((v) => v.attributs.defaut)
+
+const html = Astro.slots.has('default') ? await Astro.slots.render('default') : ''
+const NIVEAU_MAX = 6
+// Seuls les titres des panneaux (data-titre-panneau) bougent ; un jeu plus
+// profond a déjà été descendu par son parent, et l'est de nouveau ici.
+const descendu = html.replace(/<h([2-6])(\s[^>]*\bdata-titre-panneau\b[^>]*)>([\s\S]*?)<\/h\1>/g, (_, niveau, attributs, contenu) => {
+  const nouveau = Math.min(Number(niveau) + 1, NIVEAU_MAX)
+  return `<h${nouveau}${attributs}>${contenu}</h${nouveau}>`
+})
+---
+
+<JeuOnglets class="onglets-studio" horizontal tabs={libelles} valeurs={valeurs} groupe={groupe} url={url} defaultTab={defaut >= 0 ? defaut + 1 : 1} niveauTitre={niveauTitre(niveau)}>
+  <Fragment set:html={descendu} />
+</JeuOnglets>
+
+<style>
+  /* Un jeu d'onglets est un bloc du texte : un espace au-dessus et au-dessous */
+  .onglets-studio {
+    margin-block: var(--espace-bloc);
+    /* Carrousel mobile : la pastille de l'onglet actif est celle de l'état choisi (bleu foncé) */
+    --onglets-indicateur: var(--selection-fond);
+  }
+
+  /* Rangée d'onglets alignée à gauche, comme le texte (JeuOnglets la centre) */
+  .onglets-studio.onglets-studio :global(.liste) {
+    margin-inline: 0;
+  }
+
+  /* Rangée compacte (JeuOnglets : onglets de 48 px, capsule et panneau aérés) : même style,
+     moins de hauteur et d'espace autour. La hauteur reste au-dessus de 24 px (WCAG 2.5.8). */
+  .onglets-studio.onglets-studio :global(.liste) {
+    gap: 0.125rem;
+    padding: 0.1875rem;
+  }
+
+  .onglets-studio.onglets-studio :global(.liste .onglet) {
+    min-height: 2.25rem;
+    padding: 0.3125rem 0.875rem;
+    font-size: 0.9375rem;
+  }
+
+  /* L'onglet choisi est un état, pas une action : bleu foncé plein, texte blanc ; le survol jaune pâle */
+  .onglets-studio.onglets-studio :global(.liste .onglet[data-selectionne='true']) {
+    background-color: var(--selection-fond);
+    color: var(--selection-texte);
+  }
+
+  /* Carrousel mobile : une fois la pastille en place, c'est elle qui fait le fond (l'onglet reste transparent) */
+  .onglets-studio.onglets-studio.carrousel :global(.liste.pret .onglet[data-selectionne='true']) {
+    background-color: transparent;
+  }
+
+  .onglets-studio.onglets-studio :global(.liste .onglet:not([data-selectionne='true']):hover) {
+    background-color: var(--action-douce-fond-survol);
+  }
+
+  .onglets-studio.onglets-studio :global(.panneau) {
+    padding-top: var(--espace-3);
+  }
+
+  @media (min-width: 900px) {
+    .onglets-studio.onglets-studio :global(.liste .onglet) {
+      padding-inline: 1.125rem;
+      font-size: 1rem;
+    }
+  }
+
+  /* Sous 900 px (carrousel) : les onglets passent à la ligne au lieu
+     de couper un mot (« Win dow s »), chacun prend la largeur de son libellé et se partage le reste */
+  @media (width < 900px) {
+    .onglets-studio.onglets-studio.carrousel :global(.liste) {
+      flex-wrap: wrap;
+    }
+
+    .onglets-studio.onglets-studio.carrousel :global(.liste .onglet) {
+      flex: 1 1 auto;
+      padding-inline: 0.75rem;
+      overflow-wrap: normal;
+    }
+  }
+
+  /* Dès 600 px, chaque onglet garde la largeur de son libellé : la capsule se range à gauche au lieu de s'étirer */
+  @media (min-width: 600px) {
+    .onglets-studio.onglets-studio :global(.onglet) {
+      flex: 0 1 auto;
+    }
+  }
+
+  /* Le contenu du panneau ne double pas l'espace du panneau */
+  .onglets-studio :global(.contenu-onglet > :first-child) {
+    margin-top: 0;
+  }
+
+  .onglets-studio :global(.contenu-onglet > :last-child) {
+    margin-bottom: 0;
+  }
+</style>

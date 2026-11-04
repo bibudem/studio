@@ -1,0 +1,41 @@
+---
+title: Atelier de zines
+description: "Atelier de zines gratuit de la Bibliothèque LSH (local 2076-4) pour la communauté UdeM : papiers, outils de découpe et matériel de dessin."
+image: "../images/cover/zines.webp"
+derniereMaj: 2026-10-19
+---
+
+L’atelier de zines est un lieu idéal pour concevoir ou finaliser un zine réalisé dans le cadre d’un cours, approfondir une démarche de recherche-création ou expérimenter de nouvelles formes de communication des connaissances.
+
+## Qu’est-ce qu’un zine?
+
+Un zine est une forme d’autopublication imprimée et fabriquée à la main qui circule en dehors des circuits traditionnels de l’édition.
+Matériel disponible à l’atelier :
+
+- Papiers, cartons, magazines récupérés
+- Tapis de découpe et instruments de travail du papier, comme des plioirs et des lames
+- Marqueurs à peinture Posca, tampons encreurs, crayons de couleur, feutres
+- Accessoire de dessin, comme des étampes, des pochoirs
+- Etc.
+
+---
+
+## Localisation et accès
+
+:::lieu{titre="Bibliothèque des lettres et sciences humaines" carte="https://share.google/L5433dSpcvXkJi10K"}
+::adresse[Pavillon Samuel-Bronfman, local 2076-4]
+
+L’atelier de zines est accessible gratuitement à toute la communauté UdeM. L’atelier est ouvert les mardis, mercredis et jeudis de 16 h  à 17 h et les mercredis et vendredis en matinée, de 11 h 30 à 12 h 30.
+:::
+
+---
+
+:::alerte{type="succes" titre="Vous enseignez un cours à l’UdeM?"}
+Vous pouvez réserver l’atelier pour intégrer le zine à votre enseignement. [Consultez la fiche du local dans le module de réservation](https://calendrier.bib.umontreal.ca/space/36571).
+:::
+
+---
+
+## Formations et soutien
+
+Un membre de l’équipe est sur place durant les heures d’ouverture.

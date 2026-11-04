@@ -1,0 +1,68 @@
+---
+/*
+ * Rendu des directives propres à studio·bib (src/plugins/directives-studio.mjs).
+ * RenduDirectives.astro lui confie toute directive qu'il ne
+ * connaît pas. Le contenu de la directive arrive dans le slot, déjà rendu ;
+ * `enfants` (l'arbre des marqueurs) sert aux composants qui doivent en
+ * répartir les morceaux (onglets, fiche de lieu).
+ */
+import Onglets from './Onglets.astro'
+import Onglet from './Onglet.astro'
+import MasquerSi from './MasquerSi.astro'
+import Lieu from './Lieu.astro'
+import ParcoursReservation from './ParcoursReservation.astro'
+import Disponibilites from './Disponibilites.astro'
+import Colonnes from './Colonnes.astro'
+import Video from './Video.astro'
+import Copier from './Copier.astro'
+import Encart from './Encart.astro'
+import Pano360 from './Pano360.astro'
+import CarteBibliotheques from './CarteBibliotheques.astro'
+import CatalogueLogiciels from './CatalogueLogiciels.astro'
+import PostesDisponibles from './PostesDisponibles.astro'
+import HoraireSoutien from './HoraireSoutien.astro'
+import TableauDonnees from './TableauDonnees.astro'
+import CarrouselBalados from './CarrouselBalados.astro'
+import Telecommande from './Telecommande.astro'
+import ImageInteractive from './ImageInteractive.astro'
+import LibChatWidget from '@/components/contenu/integrations/LibChatWidget.astro'
+
+import type { NoeudDirective } from '@/lib/directives'
+
+interface Props {
+  nom: string
+  attributs: Record<string, any>
+  enfants: NoeudDirective[]
+}
+
+const { nom, attributs: a, enfants } = Astro.props
+const COMPOSANTS: Record<string, any> = {
+  onglets: Onglets,
+  onglet: Onglet,
+  'masquer-si': MasquerSi,
+  lieu: Lieu,
+  'parcours-reservation': ParcoursReservation,
+  disponibilites: Disponibilites,
+  colonnes: Colonnes,
+  video: Video,
+  copier: Copier,
+  encart: Encart,
+  pano360: Pano360,
+  'carte-bibliotheques': CarteBibliotheques,
+  'catalogue-logiciels': CatalogueLogiciels,
+  'postes-disponibles': PostesDisponibles,
+  'horaire-soutien': HoraireSoutien,
+  'tableau-donnees': TableauDonnees,
+  'carrousel-balados': CarrouselBalados,
+  telecommande: Telecommande,
+  'image-interactive': ImageInteractive,
+  clavardage: LibChatWidget,
+}
+// Morceaux que leur conteneur place lui-même (Lieu) : rendus par lui seul
+const DANS_CONTENEUR = new Set(['adresse', 'disponibilite', 'colonne'])
+const Composant = COMPOSANTS[nom]
+if (!Composant && !DANS_CONTENEUR.has(nom)) throw new Error(`RenduStudio : directive « ${nom} » sans composant.`)
+---
+
+{nom === 'colonne' && <div class="colonne"><slot /></div>}
+{Composant && <Composant {...a} enfants={enfants}><slot /></Composant>}

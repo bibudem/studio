@@ -1,0 +1,102 @@
+/*
+ * Fiches d'état (studio·bib) : une grille de liens-fiches, chacune avec un libellé en gras, un
+ * état dessous et une flèche en haut à droite. Communes à Disponibilites (casques de réalité
+ * virtuelle, disponibilité dans Sofia) et à PostesDisponibles (postes de connexion à distance).
+ *
+ * - `.fiches-etat` (liste) ; `--fiches-min` : largeur minimale d'une fiche (14rem par défaut).
+ * - `.fiche-etat` (lien) ; `data-statut="disponible"` : filet de gauche jaune et état appuyé.
+ *   L'état se lit dans le texte : le filet ne fait que le souligner (jamais la couleur seule).
+ * - `data-fleche="bas"` : la flèche descend au survol (téléchargement) au lieu de partir en diagonale.
+ */
+.fiches-etat {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(var(--fiches-min, 14rem), 100%), 1fr));
+  gap: var(--espace-element);
+  max-inline-size: none;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.fiches-etat[hidden] {
+  display: none;
+}
+
+.fiches-etat > li {
+  display: flex;
+  max-inline-size: none;
+  margin: 0;
+}
+
+.fiche-etat {
+  position: relative;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: calc(var(--espace-1) / 2);
+  box-sizing: border-box;
+  min-width: 0;
+  padding: var(--espace-2) calc(var(--espace-2) + 1.75rem) var(--espace-2) var(--espace-2);
+  border: 1px solid var(--couleur-bordure);
+  /* Filet de gauche net : coins droits de ce côté, arrondis de l'autre */
+  border-left: 4px solid var(--couleur-bordure);
+  border-radius: 0 var(--rayon-petit) var(--rayon-petit) 0;
+  background-color: var(--couleur-surface);
+  color: var(--couleur-texte);
+  text-decoration: none;
+  transition: border-color var(--duree-courte-4) var(--courbe-standard);
+}
+
+.fiche-etat .libelle {
+  font-weight: var(--graisse-forte);
+  overflow-wrap: break-word;
+}
+
+.fiche-etat .etat {
+  color: var(--couleur-texte-secondaire);
+  font-size: 0.9444rem;
+}
+
+.fiche-etat[data-statut='disponible'] {
+  border-left-color: var(--jaune);
+}
+
+.fiche-etat[data-statut='disponible'] .etat {
+  color: var(--couleur-texte);
+  font-weight: var(--graisse-moyenne);
+}
+
+.fiche-etat[data-statut='erreur'] .etat {
+  color: var(--couleur-lien);
+  text-decoration: underline;
+}
+
+.fiche-etat .fleche {
+  position: absolute;
+  top: var(--espace-2);
+  right: var(--espace-2);
+  color: var(--couleur-texte);
+  transition: transform var(--duree-courte-4) var(--courbe-standard-deceleree);
+}
+
+.fiche-etat:focus-visible .fleche {
+  transform: translate(2px, -2px);
+}
+
+.fiche-etat[data-fleche='bas']:focus-visible .fleche {
+  transform: translateY(2px);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .fiche-etat:hover {
+    border-color: var(--action-contour);
+  }
+
+  .fiche-etat:hover .fleche {
+    transform: translate(2px, -2px);
+  }
+
+  .fiche-etat[data-fleche='bas']:hover .fleche {
+    transform: translateY(2px);
+  }
+}

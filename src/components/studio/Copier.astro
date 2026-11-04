@@ -1,0 +1,101 @@
+---
+/*
+ * Directive `copier` : le texte à saisir,
+ * en code, suivi d'un bouton Copier. Le texte reste sélectionnable : la
+ * source en faisait un bouton entier, qu'on ne pouvait plus sélectionner.
+ *
+ * Le bouton n'existe qu'avec l'API du presse-papiers (JS, contexte sécurisé) :
+ * absent du rendu sans script, il ne promet rien qu'il ne peut faire. Le
+ * succès s'affiche sur le bouton et s'annonce dans une région status.
+ * Directive de texte : tout est en ligne (span, code, button), valide dans un
+ * paragraphe ou un élément de liste.
+ */
+import { CopyIcon } from '@phosphor-icons/react/dist/ssr/Copy'
+import { CheckIcon } from '@phosphor-icons/react/dist/ssr/Check'
+
+interface Props {
+  texte: string
+}
+
+const { texte } = Astro.props
+---
+
+<span class="copier" data-copier><code class="code">{texte}</code><button type="button" class="bouton-copier action-douce" data-texte={texte} aria-label={`Copier ${texte}`} hidden><CopyIcon size="1em" className="icone-copier" aria-hidden="true" focusable="false" /><CheckIcon size="1em" className="icone-copie" aria-hidden="true" focusable="false" /><span class="libelle" aria-hidden="true">Copier</span></button><span class="visuellement-masque" role="status"></span></span>
+
+<script>
+  // Durée du « Copié » : le temps de le lire
+  const DUREE_CONFIRMATION = 2000
+
+  if (navigator.clipboard?.writeText) {
+    for (const copier of document.querySelectorAll<HTMLElement>('[data-copier]')) {
+      const bouton = copier.querySelector<HTMLButtonElement>('.bouton-copier')
+      const statut = copier.querySelector<HTMLElement>('[role="status"]')
+      const libelle = bouton?.querySelector('.libelle')
+      if (!bouton || !statut || !libelle) continue
+      bouton.hidden = false
+      let minuterie: number | undefined
+      bouton.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(bouton.dataset.texte ?? '')
+        } catch {
+          statut.textContent = 'La copie a échoué : sélectionnez le texte pour le copier.'
+          return
+        }
+        bouton.dataset.copie = ''
+        libelle.textContent = 'Copié'
+        statut.textContent = 'Copié dans le presse-papiers'
+        clearTimeout(minuterie)
+        minuterie = window.setTimeout(() => {
+          delete bouton.dataset.copie
+          libelle.textContent = 'Copier'
+          statut.textContent = ''
+        }, DUREE_CONFIRMATION)
+      })
+    }
+  }
+</script>
+
+<style>
+  .copier {
+    display: inline-flex;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+    align-items: center;
+    max-width: 100%;
+    vertical-align: baseline;
+  }
+
+  .code {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .bouton-copier {
+    display: inline-flex;
+    gap: 0.25rem;
+    align-items: center;
+    min-height: 24px;
+    min-width: 24px;
+    padding: 0.1rem 0.5rem;
+    /* Apparence : .action-douce (global.css) */
+    border-radius: var(--rayon-petit);
+    font: inherit;
+    font-size: 0.8333rem;
+    font-weight: var(--graisse-moyenne);
+    line-height: 1.2;
+    cursor: pointer;
+  }
+
+  .bouton-copier[hidden] {
+    display: none;
+  }
+
+  .bouton-copier :global(.icone-copie),
+  .bouton-copier[data-copie] :global(.icone-copier) {
+    display: none;
+  }
+
+  .bouton-copier[data-copie] :global(.icone-copie) {
+    display: inline;
+  }
+</style>

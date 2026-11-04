@@ -1,0 +1,48 @@
+{
+  "name": "techno-astro",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "description": "studio·bib, les services technologiques et créatifs des Bibliothèques de l'UdeM (Astro)",
+  "engines": {
+    "node": ">=22.22.0"
+  },
+  "scripts": {
+    "dev": "astro dev --port 4323",
+    "dev:fond": "astro dev --port 4323 --background",
+    "dev:arreter": "astro dev stop",
+    "dev:propre": "astro dev stop; rm -f .astro/data-store.json && astro dev --port 4323 --background",
+    "build": "astro build",
+    "preview": "astro preview --port 4323",
+    "astro": "astro",
+    "cms:local": "npx --yes decap-server@3.11.3",
+    "verifier": "node scripts/verifier-pages.mjs",
+    "test": "node --test 'src/**/*.test.ts'"
+  },
+  "dependencies": {
+    "@astrojs/markdown-remark": "^7.3.5",
+    "@astrojs/mdx": "^8.1.0",
+    "@astrojs/react": "^7.1.0",
+    "@astrojs/sitemap": "^3.7.4",
+    "@fontsource-variable/figtree": "^5.3.0",
+    "@fontsource-variable/lora": "^5.3.0",
+    "@phosphor-icons/react": "^2.1.10",
+    "@photo-sphere-viewer/core": "^5.15.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "astro": "^7.4.1",
+    "github-slugger": "^2.0.0",
+    "leaflet": "^1.9.4",
+    "minisearch": "^7.2.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "remark-directive": "^4.0.0",
+    "sharp": "^0.35.5",
+    "unist-util-visit": "^5.2.0"
+  },
+  "devDependencies": {
+    "axe-core": "^4.14.0",
+    "gray-matter": "^4.0.3",
+    "playwright-core": "^1.64.1"
+  }
+}

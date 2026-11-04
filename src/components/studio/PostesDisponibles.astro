@@ -1,0 +1,225 @@
+---
+/*
+ * Postes de connexion à distance libres dans une zone. L'état des postes change de minute en minute : il est lu dans le
+ * navigateur (API disponibilite/ordinateurs), puis relu toutes les
+ * 30 secondes tant que l'onglet est visible.
+ *
+ * - Chaque poste libre est une fiche, comme celles de disponibilité des casques
+ *   de réalité virtuelle (Disponibilites), et un lien qui télécharge son
+ *   fichier de connexion (.rdp) : un vrai lien `download` (adresse data:), au
+ *   lieu d'un href="#" qui fabriquait le fichier au clic.
+ * - La liste n'est remplacée que si elle change : le focus clavier n'est pas
+ *   perdu à chaque relecture. Le nombre de postes libres est annoncé
+ *   poliment, seulement quand il change.
+ * - Sans JS : un renvoi vers la procédure de connexion.
+ */
+import EtatErreur from '@/components/contenu/dynamiques/EtatErreur.astro'
+import { niveauTitre } from '@/lib/directives'
+import '@/styles/fiches.css'
+
+interface Props {
+  zone: string
+  /** Nom du groupe de logiciels : un titre au-dessus des fiches, avec le nombre de postes libres */
+  titre?: string
+  /** Niveau du titre, juste sous le titre qui précède (calculé par rehypeDirectivesBib) */
+  niveau?: number
+  [attribut: string]: unknown
+}
+
+const { zone, titre, niveau = 3 } = Astro.props
+const Titre = `h${niveauTitre(niveau)}`
+---
+
+<div class="postes" data-postes={zone} aria-busy="true">
+  {
+    titre && (
+      <div class="groupe-entete">
+        <Titre class="groupe-titre">{titre}</Titre>
+        <span class="compte" data-compte />
+      </div>
+    )
+  }
+  <p class="message" data-message>La liste des postes libres s’affiche avec JavaScript. Voyez la <a href="#procedure-de-connexion">procédure de connexion</a>.</p>
+  <p class="visuellement-masque" role="status" data-annonce></p>
+  <ul class="fiches-etat" style="--fiches-min: 11rem" data-liste hidden></ul>
+  <EtatErreur message="La liste des postes n’est pas disponible pour le moment." etat="" />
+</div>
+
+<script>
+  import { brancherReessayer } from '@/components/contenu/dynamiques/chargement'
+  import { pluriel } from '@/lib/texte'
+
+  const API = 'https://api.bib.umontreal.ca/disponibilite/ordinateurs/?lieu=RDP'
+  const INTERVALLE = 30_000
+
+  const configuration = (adresse: string) =>
+    [
+      'screen mode id:i:2', 'session bpp:i:32', 'winposstr:s:0,1,691,455,2274,1457', 'compression:i:1', 'keyboardhook:i:2',
+      'audiocapturemode:i:0', 'videoplaybackmode:i:1', 'connection type:i:7', 'networkautodetect:i:1', 'bandwidthautodetect:i:1',
+      'displayconnectionbar:i:1', 'enableworkspacereconnect:i:0', 'disable wallpaper:i:0', 'allow font smoothing:i:0',
+      'allow desktop composition:i:0', 'disable full window drag:i:1', 'disable menu anims:i:1', 'disable themes:i:0',
+      'disable cursor setting:i:0', 'bitmapcachepersistenable:i:1', `full address:s:${adresse}`, 'audiomode:i:0',
+      'redirectprinters:i:1', 'redirectcomports:i:0', 'redirectsmartcards:i:1', 'redirectclipboard:i:1', 'redirectposdevices:i:0',
+      'autoreconnection enabled:i:1', 'authentication level:i:2', 'prompt for credentials:i:0', 'negotiate security layer:i:1',
+      'remoteapplicationmode:i:0', 'gatewayusagemethod:i:4', 'gatewaycredentialssource:i:4', 'gatewayprofileusagemethod:i:0',
+      'promptcredentialonce:i:0', 'use redirection server name:i:0', 'rdgiskdcproxy:i:0', 'use multimon:i:0', 'gatewaybrokeringtype:i:0',
+      '',
+    ].join('\n')
+
+  const adresseDe = (id: string) => `${id}${id.toLowerCase().includes('sap') ? '.bib.umontreal.ca' : '.fil.umontreal.ca'}`
+
+  // Icône « télécharger » (Phosphor DownloadSimple), dessinée ici : la liste est construite dans le navigateur
+  const telechargement = () => {
+    const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg')
+    svg.setAttribute('viewBox', '0 0 256 256')
+    svg.setAttribute('width', '20')
+    svg.setAttribute('height', '20')
+    svg.setAttribute('fill', 'currentColor')
+    svg.setAttribute('aria-hidden', 'true')
+    svg.setAttribute('focusable', 'false')
+    svg.classList.add('fleche')
+    const chemin = document.createElementNS('http://www.w3.org/2000/svg', 'path')
+    chemin.setAttribute('d', 'M224,144v64a8,8,0,0,1-8,8H40a8,8,0,0,1-8-8V144a8,8,0,0,1,16,0v56H208V144a8,8,0,0,1,16,0Zm-101.66,5.66a8,8,0,0,0,11.32,0l40-40a8,8,0,0,0-11.32-11.32L136,124.69V32a8,8,0,0,0-16,0v92.69L93.66,98.34a8,8,0,0,0-11.32,11.32Z')
+    svg.append(chemin)
+    return svg
+  }
+
+  type Poste = { id?: string; enabled?: boolean; state?: string }
+
+  for (const racine of document.querySelectorAll<HTMLElement>('[data-postes]')) {
+    const zone = racine.dataset.postes!
+    const message = racine.querySelector<HTMLElement>('[data-message]')!
+    const annonce = racine.querySelector<HTMLElement>('[data-annonce]')!
+    const liste = racine.querySelector<HTMLUListElement>('[data-liste]')!
+    const compte = racine.querySelector<HTMLElement>('[data-compte]')
+    const erreur = racine.querySelector<HTMLElement>('.etat-erreur')!
+    let precedents = ''
+    let minuterie: number | undefined
+    let echecs = 0
+
+    message.textContent = 'Chargement des postes disponibles…'
+
+    const afficher = (ids: string[]) => {
+      const cle = ids.join('|')
+      if (cle === precedents && !liste.hidden) return
+      precedents = cle
+      liste.replaceChildren(
+        ...ids.map((id) => {
+          const adresse = adresseDe(id)
+          const lien = document.createElement('a')
+          lien.className = 'fiche-etat'
+          // Toujours libre, et un fichier à télécharger : filet jaune, flèche vers le bas
+          lien.dataset.statut = 'disponible'
+          lien.dataset.fleche = 'bas'
+          lien.href = `data:application/x-rdp;charset=utf-8,${encodeURIComponent(configuration(adresse))}`
+          lien.download = `${adresse}.rdp`
+          const libelle = Object.assign(document.createElement('span'), { className: 'libelle', textContent: id })
+          const etat = Object.assign(document.createElement('span'), { className: 'etat', textContent: 'Disponible' })
+          const masque = Object.assign(document.createElement('span'), { className: 'visuellement-masque', textContent: ' (fichier de connexion .rdp)' })
+          lien.append(libelle, etat, masque, telechargement())
+          const li = document.createElement('li')
+          li.append(lien)
+          return li
+        }),
+      )
+      liste.hidden = !ids.length
+      message.hidden = Boolean(ids.length)
+      message.textContent = 'Aucun poste disponible pour le moment.'
+      const texte = ids.length ? pluriel(ids.length, 'poste', 'disponible') : 'Aucun poste disponible'
+      if (compte) compte.textContent = texte
+      annonce.textContent = texte
+    }
+
+    // Chaque chargement a son numéro : seul le plus récent programme la relecture suivante (sinon,
+    // une requête terminée après un retour au premier plan lançait une seconde boucle, jamais arrêtée)
+    let tour = 0
+    const charger = async () => {
+      clearTimeout(minuterie)
+      const ceTour = ++tour
+      try {
+        const reponse = await fetch(`${API}&zone=${encodeURIComponent(zone)}`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(8000) })
+        if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`)
+        const donnees: Poste[] = await reponse.json()
+        if (!Array.isArray(donnees)) throw new Error('La réponse n’est pas une liste.')
+        echecs = 0
+        erreur.hidden = true
+        afficher(donnees.filter((p) => p?.id && p.enabled === true && p.state !== 'active').map((p) => String(p.id).trim()))
+      } catch (e) {
+        console.error(`Postes disponibles (${zone}) :`, e)
+        echecs++
+        // Une relecture manquée ne vide pas la liste ; l'erreur ne s'affiche qu'au premier chargement ou après trois échecs
+        if (!precedents || echecs >= 3) {
+          liste.hidden = true
+          message.hidden = true
+          erreur.hidden = false
+        }
+      } finally {
+        racine.setAttribute('aria-busy', 'false')
+        if (ceTour === tour && !document.hidden) {
+          clearTimeout(minuterie)
+          minuterie = window.setTimeout(charger, INTERVALLE)
+        }
+      }
+    }
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) clearTimeout(minuterie)
+      else charger()
+    })
+    brancherReessayer(racine, () => {
+      erreur.hidden = true
+      message.hidden = false
+      message.textContent = 'Chargement des postes disponibles…'
+      charger()
+    })
+    charger()
+  }
+</script>
+
+<style>
+  .postes {
+    margin-block: var(--espace-4) var(--espace-3);
+  }
+
+  /* Un groupe de logiciels : son nom en titre, le nombre de postes libres à droite,
+     puis les fiches en grille. Le nom reste sur toute la largeur : un titre long
+     (« Mathematica, SAS, Stata et SPSS Amos ») ne déforme plus les fiches. */
+  .groupe-entete {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0 var(--espace-2);
+    margin-block-end: var(--espace-2);
+    padding-block-end: var(--espace-1);
+    border-bottom: 1px solid var(--couleur-bordure);
+  }
+
+  .groupe-titre {
+    margin: 0;
+    font-family: var(--police-sans);
+    font-size: 1.25rem;
+    font-weight: var(--graisse-forte);
+    line-height: 1.3;
+  }
+
+  .compte {
+    color: var(--couleur-texte-secondaire);
+    font-size: 0.875rem;
+  }
+
+  .compte:empty {
+    display: none;
+  }
+
+  .message {
+    margin: 0;
+    color: var(--couleur-texte-secondaire);
+  }
+
+  .message[hidden] {
+    display: none;
+  }
+
+  /* Grille et fiches : src/styles/fiches.css (communes avec Disponibilites) */
+</style>

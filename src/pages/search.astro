@@ -1,0 +1,325 @@
+---
+/*
+ * Page de résultats de la recherche dans le site (/search?q=…), adresse citée par
+ * l'action SearchAction des données structurées (src/data/site.ts). C'est la
+ * suite du champ de l'en-tête (« Tous les résultats ») ; reprise de la page
+ * de résultats de boite-outils-astro, avec MiniSearch.
+ *
+ * Page statique : la requête est lue dans l'URL par le script, l'index se
+ * charge à l'arrivée. Le formulaire est un vrai GET vers la page elle-même.
+ */
+import Base from '@/layouts/Base.astro'
+import RechercheSite from '@/components/coquille/RechercheSite.astro'
+import { SECTIONS } from '@/data/navigation'
+
+const PAR_PAGE = 20
+// Filtre par section, dans l'ordre du menu ; les pages hors section (accueil) ne comptent que dans « Tout le site »
+const FILTRES = [{ cle: 'tout', libelle: 'Tout le site' }, ...SECTIONS.map(({ cle, titre }) => ({ cle, libelle: titre }))]
+---
+
+<Base titre="Résultats de recherche" description="Rechercher dans les pages de studio·bib." noindex niveau={1}>
+  <main id="contenu-principal" class="conteneur resultats" data-page-resultats data-par-page={PAR_PAGE}>
+    <h1 class="apparence-h2">Résultats de recherche</h1>
+    <RechercheSite id="resultats" nom="Modifier la recherche" />
+
+    <fieldset class="sources" hidden data-sources>
+      <legend class="visuellement-masque">Section</legend>
+      {
+        FILTRES.map(({ cle, libelle }, i) => (
+          <label class="source">
+            <input type="radio" name="section" value={cle} checked={i === 0} />
+            <span>{libelle}</span>
+            <span class="compte" data-compte={cle} />
+          </label>
+        ))
+      }
+    </fieldset>
+
+    <p class="etat" role="status" data-statut>
+      <noscript>La recherche demande JavaScript. Le menu ci-dessus mène à toutes les sections du site.</noscript>
+    </p>
+
+    {/* role="list" : Safari retire la sémantique de liste avec list-style: none */}
+    <ul class="liste" role="list" data-liste></ul>
+    <button type="button" class="plus action-douce" hidden data-plus>Afficher plus de résultats</button>
+
+    <template data-modele>
+      <li>
+        <a class="resultat">
+          <span class="ligne">
+            <span class="section"></span>
+            <span class="fleche" aria-hidden="true">→</span>
+            <span class="visuellement-masque"> : </span>
+            <span class="titre"></span>
+          </span>
+          <span class="extrait"></span>
+        </a>
+      </li>
+    </template>
+  </main>
+</Base>
+
+<script>
+  import { chargerIndex, chercher, type Resultat } from '@/lib/recherche'
+  import { pluriel } from '@/lib/texte'
+
+  const page = document.querySelector<HTMLElement>('[data-page-resultats]')!
+  const trouver = <T extends Element>(selecteur: string) => page.querySelector<T>(selecteur)!
+  const PAR_PAGE = Number(page.dataset.parPage)
+  const champ = trouver<HTMLInputElement>('input[type="search"]')
+  const sources = trouver<HTMLFieldSetElement>('[data-sources]')
+  const statut = trouver<HTMLElement>('[data-statut]')
+  const liste = trouver<HTMLElement>('[data-liste]')
+  const plus = trouver<HTMLButtonElement>('[data-plus]')
+  const modele = trouver<HTMLTemplateElement>('[data-modele]')
+  const radios = [...page.querySelectorAll<HTMLInputElement>('input[name="section"]')]
+
+  const requete = new URLSearchParams(location.search).get('q')?.trim() ?? ''
+  let resultats: Resultat[] = []
+  let montres = PAR_PAGE
+
+  champ.value = requete
+  if (requete) document.title = `« ${requete} » – ${document.title}`
+
+  const deSection = (cle: string) => resultats.filter((r) => cle === 'tout' || r.cleSection === cle)
+  const phraseResultats = (n: number) => `${pluriel(n, 'résultat')} pour « ${requete} »`
+
+  function element({ titre, url, description, section }: Resultat) {
+    const li = modele.content.firstElementChild!.cloneNode(true) as HTMLElement
+    li.querySelector('a')!.href = url
+    li.querySelector('.section')!.textContent = section
+    li.querySelector('.titre')!.textContent = titre
+    const extrait = li.querySelector('.extrait')!
+    if (description) extrait.textContent = description
+    else extrait.remove()
+    return li
+  }
+
+  function rendre() {
+    const visibles = deSection(radios.find((r) => r.checked)!.value)
+    liste.replaceChildren(...visibles.slice(0, montres).map(element))
+    plus.hidden = visibles.length <= montres
+    statut.textContent = visibles.length ? phraseResultats(visibles.length) : `Aucun résultat pour « ${requete} » dans cette section.`
+  }
+
+  if (!requete) statut.textContent = 'Tapez votre recherche ci-dessus.'
+  else {
+    statut.textContent = 'Chargement des résultats…'
+    chargerIndex()
+      .then((index) => {
+        resultats = chercher(index, requete)
+        if (!resultats.length) {
+          statut.textContent = `Aucun résultat pour « ${requete} ». Essayez un autre mot ou une orthographe plus courte.`
+          return
+        }
+        // Une section sans résultat ne sert à rien comme filtre
+        for (const radio of radios) {
+          const n = deSection(radio.value).length
+          page.querySelector(`[data-compte="${CSS.escape(radio.value)}"]`)!.textContent = String(n)
+          radio.closest('label')!.hidden = n === 0
+        }
+        sources.hidden = false
+        rendre()
+      })
+      .catch(() => {
+        statut.textContent = "Les résultats n'ont pas pu être chargés. Réessayez dans un moment."
+      })
+  }
+
+  for (const radio of radios) {
+    radio.addEventListener('change', () => {
+      montres = PAR_PAGE
+      rendre()
+    })
+  }
+
+  plus.addEventListener('click', () => {
+    const premierNouveau = montres
+    montres += PAR_PAGE
+    rendre()
+    // Le focus va au premier résultat ajouté, pas en haut de la liste
+    liste.children[premierNouveau]?.querySelector('a')?.focus()
+  })
+</script>
+
+<style>
+  .resultats {
+    padding-block: var(--espace-4) var(--espace-8);
+  }
+
+  h1 {
+    margin-block: 0 var(--espace-3);
+  }
+
+  .resultats > :global(.recherche-site) {
+    max-width: 48rem;
+  }
+
+  .sources {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--espace-1);
+    min-width: 0;
+    margin: var(--espace-3) 0 var(--espace-2);
+    padding: 0;
+    border: 0;
+  }
+
+  .sources[hidden],
+  .source[hidden] {
+    display: none;
+  }
+
+  .source {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-height: var(--taille-cible);
+    padding: 0.375rem 1rem;
+    border: 1px solid var(--couleur-bordure);
+    border-radius: var(--rayon-plein);
+    background: var(--couleur-surface);
+    color: var(--couleur-texte);
+    font-size: 0.9375rem;
+    font-weight: var(--graisse-moyenne);
+    cursor: pointer;
+  }
+
+  /* Le bouton radio couvre la pastille : clavier et lecteurs d'écran natifs */
+  .source input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    opacity: 0;
+    cursor: pointer;
+  }
+
+  /* studio·bib : source choisie (état) : bleu foncé plein, texte blanc */
+  .source:has(input:checked) {
+    border-color: var(--selection-fond);
+    background: var(--selection-fond);
+    color: var(--selection-texte);
+  }
+
+  .source:has(input:focus-visible) {
+    outline: 3px solid var(--couleur-focus);
+    outline-offset: 2px;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .source:not(:has(input:checked)):hover {
+      background: var(--action-douce-fond-survol);
+    }
+  }
+
+  @media (forced-colors: active) {
+    .source:has(input:checked) {
+      border: 2px solid Highlight;
+    }
+  }
+
+  .compte {
+    padding: 0 0.5rem;
+    border-radius: var(--rayon-plein);
+    background: color-mix(in srgb, currentColor 12%, transparent);
+    font-size: 0.8125rem;
+  }
+
+  .compte:empty {
+    display: none;
+  }
+
+  .etat {
+    margin: var(--espace-3) 0 var(--espace-1);
+    color: var(--couleur-texte-secondaire);
+  }
+
+  .sources:not([hidden]) + .etat {
+    margin-block-start: 0;
+  }
+
+  .liste {
+    max-width: 48rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Les résultats sont créés par le script, depuis le modèle : hors de la portée des styles scopés */
+  .liste :global(li) {
+    max-inline-size: none;
+  }
+
+  .liste :global(li + li) {
+    border-block-start: 1px solid var(--couleur-bordure);
+  }
+
+  .liste :global(.resultat) {
+    display: block;
+    padding-block: var(--espace-2);
+    color: var(--couleur-lien);
+    text-decoration: none;
+  }
+
+  .liste :global(.resultat:focus-visible) {
+    outline: 3px solid var(--couleur-focus);
+    outline-offset: 2px;
+  }
+
+  .liste :global(.ligne) {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 0 var(--espace-1);
+  }
+
+  .liste :global(.section),
+  .liste :global(.fleche) {
+    flex-shrink: 0;
+    color: var(--couleur-texte-secondaire);
+    font-size: 0.875rem;
+    font-weight: var(--graisse-forte);
+  }
+
+  .liste :global(.titre) {
+    min-width: 0;
+    font-size: 1.0625rem;
+    font-weight: var(--graisse-forte);
+    overflow-wrap: anywhere;
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .liste :global(.resultat:hover .titre) {
+      text-decoration: underline;
+    }
+  }
+
+  .liste :global(.extrait) {
+    display: block;
+    margin-block-start: 0.25rem;
+    color: var(--couleur-texte-secondaire);
+  }
+
+  .plus {
+    min-height: var(--taille-cible);
+    margin-block-start: var(--espace-3);
+    padding: 0.5rem 1.5rem;
+    /* Apparence : .action-douce (global.css) */
+    border-radius: var(--rayon-plein);
+    font: inherit;
+    font-weight: var(--graisse-moyenne);
+    cursor: pointer;
+  }
+
+  .plus[hidden] {
+    display: none;
+  }
+
+  .plus:focus-visible {
+    outline: 3px solid var(--couleur-focus);
+    outline-offset: 2px;
+  }
+</style>

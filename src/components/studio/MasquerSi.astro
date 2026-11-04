@@ -1,0 +1,27 @@
+---
+/*
+ * Directive `masquer-si` : masque son contenu quand l'onglet choisi du groupe
+ * vaut `valeur` (proxy : l'étape de test ne concerne pas iOS). Le groupe est
+ * suivi par onglets.ts : onglet affiché sur la page, sinon choix gardé
+ * dans localStorage.
+ *
+ * Sans JS, le contenu reste affiché : il vaut pour la plupart des systèmes.
+ */
+interface Props {
+  groupe: string
+  valeur: string
+}
+
+const { groupe, valeur } = Astro.props
+---
+
+<div data-masquer-si data-groupe={groupe} data-valeur={valeur}><slot /></div>
+
+<script>
+  import { suivreGroupe } from '@/components/contenu/accordeons/onglets'
+
+  for (const bloc of document.querySelectorAll<HTMLElement>('[data-masquer-si]')) {
+    const { groupe, valeur } = bloc.dataset
+    if (groupe) suivreGroupe(groupe, (choisie) => (bloc.hidden = choisie === valeur))
+  }
+</script>

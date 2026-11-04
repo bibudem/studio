@@ -1,0 +1,75 @@
+---
+/*
+ * Pastille fléchée des listes Quoi de neuf : → pour une page du site,
+ * ↗ pour un lien qui s'ouvre dans un nouvel onglet. Purement décorative :
+ * le lien annonce lui-même le nouvel onglet. Elle prend la couleur du texte
+ * (currentColor), son disque à 10 % d'opacité.
+ *
+ * La flèche porte la classe `fleche` : le parent la déplace au survol (voir
+ * Element.astro).
+ *
+ * Taille des pastilles fléchées du site (jetons) : petite dans une ligne de
+ * liste, `grande` dans une carte (50 px).
+ */
+interface Props {
+  externe?: boolean
+  grande?: boolean
+}
+
+const { externe = false, grande = false } = Astro.props
+// Attributs de repli, sans CSS ; le CSS donne la taille du jeton
+const repli = grande ? 50 : 40
+---
+
+<svg class:list={['pastille', { grande, externe }]} width={repli} height={repli} viewBox="0 0 50 51" aria-hidden="true" focusable="false">
+  <rect width="50" height="50" x="0" y="0.5" rx="25" opacity=".1" fill="currentColor"></rect>
+  {
+    externe ? (
+      <path
+        class="fleche"
+        fill="currentColor"
+        d="m32.163 18.924 0 9.944a.586.586 0 0 1-1.172 0l-.001-8.529-11.153 11.153a.586.586 0 0 1-.828-.828l11.153-11.153-8.529-.001a.586.586 0 0 1 0-1.172l9.944 0a.586.586 0 0 1 .586.586z"
+      />
+    ) : (
+      <path
+        class="fleche"
+        fill="currentColor"
+        d="m34.508 25.415-7.031 7.031a.586.586 0 0 1-.828-.828l6.03-6.031H16.907a.586.586 0 1 1 0-1.172h15.772l-6.03-6.031a.586.586 0 0 1 .828-.828l7.031 7.03a.586.586 0 0 1 0 .829z"
+      />
+    )
+  }
+</svg>
+
+<style>
+  .pastille {
+    display: block;
+    flex-shrink: 0;
+    /* studio·bib : le contour du disque déborde du viewBox ; il n'est plus rogné sur les bords */
+    overflow: visible;
+    width: var(--taille-pastille-petite);
+    height: var(--taille-pastille-petite);
+  }
+
+  .grande {
+    width: var(--taille-pastille);
+    height: var(--taille-pastille);
+  }
+
+  /* studio·bib : pastille jaune pâle à contour jaune foncé, flèche bleu foncé */
+  .pastille :global(rect) {
+    fill: var(--action-douce-fond);
+    opacity: 1;
+    stroke: var(--action-contour);
+    stroke-width: 1.5;
+  }
+
+  .pastille :global(.fleche) {
+    fill: var(--action-texte);
+  }
+
+  /* La flèche peut avancer d'un cran : le composant qui la contient décide
+     quand (survol, focus), voir Element.astro */
+  .fleche {
+    transition: transform var(--duree-courte-4) var(--courbe-standard-deceleree);
+  }
+</style>
