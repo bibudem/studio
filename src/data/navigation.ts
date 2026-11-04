@@ -170,7 +170,6 @@ export const COLONNES_PIED: { titre: string; liens: LienPied[] }[] = [
       { libelle: 'Studio·bib', fonction: 'Informatique et création numérique', href: '/', point: 'var(--jaune)' },
       { libelle: 'Papyrus', fonction: 'Dépôt institutionnel', href: 'https://umontreal.scholaris.ca/', point: 'var(--vert-fonce)' },
       { libelle: 'GéoIndex', fonction: 'Données géospatiales', href: 'https://geoapp.bibl.ulaval.ca/', rel: 'noopener noreferrer', point: 'var(--bleu-200)' },
-      { libelle: 'Collections spéciales', fonction: 'Objets numériques', href: 'https://collections-speciales.bib.umontreal.ca/', point: 'var(--rose-300)' },
     ],
   },
 ]
