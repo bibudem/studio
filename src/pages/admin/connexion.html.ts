@@ -19,6 +19,9 @@ import type { APIRoute } from 'astro'
 
 export const prerender = true
 
+// Relais n8n (workflow « Decap CMS : connexion GitHub (studio) ») ; DECAP_AUTH_URL le remplace au besoin
+const RELAIS = 'https://ordo.bib.umontreal.ca/webhook/decap-studio/auth'
+
 const page = (relais: string) => `<!doctype html>
 <html lang="fr">
 <head>
@@ -58,6 +61,6 @@ const page = (relais: string) => `<!doctype html>
 `
 
 export const GET: APIRoute = () =>
-  new Response(page(process.env.DECAP_AUTH_URL ?? ''), {
+  new Response(page(process.env.DECAP_AUTH_URL ?? RELAIS), {
     headers: { 'Content-Type': 'text/html; charset=utf-8' },
   })

@@ -30,7 +30,7 @@ npm test             # tests unitaires
 
 ## Déploiement
 
-AWS Amplify (`amplify.yml`, `customHttp.yml`), sortie `dist/`. Seule la branche `production` est indexée ; ailleurs, le site est une préproduction.
+AWS Amplify (`amplify.yml`, `customHttp.yml`), sortie `dist/`. La branche `main` est le site public (seule indexée) ; Decap CMS y enregistre directement. Ailleurs, le site est une préproduction.
 
 ## Licence
 

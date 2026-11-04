@@ -12,12 +12,15 @@ import { SECTIONS } from '@/data/navigation'
  * - Le corps s'édite en Markdown brut : un éditeur visuel réécrirait les
  *   directives (:::onglets, ::bouton…) à l'enregistrement.
  * - Une collection par section du site (menu principal), plus les encarts.
- * - En ligne, chaque enregistrement ouvre une pull request
- *   (editorial_workflow) ; en développement (npm run cms:local), Decap écrit
- *   directement dans les fichiers.
+ * - En ligne, chaque enregistrement est un commit direct sur la branche publiée
+ *   (mode simple, sans pull request) : Amplify reconstruit le site et le publie.
+ *   Si le build échoue, Amplify garde la version précédente en ligne. En
+ *   développement (npm run cms:local), Decap écrit directement dans les fichiers.
  * - Dépôt, branche et connexion : DECAP_DEPOT (par défaut bibudem/studio), DECAP_BRANCHE (par
- *   défaut main : la branche où s'ouvrent les pull requests de rédaction),
- *   DECAP_ORIGINE et DECAP_AUTH_URL (relais OAuth GitHub).
+ *   défaut main : la branche publiée par Amplify, où Decap enregistre),
+ *   DECAP_ORIGINE (par défaut https://studio.bib.umontreal.ca : l'origine où
+ *   s'ouvre admin/connexion.html) et DECAP_AUTH_URL (connexion.html.ts). Ces
+ *   adresses ne sont pas secrètes ; les variables ne servent qu'à les remplacer.
  *
  * JSON.stringify suffit : un document JSON est un document YAML valide.
  */
@@ -26,6 +29,7 @@ export const prerender = true
 
 const DEPOT = process.env.DECAP_DEPOT ?? 'bibudem/studio'
 const BRANCHE = process.env.DECAP_BRANCHE ?? 'main'
+const ORIGINE = process.env.DECAP_ORIGINE ?? 'https://studio.bib.umontreal.ca'
 const pageConnexion = [process.env.BASE_PATH, 'admin/connexion.html']
   .map((partie) => partie?.replace(/^\/+|\/+$/g, ''))
   .filter(Boolean)
@@ -125,7 +129,8 @@ export const GET: APIRoute = async () => {
       name: 'github',
       repo: DEPOT,
       branch: BRANCHE,
-      ...(process.env.DECAP_ORIGINE ? { base_url: process.env.DECAP_ORIGINE, auth_endpoint: pageConnexion } : {}),
+      base_url: ORIGINE,
+      auth_endpoint: pageConnexion,
       commit_messages: {
         create: 'Création de {{collection}} « {{slug}} »',
         update: 'Modification de {{collection}} « {{slug}} »',
@@ -134,7 +139,7 @@ export const GET: APIRoute = async () => {
         deleteMedia: 'Suppression de l’image « {{path}} »',
       },
     },
-    ...(import.meta.env.DEV ? { local_backend: true } : { publish_mode: 'editorial_workflow' }),
+    ...(import.meta.env.DEV ? { local_backend: true } : {}),
     omit_empty_optional_fields: true,
     media_folder: 'public/televersements',
     public_folder: '/televersements',

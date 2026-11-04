@@ -11,7 +11,7 @@ import { remarkHtmlPermis } from './src/plugins/directives-studio.mjs'
 import rehypeAncresTitres from './src/plugins/rehype-ancres-titres.mjs'
 import { REDIRECTIONS } from './src/data/redirections.mjs'
 
-// Seule la branche production est indexée (robots.txt, balise robots) ; SITE_ENV peut le forcer.
+// Seule la branche main (le site public) est indexée (robots.txt, balise robots) ; SITE_ENV peut le forcer.
 // Sur Amplify, le dépôt est extrait sans branche (HEAD détaché) : AWS_BRANCH donne alors son nom.
 function branche() {
   if (process.env.AWS_BRANCH) return process.env.AWS_BRANCH
@@ -21,7 +21,7 @@ function branche() {
     return null
   }
 }
-process.env.SITE_ENV ||= branche() === 'production' ? 'production' : 'preprod'
+process.env.SITE_ENV ||= branche() === 'main' ? 'production' : 'preprod'
 
 // Pages Markdown : directives communes et de studio·bib (docs/REDACTION.md),
 // puis ancres des titres. rehypeDirectivesBib en dernier : il change les
