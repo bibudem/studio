@@ -14,7 +14,7 @@ Le studio balado vidéo de la [Bibliothèque des lettres et sciences humaines](h
 ::::lieu{titre="Bibliothèque des lettres et sciences humaines (BLSH)" carte="https://maps.app.goo.gl/cXprvQUPjBzQ6c8L8"}
 ::adresse[**Pavillon Samuel-Bronfman, 2<sup>e</sup> étage, local 2076-2&#x20;**]
 
-À votre arrivée, présentez-vous au bureau de référence du 2<sup>e</sup> étage afin que le personnel vous déverrouille le studio.A
+À votre arrivée, présentez-vous au bureau de référence du 2<sup>e</sup> étage afin que le personnel vous déverrouille le studio.
 
 :::parcours-reservation{reservation="https://calendrier.bib.umontreal.ca/space/27462" accompagnement="https://outlook.office.com/book/studiobib@umontreal.ca/s/O1Um8iUY1kGYJYWEupBIzQ2?ismsaljsauthenabled" guide="/medias/guidebaladovideo"}
 Gardez votre réservation du studio. Sur place, le guide d’utilisation pas à pas vous accompagne, et le personnel du bureau de référence du 2<sup>e</sup> étage pourra vous aider à démarrer.
