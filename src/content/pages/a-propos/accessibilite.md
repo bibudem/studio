@@ -6,9 +6,7 @@ imageAlt: Photo par Gloria Obeid, étudiante au baccalauréat en architecture (2
 masquerDate: true
 ---
 
-Nous nous efforçons de rendre ce site accessible au plus grand nombre, conformément aux [normes WCAG (Web Content Accessibility Guidelines)](https://www.w3.org/WAI/standards-guidelines/wcag/) et aux standards du gouvernement du Québec [SGQRI 008 2.0](https://cdn-contenu.quebec.ca/cdn-contenu/adm/min/cybersecurite_numerique/Standard_sur_l_accessibilite/standard-access-web.pdf).
-
-Les contenus et fonctionnalités développés à partir du 29 avril 2024 respectent la version 3.0 du [Standard sur l'accessibilité des sites Web (SGQRI 008 3.0)](https://www.quebec.ca/gouvernement/ministere/cybersecurite-numerique/publications/standard-accessibilite-sites-web).
+Nous nous efforçons de rendre ce site accessible au plus grand nombre, conformément aux [normes WCAG (Web Content Accessibility Guidelines)](https://www.w3.org/WAI/standards-guidelines/wcag/) et au [Standard sur l'accessibilité des sites Web du gouvernement du Québec (SGQRI 008 3.0)](https://www.quebec.ca/gouvernement/ministeres-organismes/cybersecurite-numerique/publications/standard-accessibilite-sites-web).
 
 ## Principes appliqués
 
@@ -36,6 +34,8 @@ Les icônes accompagnent le texte et ne sont jamais le seul moyen de comprendre 
 - :icone[magnifying-glass] Loupe : ouvrir la recherche dans le site. Elle devient une croix pour la fermer.
 - :icone[list] Trois traits horizontaux (menu) : ouvrir le menu de navigation. Ils deviennent une croix pour le fermer.
 - :icone[arrow-right] Flèche vers la droite : lien vers une autre page.
+- :icone[arrow-up-right] Flèche en diagonale : lien vers un site externe. Les lecteurs d’écran annoncent « lien externe ».
+- :icone[arrow-square-out] Flèche qui sort d’un carré : lien vers un site externe, qui s’ouvre dans un nouvel onglet.
 - :icone[arrow-up] Flèche vers le haut : retourner en haut de la page.
 - :icone[magnifying-glass-plus] Loupe dans le coin d’une photo : cliquer pour agrandir la photo.
 - :icone[info] Icône dans un encadré (information, succès, attention, erreur) : type de message. Le texte de l’encadré indique toujours la même chose.
