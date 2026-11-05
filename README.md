@@ -21,6 +21,17 @@ npm test             # tests unitaires
 | `npm run dev:fond` / `dev:arreter` | Serveur de dev en arrière-plan / l'arrêter |
 | `npm run dev:propre` | Après une modification d'un plugin ou du schéma : vide le cache du contenu et relance |
 
+## Structure
+
+| Dossier | Contenu |
+| :-- | :-- |
+| `src/` | Le site lui-même. Les textes des pages sont dans `src/content/` (un fichier Markdown par page) et les listes partagées entre pages (bibliothèques, menus, sigles…) dans `src/data/` ; le reste est le code qui les met en forme. |
+| `public/` | Fichiers servis tels quels : images, PDF, vidéos, et quelques pages autonomes (présentations, occupation des bibliothèques…). |
+| `scripts/` | Outils pour les développeurs, comme la vérification de toutes les pages (`npm run verifier`). |
+| `dist/` | Le site prêt à publier, créé par `npm run build`. Ne pas modifier à la main. |
+| `node_modules/` | Bibliothèques installées par `npm install`. Ne pas modifier. |
+
+À la racine, `astro.config.mjs` règle le site, et `amplify.yml` et `customHttp.yml` règlent sa mise en ligne.
 
 ## Qualité
 
@@ -37,3 +48,5 @@ Page 404 : une règle de la console Amplify (**Hosting** → **Rewrites and redi
 ## Licence
 
 Code : MIT. Contenu : CC BY 4.0, sauf indication contraire (Les bibliothèques de l'Université de Montréal).
+
+---
