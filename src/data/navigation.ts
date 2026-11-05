@@ -118,7 +118,7 @@ export const SECTIONS: Section[] = [
       },
       'medias/postes-edition',
       { titre: 'Production audio', enfants: ['medias/balado', 'medias/rodecaster', 'medias/audacity'] },
-      { titre: 'Production vidéo', enfants: ['medias/obs', 'medias/guidebaladovideo', 'medias/guidevideolsh', 'medias/guidevideotgd', 'medias/teleprompteur'] },
+      { titre: 'Production vidéo', enfants: ['medias/obs', 'medias/guidebaladovideo', 'medias/guidevideolsh', 'medias/guidevideotgd', 'medias/teleprompteur', 'medias/handbrake'] },
       { titre: 'Infographie', enfants: ['medias/tabgraphique'] },
     ],
   },

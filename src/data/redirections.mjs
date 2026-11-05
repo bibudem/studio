@@ -8,6 +8,7 @@ export const REDIRECTIONS = {
   '/espaces/studiovideo': '/espaces/studiosvideo',
   '/espaces/studioaudio': '/espaces/studiosbalado',
   '/creatives/impression3d/imprimantes3d': '/creatives/impression3d',
+  '/medias/handbreak': '/medias/handbrake',
   // Logiciels sans guide : pages retirées, le catalogue indique où les trouver
   ...Object.fromEntries(SANS_GUIDE.map((nom) => [`/informatique/logiciels/${nom}`, '/informatique/logiciels'])),
 }
