@@ -1,14 +1,21 @@
 ---
 /*
- * Rétroaction de l'usager (RetroactionUsager.jsx) : le web component
- * <bib-retroaction-usager> (« Cette page vous a été utile? »), en bas du
- * contenu. Il reste discret : une ligne centrée, sur le fond de la page.
+ * Rétroaction de l'usager (« Cette page vous a été utile? »), en bas du
+ * contenu. Reprise du composant de l'ancien site techno : les réponses vont
+ * au formulaire LibWizard de studio·bib et, en parallèle, au webhook n8n.
  *
- * Pas de role="alert" sur ce cadre statique (les lecteurs d'écran
- * l'annonceraient au chargement de chaque page) : un simple repère
- * complémentaire nommé ; le web component gère lui-même ses annonces
- * (formulaire aria-live).
+ * L'envoi demande JavaScript : sans lui, le bloc reste masqué (hidden) plutôt
+ * que d'offrir des boutons inertes.
+ *
+ * Pas de role="alert" sur le cadre (les lecteurs d'écran l'annonceraient au
+ * chargement de chaque page) : un repère complémentaire nommé. Le
+ * remerciement reçoit le focus ; l'erreur, elle, est annoncée (role="alert").
  */
+import { ThumbsUpIcon } from '@phosphor-icons/react/dist/ssr/ThumbsUp'
+import { ThumbsDownIcon } from '@phosphor-icons/react/dist/ssr/ThumbsDown'
+import { CheckCircleIcon } from '@phosphor-icons/react/dist/ssr/CheckCircle'
+import { WarningCircleIcon } from '@phosphor-icons/react/dist/ssr/WarningCircle'
+
 interface Props {
   class?: string
   style?: string
@@ -16,38 +23,167 @@ interface Props {
 }
 
 const { class: classe, style, lang } = Astro.props
+const MAX = 500
 ---
 
-<script is:inline type="module" src="https://cdn.jsdelivr.net/gh/bibudem/ui@1/dist/bib-retroaction-usager.js"></script>
-<aside class:list={['retroaction', classe]} style={style} lang={lang} aria-label="Rétroaction sur la page">
-  <bib-retroaction-usager data-retroaction></bib-retroaction-usager>
+<aside class:list={['retroaction', classe]} style={style} lang={lang} aria-label="Rétroaction sur la page" data-retroaction hidden>
+  <form data-formulaire>
+    <p id="retroaction-titre" class="titre">Cette page vous a été utile?</p>
+
+    <div class="pouces" role="group" aria-labelledby="retroaction-titre">
+      <button type="button" class="pouce" data-vote="oui" aria-pressed="false" aria-label="Oui">
+        <ThumbsUpIcon size={24} aria-hidden="true" />
+      </button>
+      <button type="button" class="pouce" data-vote="non" aria-pressed="false" aria-label="Non">
+        <ThumbsDownIcon size={24} aria-hidden="true" />
+      </button>
+    </div>
+
+    <div class="commentaire" data-commentaire hidden>
+      <p class="intro">Merci. Dites-nous ce qui manquait ou ce qui a rendu cette page moins utile.</p>
+
+      <label for="retroaction-commentaire" class="etiquette">
+        Commentaire <span class="optionnel">(optionnel)</span>
+      </label>
+      <textarea
+        id="retroaction-commentaire"
+        rows="5"
+        maxlength={MAX}
+        placeholder="Décrivez brièvement le problème. Évitez d’inscrire des renseignements personnels dans ce champ."
+        aria-describedby="retroaction-commentaire-aide"
+      ></textarea>
+      <!-- Redit sous le champ : la consigne du placeholder disparaît dès qu'on écrit -->
+      <p id="retroaction-commentaire-aide" class="aide">N’inscrivez pas de renseignements personnels.</p>
+
+      <p class="aide">
+        Nous ne pourrons pas vous répondre. Pour obtenir de l’aide,{' '}
+        <a href="/a-propos/nous-joindre">contactez-nous directement</a>.
+      </p>
+
+      <div class="pied">
+        <span class="compteur" data-compteur>0/{MAX}</span>
+        <button type="submit" class="envoyer" data-envoyer>Envoyer mon retour</button>
+      </div>
+    </div>
+
+    <p class="erreur" data-erreur role="alert" hidden>
+      <WarningCircleIcon size={18} weight="fill" aria-hidden="true" />
+      Une erreur est survenue lors de l'envoi. Veuillez réessayer.
+    </p>
+  </form>
+
+  <div class="merci" data-merci tabindex="-1" hidden>
+    <CheckCircleIcon size={20} weight="fill" aria-hidden="true" />
+    <p>Merci, votre retour a été envoyé. Il nous aide à améliorer le site.</p>
+  </div>
 </aside>
 
 <script>
-  // Le web component pose la question au-dessus des boutons, alignés à
-  // gauche, dans sa racine fantôme (ouverte). Une feuille ajoutée met la
-  // question et les pouces sur une ligne centrée ; la suite (commentaire,
-  // remerciement) passe dessous, centrée elle aussi.
-  const AJOUT = `
-    :host { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0.25rem 0.75rem; text-align: center; }
-    .survey-title { margin: 0; }
-    form { display: flex; flex-direction: column; align-items: center; }
-    .radio-group { justify-content: center; margin: 0; }
-  `
-  customElements.whenDefined('bib-retroaction-usager').then(() => {
-    for (const element of document.querySelectorAll<HTMLElement>('[data-retroaction]')) {
-      const racine = element.shadowRoot
-      if (!racine) continue
-      const feuille = new CSSStyleSheet()
-      feuille.replaceSync(AJOUT)
-      racine.adoptedStyleSheets = [...racine.adoptedStyleSheets, feuille]
+  const FORMULAIRE = 43784
+  const CHAMP_VOTE = 1582731
+  const CHAMP_COMMENTAIRE = 1582733
+  const API = 'https://umontreal.libwizard.com/api/v1/submission'
+  const WEBHOOK = 'https://ordo.bib.umontreal.ca/webhook/retroaction-studio-site'
+
+  async function envoyer(vote: string, commentaire: string) {
+    const reponse = await fetch(`${API}/getguid`)
+    if (!reponse.ok) throw new Error('GUID introuvable')
+    const { guid } = await reponse.json()
+
+    const charge = {
+      formId: FORMULAIRE,
+      guid,
+      flags: 0,
+      // Rien sur la personne : ni IP ni navigateur. Seule l'adresse de la page est gardée.
+      collectIP: false,
+      collectBrowser: false,
+      collectRefer: true,
+      isPreview: false,
+      data: [
+        { formId: FORMULAIRE, fieldId: CHAMP_VOTE, type: 'control_radio', data: vote, hidden: false, flags: 0 },
+        { formId: FORMULAIRE, fieldId: CHAMP_COMMENTAIRE, type: 'control_multi', data: commentaire, hidden: false, flags: 0 },
+      ],
+      // Sans paramètres ni ancre : ils peuvent contenir des données propres à la personne
+      referrer: window.location.origin + window.location.pathname,
+      // Heure de Montréal, « AAAA-MM-JJ HH:MM:SS » : ce champ n'a pas de fuseau, et
+      // toISOString() donnait l'heure UTC (4 ou 5 h d'avance)
+      arrive: new Date().toLocaleString('sv-SE', { timeZone: 'America/Toronto' }),
     }
-  })
+    const corps = JSON.stringify(charge)
+    const entetes = { 'Content-Type': 'application/json' }
+
+    const soumission = await fetch(`${API}/insertSubmission`, { method: 'POST', headers: entetes, body: corps })
+    if (!soumission.ok) throw new Error('Soumission refusée')
+
+    // Copie vers n8n : son échec ne doit pas faire échouer la rétroaction
+    fetch(WEBHOOK, { method: 'POST', headers: entetes, body: corps }).catch((e) => console.error('Webhook n8n :', e))
+  }
+
+  for (const bloc of document.querySelectorAll<HTMLElement>('[data-retroaction]')) {
+    const formulaire = bloc.querySelector<HTMLFormElement>('[data-formulaire]')!
+    const pouces = [...bloc.querySelectorAll<HTMLButtonElement>('[data-vote]')]
+    const section = bloc.querySelector<HTMLElement>('[data-commentaire]')!
+    const champ = bloc.querySelector<HTMLTextAreaElement>('textarea')!
+    const compteur = bloc.querySelector<HTMLElement>('[data-compteur]')!
+    const bouton = bloc.querySelector<HTMLButtonElement>('[data-envoyer]')!
+    const erreur = bloc.querySelector<HTMLElement>('[data-erreur]')!
+    const merci = bloc.querySelector<HTMLElement>('[data-merci]')!
+    let enCours = false
+
+    const choisir = (vote: string) => {
+      for (const p of pouces) p.setAttribute('aria-pressed', String(p.dataset.vote === vote))
+    }
+    const occupe = (oui: boolean) => {
+      enCours = oui
+      for (const b of [...pouces, bouton]) b.disabled = oui
+      bouton.textContent = oui ? 'Envoi en cours…' : 'Envoyer mon retour'
+    }
+    const soumettre = async (vote: string, commentaire = '') => {
+      if (enCours) return
+      erreur.hidden = true
+      occupe(true)
+      try {
+        await envoyer(vote, commentaire)
+        formulaire.hidden = true
+        merci.hidden = false
+        merci.focus()
+      } catch (e) {
+        console.error('Rétroaction :', e)
+        erreur.hidden = false
+        occupe(false)
+      }
+    }
+
+    for (const pouce of pouces) {
+      pouce.addEventListener('click', () => {
+        const vote = pouce.dataset.vote!
+        choisir(vote)
+        if (vote === 'oui') {
+          section.hidden = true
+          champ.value = ''
+          soumettre('oui')
+        } else {
+          erreur.hidden = true
+          section.hidden = false
+          champ.focus()
+        }
+      })
+    }
+    champ.addEventListener('input', () => {
+      erreur.hidden = true
+      compteur.textContent = `${champ.value.length}/${champ.maxLength}`
+    })
+    formulaire.addEventListener('submit', (e) => {
+      e.preventDefault()
+      soumettre('non', champ.value.trim())
+    })
+
+    bloc.hidden = false
+  }
 </script>
 
 <style>
-  /* Discret : ni cadre ni icône, sur le fond de la page, centré sous le
-     contenu, en texte secondaire */
+  /* Discret : sans cadre, centré sous le contenu, en texte secondaire */
   .retroaction {
     margin-block: var(--espace-5) var(--espace-2);
     padding-top: var(--espace-3);
@@ -55,12 +191,171 @@ const { class: classe, style, lang } = Astro.props
     color: var(--couleur-texte-secondaire);
     font-size: 0.875rem;
     line-height: 1.43;
-    /* Variables lues par le web component */
-    --bib-comp-retroaction-usager-title-weight: var(--graisse-moyenne);
-    --md-sys-typescale-label-large-size: 0.875em;
+    text-align: center;
   }
 
-  bib-retroaction-usager {
+  /* hidden doit l'emporter sur les display: flex ci-dessous (.merci, .erreur…) */
+  [hidden] {
+    display: none !important;
+  }
+
+  .titre {
+    margin: 0;
+    font-weight: var(--graisse-moyenne);
+  }
+
+  .pouces {
+    display: flex;
+    justify-content: center;
+    gap: 2px;
+    margin-top: 0.25rem;
+  }
+
+  /* Cible de 44 px (WCAG 2.5.8 demande 24 px) */
+  .pouce {
+    width: var(--taille-cible);
+    height: var(--taille-cible);
+    padding: 0;
+    display: inline-grid;
+    place-items: center;
+    border: 0;
+    border-radius: var(--rayon-plein);
+    background: transparent;
+    color: var(--couleur-texte);
+    cursor: pointer;
+    transition:
+      background-color var(--duree-courte-4) var(--courbe-standard),
+      color var(--duree-courte-4) var(--courbe-standard);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .pouce:hover:not(:disabled) {
+      background-color: color-mix(in srgb, currentColor 8%, transparent);
+    }
+  }
+
+  /* Réponse choisie : pastille pleine (aria-pressed pour le lecteur d'écran) */
+  .pouce[aria-pressed='true'],
+  .pouce[aria-pressed='true']:hover:not(:disabled) {
+    background-color: var(--couleur-fond-fort);
+    color: var(--couleur-sur-fonce);
+  }
+
+  .pouce:disabled,
+  .envoyer:disabled {
+    opacity: 0.65;
+    cursor: not-allowed;
+  }
+
+  @media (forced-colors: active) {
+    .pouce[aria-pressed='true'] {
+      outline: 2px solid SelectedItem;
+    }
+  }
+
+  .commentaire {
+    max-width: 32rem;
+    margin: var(--espace-2) auto 0;
+    text-align: start;
+  }
+
+  .intro {
+    margin: 0 0 0.95rem;
+    text-align: center;
+  }
+
+  .etiquette {
     display: block;
+    margin-bottom: 0.3rem;
+    color: var(--couleur-texte);
+    font-weight: var(--graisse-moyenne);
+  }
+
+  .optionnel {
+    font-weight: var(--graisse-normale);
+  }
+
+  .aide {
+    margin: 0.3rem 0 0.6rem;
+  }
+
+  textarea {
+    display: block;
+    width: 100%;
+    min-height: 110px;
+    resize: vertical;
+    border: 1px solid var(--couleur-bordure);
+    border-radius: var(--rayon-petit);
+    padding: 0.7rem 0.75rem;
+    font: inherit;
+    background: var(--couleur-surface);
+    color: var(--couleur-texte);
+  }
+
+  textarea::placeholder {
+    color: var(--couleur-texte-secondaire);
+  }
+
+  .pied {
+    margin-top: 0.6rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.8rem;
+  }
+
+  .envoyer {
+    min-height: var(--taille-cible);
+    padding: 0 var(--espace-3);
+    border: 0;
+    border-radius: var(--rayon-plein);
+    background: var(--couleur-fond-fort);
+    color: var(--couleur-sur-fonce);
+    font: inherit;
+    font-weight: var(--graisse-moyenne);
+    cursor: pointer;
+    transition: background-color var(--duree-courte-4) var(--courbe-standard);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    .envoyer:hover:not(:disabled) {
+      background: var(--couleur-fond-fort-survol);
+    }
+  }
+
+  .merci {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.6rem;
+    color: var(--couleur-texte);
+  }
+
+  .merci :global(svg) {
+    flex: none;
+    color: var(--couleur-accent);
+  }
+
+  .merci p {
+    margin: 0;
+  }
+
+  .erreur {
+    margin: 0.8rem 0 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    color: var(--rouge-orange-texte);
+  }
+
+  @media (max-width: 768px) {
+    .pied {
+      flex-direction: column;
+      align-items: stretch;
+    }
+
+    .compteur {
+      align-self: flex-end;
+    }
   }
 </style>
