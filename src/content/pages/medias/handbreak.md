@@ -18,6 +18,7 @@ Certains ordinateurs peuvent avoir de la difficulté à ouvrir les fichiers enco
 - Aller à l’adresse suivante pour télécharger le logiciel. Disponible pour Windows, Mac et Linux
 
 - Cliquer sur le bouton rouge de téléchargement
+
 ![Télécharger](./images/Photohandbrake-1.webp)
 
 ### 2) Installer le logiciel
@@ -28,7 +29,8 @@ Certains ordinateurs peuvent avoir de la difficulté à ouvrir les fichiers enco
 ## Utilisation
 
 - Une fois lancé le logiciel ressemble à ceci :
-![Logiciel](./images/Photohandbrake-2.webp)Photo
+
+![Logiciel](./images/Photohandbrake-2.webp)
 
 - Les points clés pour passer du h.265 au h.264 :
 
