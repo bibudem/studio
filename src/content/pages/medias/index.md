@@ -30,7 +30,7 @@ Les bibliothèques de l'Université de Montréal offrent des studios, des postes
 - :icone[book-open-text] [Guide du studio vidéo TGD](/medias/guidevideotgd) Guide d'utilisation du studio vidéo TGD
 - :icone[record] [OBS](/medias/obs) Utiliser OBS Studio pour enregistrer, streamer ou capter du contenu vidéo.
 - :icone[monitor-play] [Téléprompteur](/medias/teleprompteur) Utilisation du téléprompteur du studio vidéo pour afficher du texte ou du contenu devant la caméra.
-- :icone[book-open-text] [HandBrake](/medias/handbrake) Guide d'utilisation pour réencoder une vidéo avec HandBrake
+- :icone[book-open-text] [Passer d'un encodage h.265 à h.264](/medias/handbrake) Guide d'utilisation pour réencoder une vidéo avec HandBrake
 :::
 
 ## Infographie
