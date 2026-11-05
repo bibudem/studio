@@ -107,6 +107,10 @@ Fonctionne en branchant votre ordinateur au câble HDMI identifié : vous appara
 ![Le mode entretien](./images/guidevideolsh_entretien_distance_E.webp)
 :::
 
+::::
+
+<!-- Mode fond vert retiré temporairement : pour le rétablir, remettre ce volet
+     juste avant le « :::: » qui ferme les onglets ci-dessus.
 :::onglet[Fond vert]{valeur="fond-vert"}
 ### Le mode fond vert
 
@@ -114,7 +118,7 @@ Permet une incrustation en post-production.
 
 ![Le mode fond vert](./images/guidevideolsh_fond_vert.webp)
 :::
-::::
+-->
 
 ---
 
