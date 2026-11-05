@@ -15,7 +15,7 @@ Certains ordinateurs peuvent avoir de la difficulté à ouvrir les fichiers enco
 
 ### 1) Télécharger le logiciel
 
-- Aller à l’adresse suivante pour télécharger le logiciel. Disponible pour Windows, Mac et Linux
+- Aller à [l’adresse suivante](https://handbrake.fr/) pour télécharger le logiciel. Disponible pour Windows, Mac et Linux
 
 - Cliquer sur le bouton rouge de téléchargement
 
