@@ -137,6 +137,10 @@ Pour réaliser un entretien via un logiciel de visioconférence (ex. Zoom, Teams
 1. Appuyer sur le bouton **STOP** pour arrêter l’enregistrement.
 2. Débrancher le disque dur et le brancher en utilisant le câble **transfert** sur votre ordinateur pour transférer les fichiers.
 
+:::alerte{type="info"}
+Nous encodons nos vidéos en h.265, pour les passer en h.264 utiliser le [guide](/medias/handbrake/)
+:::
+
 :::alerte{type="attention" titre="Attention"}
 - Assurez-vous d’avoir suffisamment d’espace disponible selon la durée de l’enregistrement.
 - Faites une copie de sauvegarde dans votre espace infonuagique ou une 2ème copie dans un autre périphérique.
