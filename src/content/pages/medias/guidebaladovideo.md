@@ -115,6 +115,10 @@ Assurez-vous d’avoir suffisamment d’espace disponible sur votre ordinateur s
 - Dossier Vidéo : Contient les enregistrements de chaque caméra séparément.
 - Fichier Default_aaaa-mm-jj.mp4 : Montage final automatisé (audio + vidéo synchronisés).
 
+:::alerte{type="info"}
+Nous encodons nos vidéos en h.265, pour les passer en h.264 utiliser le [guide](/medias/handbrake)
+:::
+
 ### Conseils
 
 - Si vous avez besoin seulement du son : le fichier Live-Mix.wav suffit.
