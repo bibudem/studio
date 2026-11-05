@@ -235,10 +235,12 @@ const donnees = [
     border-radius: var(--rayon-carte);
   }
 
+  /* Alignée sur le bord droit du contenu, et non sur la mesure du texte courant */
   .date-maj {
+    max-inline-size: none;
     margin-block-start: var(--espace-bloc);
     color: var(--couleur-texte-secondaire);
-    font-size: 0.875rem;
+    font-size: 0.75rem;
     text-align: end;
   }
 
