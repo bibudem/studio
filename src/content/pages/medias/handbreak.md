@@ -51,12 +51,12 @@ Vérifier que le fichier final sera enregistré à l’endroit souhaité
 ![Enregistrer](./images/Photohandbrake-4.webp)
 :::
 
-:::onglet[Paramêtres]{valeur="C"}
-### Paramêtres
+:::onglet[Paramètres]{valeur="C"}
+### Paramètres
 
-Vérifier si les paramètres semblent ceux souhaités
+Vérifier si les paramètres appliqués sont ceux souhaités
 
-![Paramêtres](./images/Photohandbrake-5.webp)
+![Paramètres](./images/Photohandbrake-5.webp)
 :::
 
 :::onglet[Onglets]{valeur="D"}
