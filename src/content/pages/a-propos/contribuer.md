@@ -30,7 +30,7 @@ Envoyez-nous vos photos, textes ou autres médias par courriel à <studio@bib.um
 
 Si vous maîtrisez Git, il est possible de contribuer au site en proposant directement des modifications par pull request (PR). Qu’il s’agisse de corriger une erreur, d’améliorer un contenu ou d’ajouter une ressource, chaque contribution est la bienvenue.
 
-Le contenu du site est hébergé sur GitHub : [bibudem/techno](https://github.com/bibudem/techno)
+Le contenu du site est hébergé sur GitHub : [bibudem/studio](https://github.com/bibudem/studio)
 
 ### Proposer un changement au site
 
