@@ -90,8 +90,21 @@ const descendu = html.replace(/<h([2-6])(\s[^>]*\bdata-titre-panneau\b[^>]*)>([\
 
   @media (min-width: 900px) {
     .onglets-studio.onglets-studio :global(.liste .onglet) {
-      padding-inline: 1.125rem;
       font-size: 1rem;
+    }
+
+    /* Jamais de mot coupé (« Présentatio n ») : un onglet ne rétrécit pas sous
+       son mot le plus long. Les onglets restent sur une ligne en passant leur
+       libellé sur deux lignes entre les mots (base 0) ; la rangée ne passe à
+       la ligne que si même leurs mots les plus longs n'y tiennent pas. */
+    .onglets-studio.onglets-studio :global(.liste) {
+      flex-wrap: wrap;
+    }
+
+    .onglets-studio.onglets-studio :global(.liste .onglet) {
+      flex: 1 1 0;
+      min-width: auto;
+      overflow-wrap: normal;
     }
   }
 
