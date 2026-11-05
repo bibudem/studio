@@ -103,10 +103,9 @@
 
   --gouttiere: 20px;
   --largeur-max: 1536px;
-  /* Mesure du texte courant : 75 caractères par ligne au plus (optimum de
-     50 à 75 selon Baymard ; WCAG 1.4.8 fixe 80 au plus). En Figtree, un
-     caractère de texte français mesure en moyenne 0,71ch : 52ch ≈ 73. */
-  --mesure-texte: 52ch;
+  /* Mesure du texte courant : environ 85 caractères par ligne. En Figtree,
+     un caractère de texte français mesure en moyenne 0,71ch : 60ch ≈ 85. */
+  --mesure-texte: 60ch;
 
   /* ---- Mouvement (Material 3) ---- */
   --duree-courte-1: 50ms;
