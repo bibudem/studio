@@ -1,6 +1,6 @@
 ---
 title: HandBreak
-description: "Guide d'utilisation de HandBreak, logiciel libre et gratuit : installation et utilisation"
+description: "Guide de HandBreak, logiciel libre et gratuit : installation et utilisation"
 aide: crea
 derniereMaj: 2026-11-05
 ---
