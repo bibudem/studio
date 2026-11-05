@@ -9,6 +9,7 @@ import remarkDirective from 'remark-directive'
 import { remarkDirectivesBib, rehypeDirectivesBib } from './src/plugins/directives.mjs'
 import { remarkHtmlPermis } from './src/plugins/directives-studio.mjs'
 import rehypeAncresTitres from './src/plugins/rehype-ancres-titres.mjs'
+import rehypeAbreviations from './src/plugins/rehype-abreviations.mjs'
 import { REDIRECTIONS } from './src/data/redirections.mjs'
 
 // Seule la branche main (le site public) est indexée (robots.txt, balise robots) ; SITE_ENV peut le forcer.
@@ -24,12 +25,12 @@ function branche() {
 process.env.SITE_ENV ||= branche() === 'main' ? 'production' : 'preprod'
 
 // Pages Markdown : directives communes et de studio·bib (docs/REDACTION.md),
-// puis ancres des titres. rehypeDirectivesBib en dernier : il change les
+// puis ancres des titres et abréviations (<abbr>). rehypeDirectivesBib en dernier : il change les
 // directives, les liens et les images en marqueurs que RenduDirectives.astro
 // remplace par les composants.
 const processeur = unified({
   remarkPlugins: [remarkDirective, remarkHtmlPermis, remarkDirectivesBib],
-  rehypePlugins: [rehypeAncresTitres, rehypeDirectivesBib],
+  rehypePlugins: [rehypeAncresTitres, rehypeAbreviations, rehypeDirectivesBib],
   // Les guillemets et apostrophes du contenu sont déjà typographiques
   smartypants: false,
 })
