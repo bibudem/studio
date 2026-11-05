@@ -5,6 +5,8 @@ aide: crea
 derniereMaj: 2026-11-05
 ---
 
+![HandBrake](./images/HandBrake_Icon.webp)
+
 Ce guide explique comment installer et utiliser HandBrake pour réencoder des vidéos du H.265 au H.264.
 
 ## Introduction
