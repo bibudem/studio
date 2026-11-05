@@ -138,7 +138,7 @@ Pour réaliser un entretien via un logiciel de visioconférence (ex. Zoom, Teams
 2. Débrancher le disque dur et le brancher en utilisant le câble **transfert** sur votre ordinateur pour transférer les fichiers.
 
 :::alerte{type="info"}
-Nous encodons nos vidéos en h.265, pour les passer en h.264 utiliser le [guide](/medias/handbrake/)
+Nous encodons nos vidéos en h.265, pour les passer en h.264 utiliser le [guide](/medias/handbrake)
 :::
 
 :::alerte{type="attention" titre="Attention"}
