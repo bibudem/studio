@@ -24,7 +24,7 @@ Pour utiliser Adobe Acrobat Pro sur les ordinateurs publics et à distance, vous
 2. Se connecter avec son compte Adobe.
 
 :::alerte{type="info" titre="Pas encore de compte Adobe?"}
-Cliquer **Créez un compte** dans la fenêtre de connexion, ou [Créer un compte Adobe en ligne](https://account.adobe.com/). C'est rapide et gratuit.
+Cliquer **Créez un compte** dans la fenêtre de connexion, ou [Créez un compte Adobe en ligne](https://account.adobe.com/). C'est rapide et gratuit.
 :::
 
 ## Autres
