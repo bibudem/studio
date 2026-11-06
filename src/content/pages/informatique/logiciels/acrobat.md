@@ -18,7 +18,7 @@ Le logiciel **Adobe Acrobat Pro** est un logiciel qui permet de créer, modifier
 - [Déposer un mémoire ou une thèse](https://boite-outils.bib.umontreal.ca/recherche/deposer-these-memoire)
 
 ## Se connecter avec un compte Adobe
-Pour utiliser Adobe Acrobat Pro, vous devez vous connecter avec un compte Adobe. Ce compte est gratuit.
+Pour utiliser Adobe Acrobat Pro sur les ordinateurs publics et à distance, vous devez vous connecter avec un compte Adobe. Ce compte est gratuit.
 
 1. Ouvrir **Adobe Acrobat** : cliquer **Rechercher**, puis taper **Adobe Acrobat**.
 2. Se connecter avec son compte Adobe.
