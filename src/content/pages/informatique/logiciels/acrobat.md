@@ -7,7 +7,7 @@ aide: info
 derniereMaj: 2026-10-19
 ---
 
-Le logiciel **Adobe Acrobat Pro** est un logiciel qui permet de créer, modifier, convertir, signer et protéger des fichiers PDF - (Portable Document Format).
+Le logiciel **Adobe Acrobat Pro** est un logiciel qui permet de créer, modifier, convertir, signer et protéger des fichiers PDF (Portable Document Format).
 
 ## Guides d'aide
 
@@ -16,6 +16,16 @@ Le logiciel **Adobe Acrobat Pro** est un logiciel qui permet de créer, modifier
 - [**Créer le PDF avec Adobe Acrobat Pro (méthode alternative**)](/pdf/PDF15-theses-memoires-encapsuler-avec-acrobat-pro.pdf)
 - [Rédiger un mémoire ou une thèse - Modèle général de mémoire et thèse](https://boite-outils.bib.umontreal.ca/recherche/deposer-these-memoire?p=5412524)
 - [Déposer un mémoire ou une thèse](https://boite-outils.bib.umontreal.ca/recherche/deposer-these-memoire)
+
+## Se connecter avec un compte Adobe
+Pour utiliser Adobe Acrobat Pro, vous devez vous connecter avec un compte Adobe. Ce compte est gratuit.
+
+1. Ouvrir **Adobe Acrobat** : cliquer **Rechercher**, puis taper **Adobe Acrobat**.
+2. Se connecter avec son compte Adobe.
+
+:::alerte{type="info" titre="Pas encore de compte Adobe?"}
+Cliquer **Créez un compte** dans la fenêtre de connexion, ou [Créer un compte Adobe en ligne](https://account.adobe.com/). C'est rapide et gratuit.
+:::
 
 ## Autres
 
