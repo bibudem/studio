@@ -22,7 +22,7 @@ Le logiciel **QDA Miner** est un logiciel d'analyse qualitative.
 1. Visiter [logitheque.ti.umontreal.ca](https://logitheque.ti.umontreal.ca)
 2. S’authentifier avec son code d’accès ou courriel UdeM et mot de passe.
 3. Lire la directive, cocher la case **J’accepte les termes de la directive** et cliquer **Valider**.
-4. Sélectionner **Provalis Prosuite (avec licence 2025)** dans La liste des logiciels autorisés.
+4. Sélectionner **Provalis ProSuite (QDA Miner, WordStat, SimStat)** dans La liste des logiciels autorisés.
 5. Lire les informations à l’écran et cliquer **Valider** → **Suivant** → **Installation du logiciel**.
 6. Ouvrir le fichier téléchargé, cliquer **Oui** et poursuivre l’installation.
 7. Ouvrez le logiciel depuis :
