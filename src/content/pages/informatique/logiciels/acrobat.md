@@ -1,11 +1,13 @@
 ---
 title: Adobe Acrobat Pro
-description: "Adobe Acrobat Pro : créer, modifier, convertir, signer et protéger des PDF. Guides des bibliothèques de l'UdeM pour le dépôt de thèses, l'OCR et la fusion."
+description: "Adobe Acrobat Pro : créer, modifier, convertir, signer et protéger
+  des PDF. Guides des bibliothèques de l'UdeM pour le dépôt de thèses, l'OCR et
+  la fusion."
 aide: info
 derniereMaj: 2026-10-19
 ---
 
-Le logiciel **Adobe Acrobat Pro** est un logiciel qui permet de créer, modifier, convertir, signer et protéger des fichiers PDF (Portable Document Format).
+Le logiciel **Adobe Acrobat Pro** est un logiciel qui permet de créer, modifier, convertir, signer et protéger des fichiers PDF (Portable Document Format) .
 
 ## Guides d'aide
 
