@@ -31,11 +31,9 @@ L'Université de Montréal fournit gratuitement le logiciel de référence bibli
 3. Lire la directive, cocher la case **J’accepte les termes de la directive** et cliquer **Valider**.
 4. Sélectionner **EndNote 2025.3.1 (Windows)** dans La liste des logiciels autorisés.
 5. Lire les informations à l’écran et cliquer **Valider** → **Suivant** → **Installation du logiciel**.
-6. Ouvrir le fichier téléchargé, cliquer **Oui** et poursuivre l’installation.
+6. Ouvrir le fichier téléchargé : cliquer avec le bouton droit de la souris sur le fichier puis sélectionner **Exécuter en tant qu’administrateur**. Ne le renommez pas. Cliquer **Oui** et poursuivre l’installation.
 
 :::alerte{type="info" titre="Si vous n'arrivez pas à ouvrir le fichier téléchargé"}
-Ouvrir le dossier des téléchargements, localiser le fichier d’installation EndNote (débute par UdeM\_), cliquer avec le bouton droit de la souris sur le fichier puis sélectionner **Exécuter en tant qu’administrateur**. Ne le renommez pas.
-
 Si le document n'y est pas, aller dans les téléchargements du navigateur (en haut à droite), cliquer le document téléchargé et cliquer **Conserver**. Si le message **Vérifiez que vous faites confiance…** ou **Cette application risque d’endommager votre appareil** s’affiche :
 
 1. Cliquer **Afficher plus**,
