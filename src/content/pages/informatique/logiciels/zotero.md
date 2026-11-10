@@ -2,7 +2,7 @@
 title: Zotero
 description: "Zotero, gestion de références bibliographiques : installation (Windows, macOS), connecteur de navigateur, synchronisation infonuagique et extension Zutilo."
 aide: info
-derniereMaj: 2026-10-19
+derniereMaj: 2026-11-10
 ---
 
 Zotero est un logiciel de gestion de références bibliographiques. Cette page présente son installation sur Windows et macOS ainsi que la configuration recommandée.
@@ -59,7 +59,6 @@ Pour ne pas dépasser les 300 Mo d'espace infonuagique gratuit, il est fortement
 
 ### Extension Zutilo
 
-**L'extension Zutilo n'est présentement pas compatible avec la version la plus récente de Zotero (version 9) sortie en avril 2026, la mise à jour de ce plugin prend habituellement 3-4 mois.**
 Il est recommandé d’installer l’extension Zutilo pour bénéficier de fonctionnalités supplémentaires. [Télécharger](https://github.com/wshanks/Zutilo/releases) sur votre ordinateur le fichier \*.xpi de l’extension, puis aller dans **Zotero → Outils → Extensions → Roue → Install Plugin From File** : choisir et ouvrir le fichier XPI. Parfois, il faut redémarrer Zotero (voir site Web LGB ci-dessous).
 
 ### Astuces
