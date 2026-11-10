@@ -25,6 +25,7 @@ De la documentation est disponible pour vous aider à utiliser les imprimantes 3
 - :icone[cube] [Les modèles 3D](/creatives/impression3d/modeles3d)
 - :icone[printer] [Bambu Lab X1C et X2D](/creatives/impression3d/bambu)
 - :icone[printer] [Prusa i3 Mk3s+](/creatives/impression3d/prusa)
+- :icone[printer] [Ultimaker](/creatives/impression3d/ultimaker)
 :::
 
 ---
