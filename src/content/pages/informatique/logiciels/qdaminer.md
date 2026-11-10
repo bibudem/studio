@@ -36,8 +36,8 @@ Supprimez le logiciel, redémarrez, puis réinstallez.
 ### Assistance supplémentaire
 
 - **Téléphone :** `514 343-7288`
-  - Lundi–Vendredi : 6h–23h
-  - Week-end : 8h–16h
+  - Lundi–Vendredi : 6h à 23h
+  - Week-end : 8h à 14h30
 - **Aide en ligne :** [ti.umontreal.ca/besoin-daide](https://ti.umontreal.ca/besoin-daide)
 - **Soutien informatique en bibliothèque :** [bib.umontreal.ca/soutien-informatique](https://bib.umontreal.ca/soutien-informatique)
 :::
