@@ -97,3 +97,7 @@ Il est recommandé d’installer l’extension Zutilo pour bénéficier de fonct
   Dans Zotero, sous **Préférences** → **Générales**, décocher l’option suivante `Faire une capture automatique de la page lors de la création de documents à partir de pages Web` et cliquer **OK**.
 ::::
 :::::
+## Pour aller plus loin
+- [Débuter avec Zotero](https://studio.bib.umontreal.ca/informatique/logiciels/zotero/)  
+- [Suivre une formation](https://calendrier.bib.umontreal.ca/calendar?t=d&q=zotero&cid=7690&cal=7690&inc=0)  
+- [Visionner une capsule vidéo](https://www.youtube.com/@BibliothequesUdeM/search?query=zotero)
