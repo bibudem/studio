@@ -411,6 +411,14 @@ const Fleche = externe ? ArrowUpRightIcon : ArrowRightIcon
     color: var(--_fleche);
   }
 
+  /* Repères visuels seulement : l'icône et la pastille fléchée passent
+     au-dessus du ::after du lien (leurs transformations au survol créent un
+     calque) et captaient le clic. Il traverse jusqu'au lien de la carte. */
+  .icone,
+  .pastille {
+    pointer-events: none;
+  }
+
   /* Survol et focus : la flèche avance d'un cran vers sa destination
      (rétroaction, transform seulement). Survol réservé aux pointeurs fins :
      au toucher, un survol fantôme resterait après le tapotement. */
