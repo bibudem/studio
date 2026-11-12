@@ -1,6 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config'
 import { execSync } from 'node:child_process'
+import { globSync, readFileSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 import { unified } from '@astrojs/markdown-remark'
 import react from '@astrojs/react'
@@ -11,6 +12,13 @@ import { remarkHtmlPermis } from './src/plugins/directives-studio.mjs'
 import rehypeAncresTitres from './src/plugins/rehype-ancres-titres.mjs'
 import rehypeAbreviations from './src/plugins/rehype-abreviations.mjs'
 import { REDIRECTIONS } from './src/data/redirections.mjs'
+
+// Pages en préparation (nonListee) : publiées par leur adresse, mais hors du sitemap
+const NON_LISTEES = new Set(
+  globSync('**/*.md', { cwd: 'src/content/pages' })
+    .filter((f) => /^nonListee:\s*true\s*$/m.test(readFileSync(`src/content/pages/${f}`, 'utf8').split(/^---\s*$/m)[1] ?? ''))
+    .map((f) => `/${f.replace(/\.md$/, '').replace(/(^|\/)index$/, '')}/`.replace(/\/+/g, '/')),
+)
 
 // Seule la branche main (le site public) est indexée (robots.txt, balise robots) ; SITE_ENV peut le forcer.
 // Sur Amplify, le dépôt est extrait sans branche (HEAD détaché) : AWS_BRANCH donne alors son nom.
@@ -47,7 +55,7 @@ export default defineConfig({
   build: { format: 'directory' },
   markdown: { processor: processeur },
   // React ne sert qu'au build : aucun îlot, aucun JavaScript React envoyé au navigateur
-  integrations: [react(), sitemap({ filter: (page) => !/^\/(dev|admin|search)(\/|$)/.test(new URL(page).pathname) })],
+  integrations: [react(), sitemap({ filter: (page) => !/^\/(dev|admin|search)(\/|$)/.test(new URL(page).pathname) && !NON_LISTEES.has(new URL(page).pathname) })],
   redirects: REDIRECTIONS,
   vite: {
     resolve: { alias: { '@/': fileURLToPath(new URL('./src/', import.meta.url)) } },
