@@ -1,5 +1,5 @@
-dist/
-docs/
+/dist/
+/docs/
 .astro/
 # Caches de build (Astro : images converties ; npm), gardés par Amplify
 .cache/
