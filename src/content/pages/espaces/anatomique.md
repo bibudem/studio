@@ -2,6 +2,7 @@
 title: Salle anatomique
 description: "Salle anatomique de la Bibliothèque de la santé (L-668-1) avec table Anatomage pour explorer l'anatomie en 3D; formation requise pour réserver."
 image: "../images/cover/labvisu.webp"
+nonListee: true
 derniereMaj: 2026-10-19
 ---
 
@@ -26,7 +27,7 @@ Il est également possible d'explorer la table sur une base sans rendez-vous sel
 
 ::bouton[Prendre un rendez-vous]{lien="https://forms.office.com/r/9zPS89SY16"}
 
-::bouton[Guide d'utilisation]{lien="#" type="secondaire"}
+::bouton[Guide d'utilisation]{lien="/espaces/guide/anatomique" type="secondaire"}
 :::
 
 ---
