@@ -1,0 +1,15 @@
+---
+/*
+ * Visuel d'un élément de :::legende écrit avec :icone[nom] au lieu d'une
+ * image (gestes). L'icône est décorative : le texte à côté la nomme.
+ */
+import { composantIcone } from '@/lib/icones'
+
+interface Props {
+  icone: string
+  [attribut: string]: unknown
+}
+const Icone = await composantIcone(Astro.props.icone)
+---
+
+<span class="legende-visuel"><Icone size={40} weight="duotone" aria-hidden="true" focusable="false" /></span>

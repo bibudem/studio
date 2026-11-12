@@ -37,6 +37,7 @@ export const VOCABULAIRE_STUDIO = {
   'carrousel-balados': { genre: 'leafDirective', syntaxe: '::carrousel-balados (src/data/balados.ts)', attributs: {} },
   telecommande: { genre: 'containerDirective', syntaxe: ':::telecommande[Prompteur] puis une liste, une touche par élément : - :icone[arrow-up] **Touche** : effet (« - (touche non utilisée) » pour une touche vide)', attributs: {} },
   'image-interactive': { genre: 'leafDirective', syntaxe: '::image-interactive{nom=resolve}', attributs: { nom: { obligatoire: true } } },
+  legende: { genre: 'containerDirective', syntaxe: ':::legende puis une liste, un élément par icône : - ![Ce que montre l’icône](./images/icone.webp) **Nom** : description (ou :icone[nom] au lieu de l’image ; une liste décalée de deux espaces sous l’élément pour ses sous-menus ; forme=panneau : un seul cadre, une rangée par icône)', attributs: { forme: { valeurs: ['panneau'] } } },
 }
 
 const texteDe = (n) => n.value ?? (n.children ?? []).map(texteDe).join('')
@@ -134,10 +135,54 @@ export function traiterStudio(noeud, attributs, { marquer, fichier, parent }) {
       if (!a.touches.some((t) => !t.vide)) fichier.fail(`« telecommande » : aucune touche (${VOCABULAIRE_STUDIO.telecommande.syntaxe}).`, noeud)
       break
     }
+    case 'legende': {
+      const liste = noeud.children[0]
+      if (noeud.children.length !== 1 || liste.type !== 'list') fichier.fail(`« legende » contient seulement une liste (${VOCABULAIRE_STUDIO.legende.syntaxe}).`, noeud)
+      elementsLegende(liste, { marquer, fichier })
+      break
+    }
     default:
       if (noeud.type === 'leafDirective' && nom !== 'adresse') noeud.children = []
   }
   marquer(noeud, nom, a)
+}
+
+/*
+ * :::legende : chaque élément devient une rangée « visuel + texte ». Le visuel
+ * (image ou :icone[nom]) est sorti du texte dans son propre conteneur ; une
+ * liste imbriquée (sous-menus) reste sous l'élément, à toute profondeur.
+ * Le rendu (Legende.astro) ne fait que la mise en page de ce HTML.
+ */
+const enveloppe = (balise, classe, children) => ({ type: 'paragraph', data: { hName: balise, hProperties: { className: [classe] } }, children })
+
+function elementsLegende(liste, { marquer, fichier }, profondeur = 0) {
+  const syntaxe = VOCABULAIRE_STUDIO.legende.syntaxe
+  liste.data = { ...liste.data, hProperties: { className: [profondeur ? 'legende-sous' : 'legende-liste'] } }
+  for (const element of liste.children) {
+    const [paragraphe, ...sous] = element.children
+    const morceaux = paragraphe?.type === 'paragraph' ? paragraphe.children.filter((n) => !(n.type === 'text' && !n.value.trim())) : []
+    const [visuel, ...texte] = morceaux
+    let blocVisuel
+    if (visuel?.type === 'image') {
+      // Petite image sans agrandissement au clic (comme ![](… "icone"))
+      visuel.title = 'icone'
+      blocVisuel = enveloppe('span', 'legende-visuel', [visuel])
+    } else if (visuel?.type === 'textDirective' && visuel.name === 'icone') {
+      const icone = texteDe(visuel).trim()
+      if (!trouverIcone(icone)) fichier.fail(messageIconeInconnue(icone), visuel)
+      blocVisuel = enveloppe('span', 'legende-visuel', [])
+      marquer(blocVisuel, 'legende-icone', { icone })
+    } else {
+      fichier.fail(`« legende » : chaque élément commence par une image ou une icône (${syntaxe}).`, element)
+    }
+    if (texte[0]?.type === 'text') texte[0].value = texte[0].value.replace(/^\s+/, '')
+    if (!texte.map(texteDe).join('').trim()) fichier.fail(`« legende » : après l'image ou l'icône, le nom ou la description (${syntaxe}).`, element)
+    for (const n of sous) {
+      if (n.type !== 'list') fichier.fail(`« legende » : sous un élément, seulement une liste de sous-menus, décalée de deux espaces (${syntaxe}).`, n)
+      elementsLegende(n, { marquer, fichier }, profondeur + 1)
+    }
+    element.children = [blocVisuel, enveloppe('div', 'legende-texte', texte), ...sous]
+  }
 }
 
 /* ---------- HTML permis dans le Markdown ---------- */

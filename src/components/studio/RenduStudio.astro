@@ -25,6 +25,8 @@ import TableauDonnees from './TableauDonnees.astro'
 import CarrouselBalados from './CarrouselBalados.astro'
 import Telecommande from './Telecommande.astro'
 import ImageInteractive from './ImageInteractive.astro'
+import Legende from './Legende.astro'
+import LegendeIcone from './LegendeIcone.astro'
 import LibChatWidget from '@/components/contenu/integrations/LibChatWidget.astro'
 
 import type { NoeudDirective } from '@/lib/directives'
@@ -56,6 +58,8 @@ const COMPOSANTS: Record<string, any> = {
   'carrousel-balados': CarrouselBalados,
   telecommande: Telecommande,
   'image-interactive': ImageInteractive,
+  legende: Legende,
+  'legende-icone': LegendeIcone,
   clavardage: LibChatWidget,
 }
 // Morceaux que leur conteneur place lui-même (Lieu) : rendus par lui seul
