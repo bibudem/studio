@@ -50,7 +50,7 @@ Il est recommandé de désinstaller toutes les versions précédentes d'Office a
 :::
 
 :::onglet[macOS]{valeur="macos"}
-**Prérequis** : macOS 14 et ultérieur
+**Prérequis** : macOS 15 et ultérieur
 
 **Applications incluses** : Word, Excel, PowerPoint, Outlook, OneNote, Teams, OneDrive.
 
