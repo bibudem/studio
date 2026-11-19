@@ -11,7 +11,7 @@ Les studios vidéo proposent à la communauté de l’UdeM tout l’équipement 
 ---
 
 :::cartes
-- :icone[cube-focus] [Studio vidéo lettres et sciences humaines](/espaces/studiovideolsh) Un studio moderne avec incrustation fond vert en temps réel et un prompteur.
+- :icone[cube-focus] [Studio vidéo Lettres et sciences humaines](/espaces/studiovideolsh) Un studio moderne avec incrustation fond vert en temps réel et un prompteur.
 - :icone[cube] [Studio vidéo Thérèse-Gouin-Décarie](/espaces/studiovideotgd) Différents modes de présentation ainsi qu'un tableau lumineux.
 :::
 
