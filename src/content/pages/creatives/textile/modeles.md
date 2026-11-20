@@ -1,8 +1,11 @@
 ---
 title: Les modèles
-description: "Utiliser un modèle prédéfini sur la brodeuse numérique, avec l'exemple d'un haïku brodé, et liste de sites pour trouver des modèles SVG de broderie."
-aide: crea
 titreMenu: Modèles pour la brodeuse
+description: Utiliser un modèle prédéfini sur la brodeuse numérique, avec
+  l'exemple d'un haïku brodé, et liste de sites pour trouver des modèles SVG de
+  broderie.
+aide: crea
+brouillon: true
 derniereMaj: 2026-10-19
 ---
 
