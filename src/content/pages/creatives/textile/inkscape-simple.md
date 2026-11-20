@@ -1,7 +1,9 @@
 ---
 title: Transformer une image simple avec Inkscape
-description: "Tutoriel pour transformer une image PNG simple, comme un logo ou du texte, en fichier de broderie PES avec Inkscape et l'extension Ink/Stitch."
+description: Tutoriel pour transformer une image PNG simple, comme un logo ou du
+  texte, en fichier de broderie PES avec Inkscape et l'extension Ink/Stitch.
 aide: crea
+brouillon: true
 derniereMaj: 2026-10-19
 ---
 
