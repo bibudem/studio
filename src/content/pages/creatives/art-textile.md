@@ -13,13 +13,16 @@ Cette section est destinée à vous aider à mieux comprendre l'utilisation de l
 ---
 
 :::cartes
+- :icone[yarn] [Entreposage des fils](/creatives/textile/fils) La bonne façon de stocker les fils.
+- :icone[question] [FAQ](/creatives/textile/faq) Les questions les plus fréquentes et leurs réponses
+:::
+
+<!-- Cartes retirées pendant l’indisponibilité de la brodeuse (pages en brouillon). À remettre dans la liste ci-dessus, en tête, quand ces pages seront republiées :
 - :icone[needle] [Guide de la brodeuse numérique](/creatives/textile/guidebrodeuse) Découvrir la brodeuse Brother NS2750D, le matériel requis et son fonctionnement.
 - :icone[map-trifold] [Trouver des modèles SVG](/creatives/textile/modeles) Utiliser un modèle préenregistré ou importer un SVG.
 - :icone[bezier-curve] [Transformer un modèle simple avec Inkscape](/creatives/textile/inkscape-simple) Du format PNG vers une broderie pour des modèles simples comme du texte.
 - :icone[pen-nib] [Transformer un modèle complexe avec Inkscape](/creatives/textile/inkscape-complexe) Du format PNG vers une broderie pour des modèles complexes.
-- :icone[yarn] [Entreposage des fils](/creatives/textile/fils) La bonne façon de stocker les fils.
-- :icone[question] [FAQ](/creatives/textile/faq) Les questions les plus fréquentes et leurs réponses
-:::
+-->
 
 ## Soutien
 
