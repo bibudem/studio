@@ -168,7 +168,7 @@ const FLECHE = 'm16.492 24.587 7.031-7.031a.586.586 0 0 1 .828.828l-6.03 6.031h1
         cible = j === -1 || j >= positions.length ? piste.scrollWidth : positions[j]
       } else {
         cible = positions.find((p) => p >= gauche - piste.clientWidth - 1) ?? 0
-        if (cible >= gauche - 1) cible = [...positions].reverse().find((p) => p < gauche - 1) ?? 0
+        if (cible >= gauche - 1) cible = positions.findLast((p) => p < gauche - 1) ?? 0
       }
       piste.scrollTo({ left: cible, behavior: reduit.matches ? 'auto' : 'smooth' })
     }

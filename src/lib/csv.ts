@@ -44,7 +44,7 @@ export function lireCsvPublic(source: string): string[][] {
   try {
     return analyserCsv(readFileSync(join(process.cwd(), 'public', source), 'utf8'))
   } catch (erreur) {
-    throw new Error(`CSV introuvable ou illisible dans public/ : ${source} (${erreur})`)
+    throw new Error(`CSV introuvable ou illisible dans public/ : ${source} (${erreur})`, { cause: erreur })
   }
 }
 

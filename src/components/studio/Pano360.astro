@@ -47,7 +47,7 @@ try {
     .toBuffer()
   apercu = `data:image/webp;base64,${tampon.toString('base64')}`
 } catch (erreur) {
-  throw new Error(`Pano360 : image introuvable ou illisible dans public/ : ${image} (${erreur})`)
+  throw new Error(`Pano360 : image introuvable ou illisible dans public/ : ${image} (${erreur})`, { cause: erreur })
 }
 ---
 

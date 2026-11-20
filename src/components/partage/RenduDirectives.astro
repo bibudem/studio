@@ -74,7 +74,7 @@ const directives = (liste: Noeud[]) => liste.filter(estDirective)
 function grouperBoutons(liste: Noeud[]) {
   const resultat: Noeud[] = []
   for (const noeud of liste) {
-    const groupe = [...resultat].reverse().find((n) => typeof n !== 'string' || n.trim())
+    const groupe = resultat.findLast((n) => typeof n !== 'string' || n.trim())
     if (estDirective(noeud) && noeud.nom === 'bouton') {
       if (groupe && estDirective(groupe) && groupe.nom === 'boutons') {
         while (resultat.at(-1) !== groupe) resultat.pop()
