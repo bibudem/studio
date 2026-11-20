@@ -1,6 +1,8 @@
 ---
 title: Guide général de la brodeuse
-description: "Guide de la brodeuse numérique Brother NS2750D : matériel fourni, choix d'un motif intégré ou d'une image et préparation de la machine."
+description: "Guide de la brodeuse numérique Brother NS2750D : matériel fourni,
+  choix d'un motif intégré ou d'une image et préparation de la machine."
+brouillon: true
 derniereMaj: 2026-10-19
 ---
 
