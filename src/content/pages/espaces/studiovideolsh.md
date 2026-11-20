@@ -6,7 +6,7 @@ aide: crea
 derniereMaj: 2026-10-26
 ---
 
-Le studio vidéo de la [Bibliothèque des lettres et sciences humaines](https://bib.umontreal.ca/espaces/#lsh) est conçu pour la captation vidéo individuelle, avec incrustation en temps réel, dans un environnement simple, autonome et accessible. Il permet de produire des présentations ou des interventions à l’image avec une qualité visuelle exceptionnelle, et intègre un prompteur facilitant une lecture fluide et naturelle à l’écran, sans nécessiter d’expertise technique préalable. Le studio est optimisé pour une utilisation par une seule personne.
+Le studio vidéo de la [Bibliothèque des lettres et sciences humaines](https://bib.umontreal.ca/horaires/#lettres-et-sciences-humaines) est conçu pour la captation vidéo individuelle, avec incrustation en temps réel, dans un environnement simple, autonome et accessible. Il permet de produire des présentations ou des interventions à l’image avec une qualité visuelle exceptionnelle, et intègre un prompteur facilitant une lecture fluide et naturelle à l’écran, sans nécessiter d’expertise technique préalable. Le studio est optimisé pour une utilisation par une seule personne.
 
 ---
 

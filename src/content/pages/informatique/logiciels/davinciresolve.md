@@ -11,4 +11,4 @@ Les bibliothèques possèdent une licence pour DaVinci Resolve Studio, qui offre
 
 ## Localisation
 
-[Postes d'édition](/medias/postes-edition) de la [Bibliothèque des lettres et sciences humaines](https://bib.umontreal.ca/espaces/#lsh) (BLSH).
+[Postes d'édition](/medias/postes-edition) de la [Bibliothèque des lettres et sciences humaines](https://bib.umontreal.ca/horaires/#lettres-et-sciences-humaines) (BLSH).

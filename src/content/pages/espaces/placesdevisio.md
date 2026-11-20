@@ -6,7 +6,7 @@ aide: info
 derniereMaj: 2026-10-19
 ---
 
-La salle 2076, située à la [Bibliothèque des lettres et sciences humaines](https://bib.umontreal.ca/espaces/#lsh), offre un environnement confortable et fonctionnel dédié au visionnement de documents audiovisuels à des fins académiques. Aménagée en plusieurs espaces individuels avec fauteuils, elle permet la consultation de supports Blu‑ray, DVD et VHS dans des conditions optimales de concentration et de confort.
+La salle 2076, située à la [Bibliothèque des lettres et sciences humaines](https://bib.umontreal.ca/horaires/#lettres-et-sciences-humaines), offre un environnement confortable et fonctionnel dédié au visionnement de documents audiovisuels à des fins académiques. Aménagée en plusieurs espaces individuels avec fauteuils, elle permet la consultation de supports Blu‑ray, DVD et VHS dans des conditions optimales de concentration et de confort.
 
 La salle comprend 7 postes de visionnement individuels, chacun équipé d’un téléviseur Samsung de 32 pouces offrant une résolution de 1920 × 1080 pixels, ainsi que d’écouteurs pour une expérience immersive et respectueuse de la quiétude des lieux. Chaque espace est réservable pour une durée maximale de trois heures, répondant ainsi aux besoins des étudiantes et étudiants dans le cadre de leurs travaux universitaires.
 
@@ -14,7 +14,7 @@ La salle comprend 7 postes de visionnement individuels, chacun équipé d’un t
 
 ## Localisation des appareils {#localisation}
 
-:::lieu{titre="Bibliothèque des lettres et sciences humaines (BLSH)" lien="https://bib.umontreal.ca/espaces/#lsh" carte="https://maps.app.goo.gl/6HsLMAxoBWpQZgcD8"}
+:::lieu{titre="Bibliothèque des lettres et sciences humaines (BLSH)" lien="https://bib.umontreal.ca/horaires/#lettres-et-sciences-humaines" carte="https://maps.app.goo.gl/6HsLMAxoBWpQZgcD8"}
 ::adresse[Pavillon Samuel-Bronfman, salle 2076]
 
 Libre-service, priorité aux réservations.

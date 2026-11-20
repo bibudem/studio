@@ -7,7 +7,7 @@ derniereMaj: 2026-10-19
 
 **InkScape** est un logiciel gratuit de dessin vectoriel, pouvant être utilisé pour de nombreux projets créatifs. Son extension **Inkstitch** permet de créer des objets et des fichiers de broderie.
 
-Le logiciel et son extension sont installés sur chacun des postes informatiques de l’[Atelier de fabrication](/espaces/ateliers) de [Thérèse-Gouin-Décarie](https://bib.umontreal.ca/espaces/#tgd). Vous pouvez aussi les télécharger depuis votre ordinateur personnel.
+Le logiciel et son extension sont installés sur chacun des postes informatiques de l’[Atelier de fabrication](/espaces/ateliers) de [Thérèse-Gouin-Décarie](https://bib.umontreal.ca/horaires/#therese-gouin-decarie). Vous pouvez aussi les télécharger depuis votre ordinateur personnel.
 
 - [Logiciel Inkscape](https://inkscape.org/fr/)
 

@@ -12,7 +12,7 @@ Les bibliothèques de l'UdeM offrent des ordinateurs publics en libre-service ai
 
 Les bibliothèques offrent des ordinateurs publics en libre-service dans toutes les bibliothèques.
 L’accès se fait au moyen d’un code d’accès et d’un mot de passe.
-[Consultez la liste des bibliothèques](https://bib.umontreal.ca/espaces/) pour en savoir plus.
+[Consultez la liste des bibliothèques](https://bib.umontreal.ca/horaires/) pour en savoir plus.
 
 ::bouton[Consulter la liste des logiciels offerts]{lien="/informatique/logiciels"}
 
@@ -76,7 +76,7 @@ Adressez-vous au comptoir de prêt des bibliothèques concernées.
 
 ::::onglet[Prêt 30 jours]{valeur="pret-30j"}
 :::alerte{type="attention"}
-**Uniquement à la [Bibliothèque des lettres et sciences humaines](https://bib.umontreal.ca/espaces/#lsh).**
+**Uniquement à la [Bibliothèque des lettres et sciences humaines](https://bib.umontreal.ca/horaires/#lettres-et-sciences-humaines).**
 :::
 
 - **Réservation obligatoire**.

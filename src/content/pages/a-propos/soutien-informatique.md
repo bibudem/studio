@@ -5,7 +5,7 @@ retroaction: false
 masquerDate: true
 ---
 
-Discutez avec un technicien en soutien informatique [**par clavardage**](#clavardage) ou [**sur place**](https://bib.umontreal.ca/espaces/#lsh) à la Bibliothèque des lettres et sciences humaines (BLSH).
+Discutez avec un technicien en soutien informatique [**par clavardage**](#clavardage) ou [**sur place**](https://bib.umontreal.ca/horaires/#lettres-et-sciences-humaines) à la Bibliothèque des lettres et sciences humaines (BLSH).
 
 ## Exemples d’aide offerte
 

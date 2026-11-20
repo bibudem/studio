@@ -7,7 +7,7 @@ imageAlt: Robot LEGO Education WeDo 2.0 assemblé. Photo par Gloria Obeid, étud
 derniereMaj: 2026-10-19
 ---
 
-Les bibliothèques du Campus de Laval et [Thérèse-Gouin-Décarie](https://bib.umontreal.ca/espaces/#tgd) offrent le prêt de robots afin de permettre aux futurs enseignants et enseignantes de se familiariser avec ces nouveaux outils pédagogiques et de développer des compétences d'enseignement grâce au numérique.
+Les bibliothèques du Campus de Laval et [Thérèse-Gouin-Décarie](https://bib.umontreal.ca/horaires/#therese-gouin-decarie) offrent le prêt de robots afin de permettre aux futurs enseignants et enseignantes de se familiariser avec ces nouveaux outils pédagogiques et de développer des compétences d'enseignement grâce au numérique.
 
 Pour plus d'information sur l'utilisation des robots, consulter le guide [Le numérique en éducation](https://bib.umontreal.ca/education-psychoeducation/numerique-education).
 

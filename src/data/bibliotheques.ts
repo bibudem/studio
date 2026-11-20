@@ -15,7 +15,7 @@ export interface Bibliotheque {
   region?: string
 }
 
-const ESPACES = 'https://bib.umontreal.ca/espaces/'
+const HORAIRES = 'https://bib.umontreal.ca/horaires/'
 const RECHERCHE_MAPS = 'https://www.google.com/maps/search/?api=1&query='
 
 export const REGION_DEFAUT = 'Montréal'
@@ -23,57 +23,57 @@ export const REGION_DEFAUT = 'Montréal'
 export const BIBLIOTHEQUES = {
   amenagement: {
     nom: 'Aménagement',
-    lien: `${ESPACES}#amenagement`,
+    lien: `${HORAIRES}#amenagement`,
     itineraire: 'https://maps.app.goo.gl/irzr8ofQRdBNMFd86',
     coords: [45.5046547, -73.621263],
   },
   droit: {
     nom: 'Droit',
-    lien: `${ESPACES}#droit`,
+    lien: `${HORAIRES}#droit`,
     itineraire: `${RECHERCHE_MAPS}${encodeURIComponent('Bibliothèque de droit Université de Montréal')}`,
     // Pavillon Maximilien-Caron (OpenStreetMap)
     coords: [45.4986407, -73.616983],
   },
   hubertReeves: {
     nom: 'Hubert-Reeves',
-    lien: `${ESPACES}#Hubert-reeves`,
+    lien: `${HORAIRES}#hubert-reeves`,
     itineraire: 'https://maps.app.goo.gl/T6E9TaKNk6dDgrds9',
     coords: [45.5231104, -73.6196605],
   },
   lsh: {
     nom: 'Lettres et sciences humaines',
-    lien: `${ESPACES}#lsh`,
+    lien: `${HORAIRES}#lettres-et-sciences-humaines`,
     itineraire: 'https://maps.app.goo.gl/6HsLMAxoBWpQZgcD8',
     // Pavillon Samuel-Bronfman (OpenStreetMap)
     coords: [45.4993923, -73.6165279],
   },
   mathInfo: {
     nom: 'Mathématiques et informatique',
-    lien: `${ESPACES}#math-info`,
+    lien: `${HORAIRES}#mathematiques-et-informatique`,
     itineraire: 'https://maps.app.goo.gl/Jwg5Q34WrjR7vhGV8',
     coords: [45.5010087, -73.6157778],
   },
   tgd: {
     nom: 'Thérèse-Gouin-Décarie',
-    lien: `${ESPACES}#tgd`,
+    lien: `${HORAIRES}#therese-gouin-decarie`,
     itineraire: 'https://maps.app.goo.gl/t8GE4RdMBEJiHJtd8',
     coords: [45.5106865, -73.6115803],
   },
   sante: {
     nom: 'Santé',
-    lien: `${ESPACES}#sante`,
+    lien: `${HORAIRES}#sante`,
     itineraire: 'https://maps.app.goo.gl/KVE9w3JN2BKp278q8',
     coords: [45.5025116, -73.6158328],
   },
   margueriteDYouville: {
     nom: "Marguerite d'Youville",
-    lien: `${ESPACES}#marguerite-d-youville`,
+    lien: `${HORAIRES}#marguerite-d-youville`,
     itineraire: 'https://g.co/kgs/q8wfQY2',
     coords: [45.5096654, -73.6190605],
   },
   medecineVeterinaire: {
     nom: 'Médecine vétérinaire',
-    lien: `${ESPACES}#medecine-veterinaire`,
+    lien: `${HORAIRES}#medecine-veterinaire`,
     itineraire: `${RECHERCHE_MAPS}${encodeURIComponent('Bibliothèque de médecine vétérinaire Université de Montréal')}`,
     coords: [45.6215436, -72.9657664],
     region: 'Saint-Hyacinthe',

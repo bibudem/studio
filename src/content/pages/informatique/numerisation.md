@@ -14,33 +14,33 @@ Les bibliothèques de l'UdeM mettent à votre disposition un service de numéris
 
 ::::onglets{groupe="numérisation-disponibilité"}
 :::onglet[Petit format]{valeur="petit-format"}
-- [Aménagement](https://bib.umontreal.ca/espaces/#amenagement)
-- [Campus Laval](https://bib.umontreal.ca/espaces/#laval)
-- [Droit](https://bib.umontreal.ca/espaces/#droit)
-- [Lettres et sciences humaines](https://bib.umontreal.ca/espaces/#lsh)
-- [Marguerite-d'Youville](https://bib.umontreal.ca/espaces/#marguerite-d-youville)
-- [Mathématiques et informatique](https://bib.umontreal.ca/espaces/#math-info)
-- [Santé](https://bib.umontreal.ca/espaces/#sante)
-- [Thérèse-Gouin-Décarie](https://bib.umontreal.ca/espaces/#tgd)
+- [Aménagement](https://bib.umontreal.ca/horaires/#amenagement)
+- [Campus Laval](https://bib.umontreal.ca/horaires/#campus-de-laval)
+- [Droit](https://bib.umontreal.ca/horaires/#droit)
+- [Lettres et sciences humaines](https://bib.umontreal.ca/horaires/#lettres-et-sciences-humaines)
+- [Marguerite-d'Youville](https://bib.umontreal.ca/horaires/#marguerite-d-youville)
+- [Mathématiques et informatique](https://bib.umontreal.ca/horaires/#mathematiques-et-informatique)
+- [Santé](https://bib.umontreal.ca/horaires/#sante)
+- [Thérèse-Gouin-Décarie](https://bib.umontreal.ca/horaires/#therese-gouin-decarie)
 
 Demandez au comptoir d'accueil pour connaître l'emplacement.
 :::
 
 :::onglet[Livres]{valeur="livres"}
-- [Lettres et sciences humaines](https://bib.umontreal.ca/espaces/#lsh)
+- [Lettres et sciences humaines](https://bib.umontreal.ca/horaires/#lettres-et-sciences-humaines)
 :::
 
 :::onglet[Moyen format]{valeur="moyen-format"}
-- [Hubert-Reeves : À la cartothèque, local A-0724.](https://bib.umontreal.ca/espaces/#Hubert-reeves)
+- [Hubert-Reeves : À la cartothèque, local A-0724.](https://bib.umontreal.ca/horaires/#hubert-reeves)
 :::
 
 :::onglet[Grand format]{valeur="grand-format"}
-- [Hubert-Reeves : À la cartothèque, local A-0724.](https://bib.umontreal.ca/espaces/#Hubert-reeves)
-- [Centre de conservation Marcel-Laurin](https://bib.umontreal.ca/espaces/#marcel-laurin)
+- [Hubert-Reeves : À la cartothèque, local A-0724.](https://bib.umontreal.ca/horaires/#hubert-reeves)
+- [Centre de conservation Marcel-Laurin](https://bib.umontreal.ca/horaires/#centre-de-conservation-101-boul-marcel-laurin)
 :::
 
 :::onglet[Microformes]{valeur="microformes"}
-- [Centre de conservation Lionel-Groulx](https://bib.umontreal.ca/espaces/#conservation)
+- [Centre de conservation Lionel-Groulx](https://bib.umontreal.ca/horaires/#centre-de-conservation-lionel-groulx)
 :::
 ::::
 

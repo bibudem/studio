@@ -18,8 +18,8 @@ Les bibliothèques de l'UdeM offrent en libre-service un numériseur CZUR ET25 P
 
 | **Bibliothèque**                                                                           | **Localisation**                                                                                                | **Accès**                                                                                            |
 | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| [**Bibliothèque des lettres et sciences humaines**](https://bib.umontreal.ca/espaces/#lsh) | Pavillon Samuel-Bronfman, près de la salle 1085. [Voir sur la carte](https://maps.app.goo.gl/6HsLMAxoBWpQZgcD8) | Libre-service, priorité aux réservations. [Réserver](https://calendrier.bib.umontreal.ca/seat/12008) |
-| [**Bibliothèque de Musique**](https://bib.umontreal.ca/espaces/#musique)                   | Pavillon de la Faculté de Musique, salle B-287. [Voir sur la carte](https://maps.app.goo.gl/EAcMHvvYmffawV4p9)  | Libre-service                                                                                        |
+| [**Bibliothèque des lettres et sciences humaines**](https://bib.umontreal.ca/horaires/#lettres-et-sciences-humaines) | Pavillon Samuel-Bronfman, près de la salle 1085. [Voir sur la carte](https://maps.app.goo.gl/6HsLMAxoBWpQZgcD8) | Libre-service, priorité aux réservations. [Réserver](https://calendrier.bib.umontreal.ca/seat/12008) |
+| [**Bibliothèque de Musique**](https://bib.umontreal.ca/horaires/#musique)                   | Pavillon de la Faculté de Musique, salle B-287. [Voir sur la carte](https://maps.app.goo.gl/EAcMHvvYmffawV4p9)  | Libre-service                                                                                        |
 
 ---
 

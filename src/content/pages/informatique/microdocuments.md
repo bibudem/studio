@@ -16,8 +16,8 @@ Les microdocuments, également appelés microformes, désignent des documents re
 
 | **Bibliothèque**                                                                           | **Localisation**                                                                                                              | **Accès**     |
 | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| [**Bibliothèque des lettres et sciences humaines**](https://bib.umontreal.ca/espaces/#lsh) | Pavillon Samuel-Bronfman, salle 1083. [Voir sur la carte](https://maps.app.goo.gl/6HsLMAxoBWpQZgcD8)                          | Libre-service |
-| [**Centre de conservation Lionel-Groulx**](https://bib.umontreal.ca/espaces/#conservation) | Pavillon Lionel-Groulx, salle C-1017-16 (par la porte C-1059). [Voir sur la carte](https://maps.app.goo.gl/39V82J3iZvvABeTT7) | Libre-service |
+| [**Bibliothèque des lettres et sciences humaines**](https://bib.umontreal.ca/horaires/#lettres-et-sciences-humaines) | Pavillon Samuel-Bronfman, salle 1083. [Voir sur la carte](https://maps.app.goo.gl/6HsLMAxoBWpQZgcD8)                          | Libre-service |
+| [**Centre de conservation Lionel-Groulx**](https://bib.umontreal.ca/horaires/#centre-de-conservation-lionel-groulx) | Pavillon Lionel-Groulx, salle C-1017-16 (par la porte C-1059). [Voir sur la carte](https://maps.app.goo.gl/39V82J3iZvvABeTT7) | Libre-service |
 
 ## Guide d'utilisation {#guide-utilisation}
 

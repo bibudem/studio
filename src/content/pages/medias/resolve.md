@@ -30,7 +30,7 @@ Téléchargement : [Blackmagic Design - DaVinci Resolve](https://www.blackmagicd
 
 La version gratuite est installé sur les [postes d'édition](/medias/postes-edition) des bibliothèques UdeM et au [Laboratoire multimédia](https://fas.umontreal.ca/laboratoires/lam/) (LaM) au pavillon Marie-Victorin.
 
-La version complète **DaVinci Resolve Studio** est disponible uniquement [dans le poste d'édition de la Bibliothèque des lettres et sciences humaines](https://bib.umontreal.ca/espaces/#lsh) (BLSH).
+La version complète **DaVinci Resolve Studio** est disponible uniquement [dans le poste d'édition de la Bibliothèque des lettres et sciences humaines](https://bib.umontreal.ca/horaires/#lettres-et-sciences-humaines) (BLSH).
 
 ---
 

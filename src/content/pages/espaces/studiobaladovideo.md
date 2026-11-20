@@ -7,7 +7,7 @@ aide: crea
 derniereMaj: 2026-10-31
 ---
 
-Le studio balado vidéo de la [Bibliothèque des lettres et sciences humaines](https://bib.umontreal.ca/espaces/#lsh) est aménagé pour la captation vidéo de balados, dans un cadre simple, autonome et accessible. Il permet également l’enregistrement d’entrevues ou de présentations liées à ce type de format, sans nécessiter d’expertise technique préalable. Le studio peut accueillir jusqu’à 4 personnes.
+Le studio balado vidéo de la [Bibliothèque des lettres et sciences humaines](https://bib.umontreal.ca/horaires/#lettres-et-sciences-humaines) est aménagé pour la captation vidéo de balados, dans un cadre simple, autonome et accessible. Il permet également l’enregistrement d’entrevues ou de présentations liées à ce type de format, sans nécessiter d’expertise technique préalable. Le studio peut accueillir jusqu’à 4 personnes.
 
 ---
 

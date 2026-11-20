@@ -14,8 +14,8 @@ Ces trousses contiennent tout le nécessaire pour expérimenter avec des microco
 
 Les trousses techno-créatives sont disponibles au comptoir de prêt des bibliothèques suivantes :
 
-- [Bibliothèque mathématiques et informatique](https://bib.umontreal.ca/espaces/#math-info) : Arduino, ESP8266, Raspberry Pi
-- [Bibliothèque Hubert-Reeves](https://bib.umontreal.ca/espaces/#hr) : Arduino, ESP8266, Raspberry Pi
-- [Bibliothèque Thérèse-Gouin-Décarie](https://bib.umontreal.ca/espaces/#tgd) : Arduino
+- [Bibliothèque mathématiques et informatique](https://bib.umontreal.ca/horaires/#mathematiques-et-informatique) : Arduino, ESP8266, Raspberry Pi
+- [Bibliothèque Hubert-Reeves](https://bib.umontreal.ca/horaires/#hubert-reeves) : Arduino, ESP8266, Raspberry Pi
+- [Bibliothèque Thérèse-Gouin-Décarie](https://bib.umontreal.ca/horaires/#therese-gouin-decarie) : Arduino
 
 Consulter [la disponibilité des trousses dans Sofia](https://umontreal.on.worldcat.org/oclc/1285957249).
