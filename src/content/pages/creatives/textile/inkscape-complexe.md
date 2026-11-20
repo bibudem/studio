@@ -1,7 +1,10 @@
 ---
 title: Transformer une image complexe avec Inkscape
-description: "Transformer une image PNG complexe en fichier de broderie avec Inkscape et Ink/Stitch, installés à l'Atelier de fabrication de Thérèse-Gouin-Décarie."
+description: Transformer une image PNG complexe en fichier de broderie avec
+  Inkscape et Ink/Stitch, installés à l'Atelier de fabrication de
+  Thérèse-Gouin-Décarie.
 aide: crea
+brouillon: true
 derniereMaj: 2026-10-19
 ---
 
