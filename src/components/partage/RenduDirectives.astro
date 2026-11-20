@@ -118,6 +118,19 @@ async function preparerAgrandie(noeud: Noeud, image: ImageMetadata) {
   const largeur = Math.min(image.width, LARGEUR_AGRANDIE)
   agrandies.set(noeud, { src: (await getImage({ src: image, format: 'webp', width: largeur })).src, largeur })
 }
+// Contournement temporaire (à retirer quand harmonium > v1.1.0 sera installé) : CarteImage de
+// harmonium v1.1.0 réduit la photo à 660 px de large, sans tenir compte du recadrage. Un bandeau
+// 4:1 n'y fait plus que 165 px de haut, étiré sur les 170 px de la photo (×2 ou plus sur un écran
+// haute densité) : flou. On lui passe plutôt une adresse, déjà réduite à la taille utile : la
+// largeur que prend la photo recadrée (au moins 600 px, la carte la plus large de la grille, ou
+// 170 px × son rapport largeur/hauteur), en 2x, sans dépasser l'original.
+const HAUTEUR_PHOTO_CARTE = 170
+async function photoCarte(image: ImageMetadata) {
+  if (image.format === 'svg' || image.format === 'gif') return image.src
+  const utile = Math.max(600, (HAUTEUR_PHOTO_CARTE * image.width) / image.height)
+  return (await getImage({ src: image, format: 'webp', width: Math.min(image.width, Math.round(utile * 2)) })).src
+}
+
 for (const noeud of directives(noeuds ?? [])) {
   const a = noeud.attributs
   if (noeud.nom === 'modalite') ressources.set(noeud, await composantIcone(a.icone))
@@ -136,6 +149,7 @@ for (const noeud of directives(noeuds ?? [])) {
   else if (noeud.nom === 'cartes') {
     for (const carte of directives(noeud.enfants)) {
       ressources.set(carte, carte.attributs.image ? await chargerImage(carte.attributs.image) : carte.attributs.icone ? await composantIcone(carte.attributs.icone) : undefined)
+      if (a.forme === 'image' && carte.attributs.image) ressources.set(carte, await photoCarte(ressources.get(carte)))
     }
   }
 }
