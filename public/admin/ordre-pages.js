@@ -663,7 +663,7 @@ export function installerVueOrdre(donnees, YAML, pris = new Set(donnees.ids ?? [
     if (noeud.type !== 'lien' && noeud.type !== 'categorie' && !noeud.page && noeud.id) badges.push(badge('Page introuvable', `Aucune page ${noeud.id} : le build le signalera.`))
     if (noeud.cache) badges.push(badge('Cachée', 'Absente du menu affiché, rattachée ici pour le fil d’Ariane.'))
     if (noeud.recommande) badges.push(badge('★ Recommandée'))
-    if (noeud.page?.brouillon) badges.push(badge('Brouillon', 'Non publiée.'))
+    if (noeud.page?.brouillon) badges.push(badge('Brouillon', 'Non publiée : absente du menu du site jusqu’à sa publication.'))
     else if (noeud.page?.nonListee) badges.push(badge('En préparation', 'Publiée à son adresse, hors des menus et de la recherche.'))
     return badges
   }

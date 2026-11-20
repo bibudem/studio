@@ -4,7 +4,8 @@
  * menus viennent de src/data/navigation.ts.
  */
 import { getCollection, type CollectionEntry } from 'astro:content'
-import { SECTIONS, type ElementMenu } from '@/data/navigation'
+import { SECTIONS } from '@/data/navigation'
+import { construireMenu, type NoeudNavigation } from '@/lib/menu'
 
 export type Page = CollectionEntry<'pages'>
 
@@ -41,17 +42,7 @@ export const estListee = (page: Page) => !page.data.nonListee && !page.data.brou
 
 /* ---------- Navigation ---------- */
 
-export type NoeudNavigation = {
-  titre: string
-  /** Absente pour une catégorie sans page (« Production audio ») */
-  url?: string
-  ordre: number
-  enfants: NoeudNavigation[]
-  /** Page rattachée au menu sans y figurer (guides, fiches de logiciels) */
-  cache?: boolean
-  recommande?: boolean
-  lang?: string
-}
+export type { NoeudNavigation }
 
 /** `sommaire` : la racine est le sommaire « Sur cette page » d'une page, et non un menu de section */
 export type RacineNavigation = Omit<NoeudNavigation, 'url' | 'ordre'> & { url?: string; sommaire?: boolean }
@@ -59,26 +50,25 @@ export type RacineNavigation = Omit<NoeudNavigation, 'url' | 'ordre'> & { url?: 
 /** Titre du sommaire d'une page (colonne de droite et volet repliable) */
 export const TITRE_SOMMAIRE = 'Sur cette page'
 
-async function noeud(element: ElementMenu, ordre: number): Promise<NoeudNavigation> {
-  const e = typeof element === 'string' ? { page: element } : element
-  const url = e.lien ?? (e.page ? `/${e.page}` : undefined)
-  let titre = e.titre
-  if (e.page) {
-    const page = await pageParUrl(url!)
-    // Une page du menu qui n'existe plus ferait un lien mort : le build s'arrête
-    if (!page) throw new Error(`src/data/navigation.ts : aucune page à l'adresse ${url}.`)
-    titre ??= page.data.titreMenu ?? page.data.title
-  }
-  if (!titre) throw new Error(`src/data/navigation.ts : un élément sans page ni lien doit avoir un titre.`)
-  const enfants = await Promise.all((e.enfants ?? []).map(noeud))
-  return { titre, url, ordre, enfants, cache: e.cache, recommande: e.recommande }
+/** Brouillons par URL : absents du site en production, mais leur place dans le menu est gardée */
+let brouillons: Map<string, Page> | undefined
+async function brouillonsParUrl() {
+  if (import.meta.env.DEV) brouillons = undefined
+  brouillons ??= new Map((await getCollection('pages', (p: Page) => p.data.brouillon)).map((p) => [urlDePage(p), p]))
+  return brouillons
+}
+
+/** Page d'un élément du menu ; un brouillon en sort jusqu'à sa publication (src/lib/menu.ts) */
+async function infoPage(url: string) {
+  const page = (await pageParUrl(url)) ?? (await brouillonsParUrl()).get(url)
+  return page && { titre: page.data.titreMenu ?? page.data.title, brouillon: page.data.brouillon }
 }
 
 /** Menu de la section (premier segment de l'URL), ou null hors section */
 export async function navigationDeSection(section: string): Promise<RacineNavigation | null> {
   const s = SECTIONS.find((x) => x.cle === section)
   if (!s) return null
-  return { titre: s.titre, url: `/${s.cle}`, enfants: await Promise.all(s.menu.map(noeud)) }
+  return { titre: s.titre, url: `/${s.cle}`, enfants: await construireMenu(s.menu, infoPage) }
 }
 
 /* ---------- Fil d'Ariane ---------- */
