@@ -104,22 +104,26 @@ const NOUVEL_ONGLET = ' (nouvel onglet)'
 </div>
 
 <script>
-  for (const parcours of document.querySelectorAll<HTMLElement>('[data-parcours]')) {
-    const bouton = parcours.querySelector<HTMLButtonElement>('[data-parcours-ouvrir]')
-    const etapes = parcours.querySelector<HTMLElement>('[data-parcours-etapes]')
-    if (!bouton || !etapes) continue
-    etapes.hidden = true
-    parcours.setAttribute('data-parcours-pret', '')
-    bouton.addEventListener('click', () => {
-      const ouvert = bouton.getAttribute('aria-expanded') !== 'true'
-      bouton.setAttribute('aria-expanded', String(ouvert))
-      etapes.hidden = !ouvert
-    })
-    // Le studio est réservé (dans l'autre onglet) : l'étape 2 devient l'action principale
-    parcours.querySelector('[data-parcours-studio]')?.addEventListener('click', () => {
-      parcours.setAttribute('data-studio-reserve', '')
-    })
-  }
+  import { aChaquePage } from '@/lib/pages'
+
+  aChaquePage(() => {
+    for (const parcours of document.querySelectorAll<HTMLElement>('[data-parcours]')) {
+      const bouton = parcours.querySelector<HTMLButtonElement>('[data-parcours-ouvrir]')
+      const etapes = parcours.querySelector<HTMLElement>('[data-parcours-etapes]')
+      if (!bouton || !etapes || parcours.hasAttribute('data-parcours-pret')) continue
+      etapes.hidden = true
+      parcours.setAttribute('data-parcours-pret', '')
+      bouton.addEventListener('click', () => {
+        const ouvert = bouton.getAttribute('aria-expanded') !== 'true'
+        bouton.setAttribute('aria-expanded', String(ouvert))
+        etapes.hidden = !ouvert
+      })
+      // Le studio est réservé (dans l'autre onglet) : l'étape 2 devient l'action principale
+      parcours.querySelector('[data-parcours-studio]')?.addEventListener('click', () => {
+        parcours.setAttribute('data-studio-reserve', '')
+      })
+    }
+  })
 </script>
 
 <style>
@@ -166,8 +170,8 @@ const NOUVEL_ONGLET = ' (nouvel onglet)'
     text-decoration: none;
     cursor: pointer;
     transition:
-      border-color var(--duree-courte-4) var(--courbe-standard),
-      background-color var(--duree-courte-4) var(--courbe-standard);
+      border-color var(--duree-courte) var(--courbe-standard),
+      background-color var(--duree-courte) var(--courbe-standard);
   }
 
   /* Sans JS, le bouton ne ferait rien : absent, les étapes sont affichées */
@@ -195,9 +199,9 @@ const NOUVEL_ONGLET = ' (nouvel onglet)'
 
   /* studio·bib : option ouverte (état) : fond gris pâle, contour bleu foncé doublé */
   .option[aria-expanded='true'] {
-    border-color: var(--navigation-courant);
-    background-color: var(--navigation-fond-survol);
-    box-shadow: inset 0 0 0 1px var(--navigation-courant);
+    border-color: var(--couleur-texte);
+    background-color: var(--couleur-teinte);
+    box-shadow: inset 0 0 0 1px var(--couleur-texte);
   }
 
   .option :global(.option-icone) {
@@ -302,31 +306,31 @@ const NOUVEL_ONGLET = ' (nouvel onglet)'
     max-width: 100%;
     min-height: var(--taille-cible);
     padding: 0.5rem 1rem;
-    border: 1px solid var(--action-contour);
+    border: 1px solid var(--couleur-contour);
     border-radius: var(--rayon-plein);
-    background-color: var(--action-douce-fond);
-    color: var(--action-texte);
+    background-color: var(--couleur-surface);
+    color: var(--bleu-fonce);
     font-weight: var(--graisse-moyenne);
     text-decoration: none;
     overflow-wrap: anywhere;
     transition:
-      background-color var(--duree-courte-4) var(--courbe-standard),
-      color var(--duree-courte-4) var(--courbe-standard);
+      background-color var(--duree-courte) var(--courbe-standard),
+      color var(--duree-courte) var(--courbe-standard);
   }
 
   /* Étape courante : bouton plein. D'abord le studio, puis, une fois le
      studio réservé, le technicien. */
   .action-studio,
   .parcours[data-studio-reserve] .action-technicien {
-    border-color: var(--action-fond);
-    background-color: var(--action-fond);
-    color: var(--action-texte);
+    border-color: var(--jaune);
+    background-color: var(--jaune);
+    color: var(--bleu-fonce);
   }
 
   .parcours[data-studio-reserve] .action-studio {
-    border-color: var(--action-contour);
-    background-color: var(--action-douce-fond);
-    color: var(--action-texte);
+    border-color: var(--couleur-contour);
+    background-color: var(--couleur-surface);
+    color: var(--bleu-fonce);
   }
 
   .parcours[data-studio-reserve] .etape-technicien .etape-numero {
@@ -373,7 +377,7 @@ const NOUVEL_ONGLET = ' (nouvel onglet)'
 
   .guide :global(.guide-fleche) {
     flex: 0 0 auto;
-    transition: transform var(--duree-courte-4) var(--courbe-standard-deceleree);
+    transition: transform var(--duree-courte) var(--courbe-entree);
   }
 
   .guide:focus-visible :global(.guide-fleche) {
@@ -382,24 +386,24 @@ const NOUVEL_ONGLET = ' (nouvel onglet)'
 
   @media (hover: hover) and (pointer: fine) {
     .option:hover {
-      border-color: var(--action-contour);
-      background-color: var(--action-douce-fond-survol);
+      border-color: var(--couleur-contour);
+      background-color: var(--jaune);
     }
 
     .action:hover {
-      background-color: var(--action-douce-fond-survol);
-      color: var(--action-texte);
+      background-color: var(--jaune);
+      color: var(--bleu-fonce);
     }
 
     .action-studio:hover,
     .parcours[data-studio-reserve] .action-technicien:hover {
-      background-color: var(--action-fond-survol);
-      color: var(--action-texte);
+      background-color: var(--jaune-40);
+      color: var(--bleu-fonce);
     }
 
     /* Une fois le studio réservé, son bouton redevient doux : survol doux */
     .parcours[data-studio-reserve] .action-studio:hover {
-      background-color: var(--action-douce-fond-survol);
+      background-color: var(--jaune);
     }
 
     .guide:hover :global(.guide-fleche) {

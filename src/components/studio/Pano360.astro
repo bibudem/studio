@@ -68,6 +68,8 @@ try {
 </figure>
 
 <script>
+  import { aChaquePage, auDepart } from '@/lib/pages'
+
   const LANG = {
     zoom: 'Zoom',
     zoomOut: 'Dézoomer',
@@ -91,63 +93,69 @@ try {
     }
   }
 
-  for (const figure of document.querySelectorAll<HTMLElement>('[data-pano]')) {
-    const visionneuse = figure.querySelector<HTMLElement>('[data-visionneuse]')!
-    const bouton = figure.querySelector<HTMLButtonElement>('[data-demarrer]')!
-    const etat = figure.querySelector<HTMLElement>('[data-etat]')!
-    bouton.hidden = false
+  aChaquePage((signal) => {
+    for (const figure of document.querySelectorAll<HTMLElement>('[data-pano]')) {
+      const visionneuse = figure.querySelector<HTMLElement>('[data-visionneuse]')!
+      const bouton = figure.querySelector<HTMLButtonElement>('[data-demarrer]')!
+      const etat = figure.querySelector<HTMLElement>('[data-etat]')!
+      bouton.hidden = false
 
-    bouton.addEventListener('click', async () => {
-      bouton.disabled = true
-      etat.textContent = 'Chargement de la visite virtuelle…'
-      try {
-        const [{ Viewer }] = await Promise.all([import('@photo-sphere-viewer/core'), import('@photo-sphere-viewer/core/index.css')])
-        const conteneur = document.createElement('div')
-        conteneur.className = 'psv-conteneur'
-        Object.assign(conteneur, { tabIndex: 0 })
-        conteneur.setAttribute('role', 'application')
-        conteneur.setAttribute('aria-roledescription', 'visite virtuelle')
-        conteneur.setAttribute('aria-label', figure.dataset.nom!)
-        conteneur.setAttribute('aria-describedby', figure.dataset.description!)
-        visionneuse.replaceChildren(conteneur, etat)
+      bouton.addEventListener('click', async () => {
+        bouton.disabled = true
+        etat.textContent = 'Chargement de la visite virtuelle…'
+        try {
+          const [{ Viewer }] = await Promise.all([import('@photo-sphere-viewer/core'), import('@photo-sphere-viewer/core/index.css')])
+        // Page quittée pendant le chargement : pas de visionneuse à créer
+        if (signal.aborted) return
+          const conteneur = document.createElement('div')
+          conteneur.className = 'psv-conteneur'
+          Object.assign(conteneur, { tabIndex: 0 })
+          conteneur.setAttribute('role', 'application')
+          conteneur.setAttribute('aria-roledescription', 'visite virtuelle')
+          conteneur.setAttribute('aria-label', figure.dataset.nom!)
+          conteneur.setAttribute('aria-describedby', figure.dataset.description!)
+          visionneuse.replaceChildren(conteneur, etat)
 
-        const viewer = new Viewer({
-          container: conteneur,
-          panorama: figure.dataset.image!,
-          caption: figure.dataset.legende,
-          navbar: ['zoom', 'move', 'caption', 'fullscreen'],
-          keyboard: 'fullscreen',
-          lang: LANG,
-        })
-        viewer.addEventListener(
-          'ready',
-          () => {
-            rendreBoutonsAccessibles(conteneur)
-            etat.textContent = ''
-            if (conteneur.contains(document.activeElement)) viewer.startKeyboardControl()
-          },
-          { once: true },
-        )
-        conteneur.addEventListener('keydown', (e) => {
-          const cible = (e.target as HTMLElement).closest<HTMLElement>('.psv-button')
-          if (e.key !== ' ' || !cible) return
-          e.preventDefault()
-          cible.click()
-        })
-        conteneur.addEventListener('focusin', () => viewer.startKeyboardControl())
-        conteneur.addEventListener('focusout', (e) => {
-          if (!conteneur.contains(e.relatedTarget as Node)) viewer.stopKeyboardControl()
-        })
-        figure.querySelector<HTMLElement>('[data-aide]')!.hidden = false
-        // Le bouton a disparu : le focus passe à la visite
-        conteneur.focus()
-      } catch (erreur) {
-        console.error('Visite virtuelle :', erreur)
-        bouton.disabled = false
-        etat.textContent = 'La visite virtuelle n’a pas pu être chargée. Utilisez le lien vers l’image à plat sous l’aperçu.'
-      }
-    })
-  }
+          const viewer = new Viewer({
+            container: conteneur,
+            panorama: figure.dataset.image!,
+            caption: figure.dataset.legende,
+            navbar: ['zoom', 'move', 'caption', 'fullscreen'],
+            keyboard: 'fullscreen',
+            lang: LANG,
+          })
+          // Visionneuse détruite au départ de la page (WebGL, écouteurs sur window)
+          auDepart(signal, () => viewer.destroy())
+          viewer.addEventListener(
+            'ready',
+            () => {
+              rendreBoutonsAccessibles(conteneur)
+              etat.textContent = ''
+              if (conteneur.contains(document.activeElement)) viewer.startKeyboardControl()
+            },
+            { once: true },
+          )
+          conteneur.addEventListener('keydown', (e) => {
+            const cible = (e.target as HTMLElement).closest<HTMLElement>('.psv-button')
+            if (e.key !== ' ' || !cible) return
+            e.preventDefault()
+            cible.click()
+          })
+          conteneur.addEventListener('focusin', () => viewer.startKeyboardControl())
+          conteneur.addEventListener('focusout', (e) => {
+            if (!conteneur.contains(e.relatedTarget as Node)) viewer.stopKeyboardControl()
+          })
+          figure.querySelector<HTMLElement>('[data-aide]')!.hidden = false
+          // Le bouton a disparu : le focus passe à la visite
+          conteneur.focus()
+        } catch (erreur) {
+          console.error('Visite virtuelle :', erreur)
+          bouton.disabled = false
+          etat.textContent = 'La visite virtuelle n’a pas pu être chargée. Utilisez le lien vers l’image à plat sous l’aperçu.'
+        }
+      })
+    }
+  })
 </script>
 
 <style>
@@ -187,18 +195,18 @@ try {
     padding: var(--espace-1) var(--espace-3);
     border: 0;
     border-radius: var(--rayon-plein);
-    background: var(--action-fond);
+    background: var(--jaune);
     box-shadow: var(--ombre-2);
-    color: var(--action-texte);
+    color: var(--bleu-fonce);
     font: inherit;
     font-weight: var(--graisse-forte);
     cursor: pointer;
     transform: translate(-50%, -50%);
-    transition: background-color var(--duree-courte-4) var(--courbe-standard);
+    transition: background-color var(--duree-courte) var(--courbe-standard);
   }
 
   .demarrer:hover {
-    background: var(--action-fond-survol);
+    background: var(--jaune-40);
   }
 
   .demarrer[hidden] {

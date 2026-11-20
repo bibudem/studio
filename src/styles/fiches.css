@@ -44,7 +44,7 @@
   background-color: var(--couleur-surface);
   color: var(--couleur-texte);
   text-decoration: none;
-  transition: border-color var(--duree-courte-4) var(--courbe-standard);
+  transition: border-color var(--duree-courte) var(--courbe-standard);
 }
 
 .fiche-etat .libelle {
@@ -76,7 +76,7 @@
   top: var(--espace-2);
   right: var(--espace-2);
   color: var(--couleur-texte);
-  transition: transform var(--duree-courte-4) var(--courbe-standard-deceleree);
+  transition: transform var(--duree-courte) var(--courbe-entree);
 }
 
 .fiche-etat:focus-visible .fleche {
@@ -89,7 +89,7 @@
 
 @media (hover: hover) and (pointer: fine) {
   .fiche-etat:hover {
-    border-color: var(--action-contour);
+    border-color: var(--couleur-contour);
   }
 
   .fiche-etat:hover .fleche {

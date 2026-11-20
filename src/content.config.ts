@@ -67,7 +67,7 @@ const encarts = defineCollection({
       /** Animation de l'icône à son apparition */
       animation: z.enum(['vague', 'cloche']).optional(),
       couleur: z.enum(['jaune', 'rouge-orange', 'bleu']).default('jaune'),
-      /** centree : bloc centré (accueil) ; ligne : icône à gauche ; carte : carte foncée cliquable (fin de page) */
+      /** centree : bloc centré ; ligne : icône à gauche ; carte : carte foncée cliquable (fin de page) */
       variante: z.enum(['centree', 'ligne', 'carte']).default('ligne'),
     })
     .strict(),

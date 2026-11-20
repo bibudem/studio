@@ -55,10 +55,13 @@ const LIENS = [
 </Base>
 
 <script>
+  import { aChaquePage } from '@/lib/pages'
+
   // Mots de l'adresse demandée dans le champ : /impression-3d-prusa/ → « impression 3d prusa ».
   // Rien pour les extensions et les nombres seuls.
-  const champ = document.querySelector<HTMLInputElement>('[data-recherche-404] input[type=search]')
-  if (champ) {
+  aChaquePage(() => {
+    const champ = document.querySelector<HTMLInputElement>('[data-recherche-404] input[type=search]')
+    if (!champ) return
     let chemin = location.pathname
     try {
       chemin = decodeURIComponent(chemin)
@@ -71,7 +74,7 @@ const LIENS = [
       .filter((mot) => mot && !/^\d+$/.test(mot))
       .join(' ')
     if (mots) champ.value = mots
-  }
+  })
 </script>
 
 <style>

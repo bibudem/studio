@@ -55,29 +55,38 @@ interface Props {
 
 <script>
   import { brancherCommandes } from '@/lib/commandes-carrousel'
+  import { aChaquePage, auDepart } from '@/lib/pages'
 
-  for (const racine of document.querySelectorAll<HTMLElement>('[data-balados-carrousel]')) brancherCommandes(racine)
+  // Cartes déjà branchées : une seule fois chacune
+  const branchees = new WeakSet<HTMLElement>()
 
-  // « Lire la suite » : seulement pour une description coupée par la limite de lignes
-  for (const carte of document.querySelectorAll<HTMLElement>('.balado')) {
-    const description = carte.querySelector<HTMLElement>('[data-description]')
-    const bouton = carte.querySelector<HTMLButtonElement>('[data-suite]')
-    if (!description || !bouton) continue
-    const verifier = () => {
-      // Dépliée, la description n'est plus coupée : le bouton reste pour la replier
-      if (description.classList.contains('ouverte')) return
-      bouton.hidden = description.scrollHeight <= description.clientHeight + 1
+  aChaquePage((signal) => {
+    for (const racine of document.querySelectorAll<HTMLElement>('[data-balados-carrousel]')) brancherCommandes(racine, signal)
+
+    // « Lire la suite » : seulement pour une description coupée par la limite de lignes
+    for (const carte of document.querySelectorAll<HTMLElement>('.balado')) {
+      const description = carte.querySelector<HTMLElement>('[data-description]')
+      const bouton = carte.querySelector<HTMLButtonElement>('[data-suite]')
+      if (!description || !bouton || branchees.has(carte)) continue
+      branchees.add(carte)
+      const verifier = () => {
+        // Dépliée, la description n'est plus coupée : le bouton reste pour la replier
+        if (description.classList.contains('ouverte')) return
+        bouton.hidden = description.scrollHeight <= description.clientHeight + 1
+      }
+      bouton.addEventListener('click', () => {
+        const ouvrir = bouton.getAttribute('aria-expanded') !== 'true'
+        description.classList.toggle('ouverte', ouvrir)
+        bouton.setAttribute('aria-expanded', String(ouvrir))
+        bouton.querySelector('[data-suite-texte]')!.textContent = ouvrir ? 'Lire moins' : 'Lire la suite'
+        if (!ouvrir) verifier()
+      })
+      const observateur = new ResizeObserver(verifier)
+      observateur.observe(description)
+      auDepart(signal, () => observateur.disconnect())
+      verifier()
     }
-    bouton.addEventListener('click', () => {
-      const ouvrir = bouton.getAttribute('aria-expanded') !== 'true'
-      description.classList.toggle('ouverte', ouvrir)
-      bouton.setAttribute('aria-expanded', String(ouvrir))
-      bouton.querySelector('[data-suite-texte]')!.textContent = ouvrir ? 'Lire moins' : 'Lire la suite'
-      if (!ouvrir) verifier()
-    })
-    new ResizeObserver(verifier).observe(description)
-    verifier()
-  }
+  })
 </script>
 
 <style>
@@ -159,7 +168,7 @@ interface Props {
   /* Flèche vers le bas pour déplier, vers le haut pour replier */
   .suite :global(.suite-fleche) {
     flex: none;
-    transition: transform var(--duree-courte-4) var(--courbe-standard);
+    transition: transform var(--duree-courte) var(--courbe-standard);
   }
 
   .suite[aria-expanded='true'] :global(.suite-fleche) {

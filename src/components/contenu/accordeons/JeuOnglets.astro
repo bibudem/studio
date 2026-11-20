@@ -100,7 +100,10 @@ const Titre = `h${niveauTitre}`
 </div>
 
 <script>
-  import './onglets'
+  import { brancherOnglets } from './onglets'
+  import { aChaquePage } from '@/lib/pages'
+
+  aChaquePage((signal) => brancherOnglets(signal))
 </script>
 
 <style>
@@ -164,7 +167,7 @@ const Titre = `h${niveauTitre}`
     height: 2px;
     background-color: currentColor;
     transform: scaleX(0);
-    transition: transform var(--duree-courte-4) var(--courbe-emphase-deceleree);
+    transition: transform var(--duree-courte) var(--courbe-entree);
   }
 
   .onglet[data-selectionne='true']::after {
@@ -188,7 +191,7 @@ const Titre = `h${niveauTitre}`
       top: 0;
       left: 0;
       border-radius: var(--rayon-plein);
-      background-color: var(--onglets-indicateur, var(--selection-fond));
+      background-color: var(--onglets-indicateur, var(--couleur-fond-fort));
       pointer-events: none;
     }
 
@@ -196,9 +199,9 @@ const Titre = `h${niveauTitre}`
        libellé choisi ; un scale déformerait son arrondi */
     .onglets1.carrousel > .liste.pret:not(.suivi) > .indicateur {
       transition:
-        translate var(--duree-moyenne-2) var(--courbe-emphase-deceleree),
-        width var(--duree-moyenne-2) var(--courbe-emphase-deceleree),
-        height var(--duree-moyenne-2) var(--courbe-emphase-deceleree);
+        translate var(--duree-moyenne) var(--courbe-entree),
+        width var(--duree-moyenne) var(--courbe-entree),
+        height var(--duree-moyenne) var(--courbe-entree);
     }
 
     /* Une fois la pastille en place, c'est elle qui fait le fond de l'onglet actif */
@@ -221,7 +224,7 @@ const Titre = `h${niveauTitre}`
       scrollbar-width: none;
       box-sizing: content-box;
       /* Exception voulue, comme la hauteur des accordéons : la zone suit le panneau choisi et pousse la suite */
-      transition: height var(--duree-moyenne-2) var(--courbe-standard);
+      transition: height var(--duree-moyenne) var(--courbe-standard);
     }
 
     .onglets1.carrousel > .panneaux::-webkit-scrollbar {
@@ -359,8 +362,8 @@ const Titre = `h${niveauTitre}`
     color: var(--couleur-texte);
     text-align: center;
     transition:
-      background-color var(--duree-courte-4) var(--courbe-standard),
-      color var(--duree-courte-4) var(--courbe-standard);
+      background-color var(--duree-courte) var(--courbe-standard),
+      color var(--duree-courte) var(--courbe-standard);
   }
 
   .horizontal .onglet::after {
@@ -373,8 +376,8 @@ const Titre = `h${niveauTitre}`
   }
 
   .horizontal .onglet[data-selectionne='true'] {
-    background-color: var(--selection-fond);
-    color: var(--selection-texte);
+    background-color: var(--couleur-fond-fort);
+    color: var(--couleur-sur-fonce);
   }
 
   .horizontal .onglet:focus-visible {

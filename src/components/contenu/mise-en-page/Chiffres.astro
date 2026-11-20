@@ -41,7 +41,7 @@ interface Props {
 
 const { forme = 'barres', groupes, class: classe, className, style } = Astro.props
 
-const COULEURS = ['var(--bleu-principal)', 'var(--rouge-orange)', 'var(--violet-fonce)']
+const COULEURS = ['var(--bleu-principal)', 'var(--rouge-orange)', 'var(--vert-fonce)']
 const nombre = new Intl.NumberFormat('fr-CA')
 const pourcent = new Intl.NumberFormat('fr-CA', { style: 'percent', maximumFractionDigits: 0 })
 const majuscule = (texte: string) => texte.charAt(0).toLocaleUpperCase('fr-CA') + texte.slice(1)
@@ -124,8 +124,9 @@ const legende = forme === 'barres' && groupes.length > 1 && groupes.every((g) =>
 
 <script>
   import { animerChiffres } from './chiffres'
+  import { aChaquePage } from '@/lib/pages'
 
-  animerChiffres()
+  aChaquePage((signal) => animerChiffres(signal))
 </script>
 
 <style>
@@ -359,8 +360,8 @@ const legende = forme === 'barres' && groupes.length > 1 && groupes.every((g) =>
 
   .a-animer.anime [data-chiffres-barre] {
     clip-path: inset(0);
-    transition: clip-path var(--duree-chiffres) var(--courbe-emphase-deceleree);
-    transition-delay: calc(var(--rang, 0) * var(--duree-courte-1));
+    transition: clip-path var(--duree-chiffres) var(--courbe-entree);
+    transition-delay: calc(var(--rang, 0) * var(--duree-decalage));
   }
 
   /* Contraste élevé : les couleurs sont remplacées, les parts se

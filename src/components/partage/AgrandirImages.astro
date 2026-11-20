@@ -26,79 +26,85 @@
 </dialog>
 
 <script>
-  const dialogue = document.querySelector<HTMLDialogElement>('[data-agrandissement]')!
-  const grande = dialogue.querySelector('img')!
-  const legende = dialogue.querySelector('figcaption')!
+  import { aChaquePage } from '@/lib/pages'
+
   const RAPPORT_MIN = 1.25
   const LOUPE =
     '<svg aria-hidden="true" focusable="false" viewBox="0 0 24 24" width="18" height="18"><path d="M11 4a7 7 0 1 0 4.2 12.6l4.1 4.1 1.4-1.4-4.1-4.1A7 7 0 0 0 11 4zm0 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10zm-.5 2v2.5H8v1h2.5V14h1v-2.5H14v-1h-2.5V8z" fill="currentColor"></path></svg>'
 
-  function ouvrir(source: string, alt: string, declencheur: HTMLElement) {
-    grande.alt = alt
-    grande.src = source
-    legende.textContent = alt
-    legende.hidden = !alt
-    dialogue.showModal()
-    // Le focus entre dans la fenêtre : au bouton « Fermer », pour que le clavier agisse tout de suite
-    dialogue.querySelector<HTMLElement>('[data-agrandissement-fermer]')?.focus()
-    dialogue.dataset.declencheur = declencheur.id
-  }
+  aChaquePage((signal) => {
+    const dialogue = document.querySelector<HTMLDialogElement>('[data-agrandissement]')
+    if (!dialogue) return
+    const grande = dialogue.querySelector('img')!
+    const legende = dialogue.querySelector('figcaption')!
 
-  function preparer(img: HTMLImageElement) {
-    if (img.closest('a, button, [data-agrandi]') || !img.dataset.agrandir) return
-    const largeurAffichee = img.clientWidth
-    const largeurAgrandie = Number(img.dataset.largeurAgrandie)
-    if (!largeurAffichee || largeurAgrandie < largeurAffichee * RAPPORT_MIN) return
-
-    const cible = img.parentElement?.tagName === 'PICTURE' ? img.parentElement : img
-    const bouton = document.createElement('button')
-    bouton.type = 'button'
-    bouton.className = 'agrandir-image'
-    bouton.dataset.agrandi = ''
-    bouton.setAttribute('aria-haspopup', 'dialog')
-    bouton.setAttribute('aria-label', img.alt ? `Agrandir l’image : ${img.alt}` : 'Agrandir l’image')
-    cible.replaceWith(bouton)
-    bouton.append(cible)
-    bouton.insertAdjacentHTML('beforeend', `<span class="loupe">${LOUPE}</span>`)
-    bouton.addEventListener('click', () => {
-      bouton.id ||= `agrandir-${Math.random().toString(36).slice(2)}`
-      ouvrir(img.dataset.agrandir!, img.alt, bouton)
-    })
-  }
-
-  function tout() {
-    for (const img of document.querySelectorAll<HTMLImageElement>('img[data-agrandir]')) {
-      if (img.complete) preparer(img)
-      else img.addEventListener('load', () => preparer(img), { once: true })
+    function ouvrir(source: string, alt: string, declencheur: HTMLElement) {
+      grande.alt = alt
+      grande.src = source
+      legende.textContent = alt
+      legende.hidden = !alt
+      dialogue.showModal()
+      // Le focus entre dans la fenêtre : au bouton « Fermer », pour que le clavier agisse tout de suite
+      dialogue.querySelector<HTMLElement>('[data-agrandissement-fermer]')?.focus()
+      dialogue.dataset.declencheur = declencheur.id
     }
-  }
-  tout()
 
-  dialogue.querySelector('[data-agrandissement-fermer]')!.addEventListener('click', () => dialogue.close())
-  // Clic sur le fond (hors de l'image et du bouton) : fermer
-  dialogue.addEventListener('click', (e) => {
-    if (e.target === dialogue) dialogue.close()
-  })
-  // Échap ferme la fenêtre dans tous les cas, même si le navigateur ne le fait pas de lui-même
-  // (focus perdu sur la page, navigateur ancien) ; en phase de capture, avant les autres écouteurs
-  document.addEventListener(
-    'keydown',
-    (e) => {
-      if (e.key === 'Escape' && dialogue.open) {
-        e.preventDefault()
-        e.stopPropagation()
-        dialogue.close()
+    function preparer(img: HTMLImageElement) {
+      if (img.closest('a, button, [data-agrandi]') || !img.dataset.agrandir) return
+      const largeurAffichee = img.clientWidth
+      const largeurAgrandie = Number(img.dataset.largeurAgrandie)
+      if (!largeurAffichee || largeurAgrandie < largeurAffichee * RAPPORT_MIN) return
+
+      const cible = img.parentElement?.tagName === 'PICTURE' ? img.parentElement : img
+      const bouton = document.createElement('button')
+      bouton.type = 'button'
+      bouton.className = 'agrandir-image'
+      bouton.dataset.agrandi = ''
+      bouton.setAttribute('aria-haspopup', 'dialog')
+      bouton.setAttribute('aria-label', img.alt ? `Agrandir l’image : ${img.alt}` : 'Agrandir l’image')
+      cible.replaceWith(bouton)
+      bouton.append(cible)
+      bouton.insertAdjacentHTML('beforeend', `<span class="loupe">${LOUPE}</span>`)
+      bouton.addEventListener('click', () => {
+        bouton.id ||= `agrandir-${Math.random().toString(36).slice(2)}`
+        ouvrir(img.dataset.agrandir!, img.alt, bouton)
+      })
+    }
+
+    function tout() {
+      for (const img of document.querySelectorAll<HTMLImageElement>('img[data-agrandir]')) {
+        if (img.complete) preparer(img)
+        else img.addEventListener('load', () => preparer(img), { once: true })
       }
-    },
-    true,
-  )
-  dialogue.addEventListener('close', () => {
-    // L'image reste en place le temps du fondu de fermeture (sinon elle disparaît d'un coup et la
-    // figure s'effondre avant la fin de l'animation) ; on la libère ensuite, si la fenêtre est
-    // toujours fermée
-    setTimeout(() => {
-      if (!dialogue.open) grande.removeAttribute('src')
-    }, 300)
+    }
+    tout()
+
+    dialogue.querySelector('[data-agrandissement-fermer]')!.addEventListener('click', () => dialogue.close())
+    // Clic sur le fond (hors de l'image et du bouton) : fermer
+    dialogue.addEventListener('click', (e) => {
+      if (e.target === dialogue) dialogue.close()
+    })
+    // Échap ferme la fenêtre dans tous les cas, même si le navigateur ne le fait pas de lui-même
+    // (focus perdu sur la page, navigateur ancien) ; en phase de capture, avant les autres écouteurs
+    document.addEventListener(
+      'keydown',
+      (e) => {
+        if (e.key === 'Escape' && dialogue.open) {
+          e.preventDefault()
+          e.stopPropagation()
+          dialogue.close()
+        }
+      },
+      { capture: true, signal },
+    )
+    dialogue.addEventListener('close', () => {
+      // L'image reste en place le temps du fondu de fermeture (sinon elle disparaît d'un coup et la
+      // figure s'effondre avant la fin de l'animation) ; on la libère ensuite, si la fenêtre est
+      // toujours fermée
+      setTimeout(() => {
+        if (!dialogue.open) grande.removeAttribute('src')
+      }, 300)
+    })
   })
 </script>
 
@@ -223,15 +229,15 @@
     border: 0;
     border-radius: var(--rayon-plein);
     /* Jaune de l'action principale du site (jetons --action-*) */
-    background-color: var(--action-fond);
-    color: var(--action-texte);
+    background-color: var(--jaune);
+    color: var(--bleu-fonce);
     font: inherit;
     font-weight: var(--graisse-moyenne);
     cursor: pointer;
   }
 
   .fermer:hover {
-    background-color: var(--action-fond-survol);
+    background-color: var(--jaune-40);
   }
 
   /* Focus : l'anneau du site (jaune, filet bleu foncé collé), détaché du bouton jaune par un espace
@@ -239,7 +245,7 @@
   .fermer:focus-visible {
     outline: 3px solid var(--couleur-focus);
     outline-offset: 3px;
-    box-shadow: 0 0 0 2px var(--couleur-focus-contour);
+    box-shadow: 0 0 0 2px var(--couleur-focus-interieur);
     border-radius: var(--rayon-plein);
   }
 

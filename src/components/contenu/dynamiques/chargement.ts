@@ -66,7 +66,7 @@ export function montrerEtat(racine: HTMLElement, etat: string) {
 }
 
 /**
- * Branche le bouton « Réessayer » d'un état d'erreur (EtatErreur.astro). Le
+ * Branche le bouton « Réessayer » d'un état d'erreur (EtatErreur de harmonium). Le
  * bouton disparaît pendant le nouveau chargement : le focus passe au conteneur
  * plutôt que de se perdre en haut de la page.
  */

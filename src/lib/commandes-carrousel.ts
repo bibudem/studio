@@ -7,9 +7,10 @@
  *
  * `racine` contient la piste (`[data-piste]`, dont les enfants sont les cartes)
  * et le bloc de commandes (`[data-cc]`). Les commandes ne s'affichent que si la
- * rangée défile.
+ * rangée défile. `signal` (aChaquePage, src/lib/pages.ts), facultatif, débranche
+ * l'observateur de taille quand la page est quittée.
  */
-export function brancherCommandes(racine: HTMLElement) {
+export function brancherCommandes(racine: HTMLElement, signal?: AbortSignal) {
   const piste = racine.querySelector<HTMLElement>('[data-piste]')
   const commandes = racine.querySelector<HTMLElement>('[data-cc]')
   const precedent = racine.querySelector<HTMLButtonElement>('[data-cc-precedent]')
@@ -52,6 +53,8 @@ export function brancherCommandes(racine: HTMLElement) {
   precedent.addEventListener('click', () => precedent.getAttribute('aria-disabled') !== 'true' && aller(-1))
   suivant.addEventListener('click', () => suivant.getAttribute('aria-disabled') !== 'true' && aller(1))
   piste.addEventListener('scroll', maj, { passive: true })
-  new ResizeObserver(maj).observe(piste)
+  const taille = new ResizeObserver(maj)
+  taille.observe(piste)
+  signal?.addEventListener('abort', () => taille.disconnect(), { once: true })
   maj()
 }

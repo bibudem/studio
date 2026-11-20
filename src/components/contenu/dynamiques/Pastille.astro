@@ -57,19 +57,19 @@ const repli = grande ? 50 : 40
 
   /* studio·bib : pastille jaune pâle à contour jaune foncé, flèche bleu foncé */
   .pastille :global(rect) {
-    fill: var(--action-douce-fond);
+    fill: var(--couleur-surface);
     opacity: 1;
-    stroke: var(--action-contour);
+    stroke: var(--couleur-contour);
     stroke-width: 1.5;
   }
 
   .pastille :global(.fleche) {
-    fill: var(--action-texte);
+    fill: var(--bleu-fonce);
   }
 
   /* La flèche peut avancer d'un cran : le composant qui la contient décide
      quand (survol, focus), voir Element.astro */
   .fleche {
-    transition: transform var(--duree-courte-4) var(--courbe-standard-deceleree);
+    transition: transform var(--duree-courte) var(--courbe-entree);
   }
 </style>

@@ -134,52 +134,59 @@ const FLECHE = 'm16.492 24.587 7.031-7.031a.586.586 0 0 1 .828.828l-6.03 6.031h1
 </div>
 
 <script>
+  import { aChaquePage, auDepart } from '@/lib/pages'
+
   const reduit = window.matchMedia('(prefers-reduced-motion: reduce)')
 
-  for (const racine of document.querySelectorAll<HTMLElement>('[data-carrousel]')) {
-    const piste = racine.querySelector<HTMLElement>('[data-piste]')!
-    const commandes = racine.querySelector<HTMLElement>('[data-commandes]')!
-    const precedent = racine.querySelector<HTMLButtonElement>('[data-precedent]')!
-    const suivant = racine.querySelector<HTMLButtonElement>('[data-suivant]')!
-    const diapositives = [...piste.querySelectorAll<HTMLElement>(':scope > [data-diapositive]')]
+  aChaquePage((signal) => {
+    for (const racine of document.querySelectorAll<HTMLElement>('[data-carrousel]')) {
+      if (racine.hasAttribute('data-pret')) continue
+      const piste = racine.querySelector<HTMLElement>('[data-piste]')!
+      const commandes = racine.querySelector<HTMLElement>('[data-commandes]')!
+      const precedent = racine.querySelector<HTMLButtonElement>('[data-precedent]')!
+      const suivant = racine.querySelector<HTMLButtonElement>('[data-suivant]')!
+      const diapositives = [...piste.querySelectorAll<HTMLElement>(':scope > [data-diapositive]')]
 
-    // Tolérance d'un pixel : les largeurs fractionnaires laissent un reste
-    const maj = () => {
-      const max = piste.scrollWidth - piste.clientWidth
-      commandes.hidden = max <= 1
-      precedent.setAttribute('aria-disabled', String(piste.scrollLeft <= 1))
-      suivant.setAttribute('aria-disabled', String(piste.scrollLeft >= max - 1))
-      // Fondu du bord droit tant qu'il reste des cartes à découvrir
-      piste.toggleAttribute('data-suite', piste.scrollLeft < max - 1)
-    }
-
-    // Une « page » à la fois : la première
-    // diapositive coupée à droite vient au début, ou l'inverse en reculant.
-    const aller = (sens: 1 | -1) => {
-      const debut = piste.getBoundingClientRect().left
-      const positions = diapositives.map((d) => d.getBoundingClientRect().left - debut + piste.scrollLeft)
-      const gauche = piste.scrollLeft
-      let cible: number
-      if (sens === 1) {
-        const bord = gauche + piste.clientWidth
-        const i = diapositives.findIndex((d, n) => positions[n] + d.offsetWidth > bord + 1)
-        // Une diapositive plus large que la piste, déjà au début : la suivante
-        const j = i !== -1 && positions[i] <= gauche + 1 ? i + 1 : i
-        cible = j === -1 || j >= positions.length ? piste.scrollWidth : positions[j]
-      } else {
-        cible = positions.find((p) => p >= gauche - piste.clientWidth - 1) ?? 0
-        if (cible >= gauche - 1) cible = positions.findLast((p) => p < gauche - 1) ?? 0
+      // Tolérance d'un pixel : les largeurs fractionnaires laissent un reste
+      const maj = () => {
+        const max = piste.scrollWidth - piste.clientWidth
+        commandes.hidden = max <= 1
+        precedent.setAttribute('aria-disabled', String(piste.scrollLeft <= 1))
+        suivant.setAttribute('aria-disabled', String(piste.scrollLeft >= max - 1))
+        // Fondu du bord droit tant qu'il reste des cartes à découvrir
+        piste.toggleAttribute('data-suite', piste.scrollLeft < max - 1)
       }
-      piste.scrollTo({ left: cible, behavior: reduit.matches ? 'auto' : 'smooth' })
-    }
 
-    precedent.addEventListener('click', () => precedent.getAttribute('aria-disabled') !== 'true' && aller(-1))
-    suivant.addEventListener('click', () => suivant.getAttribute('aria-disabled') !== 'true' && aller(1))
-    piste.addEventListener('scroll', maj, { passive: true })
-    new ResizeObserver(maj).observe(piste)
-    racine.toggleAttribute('data-pret', true)
-    maj()
-  }
+      // Une « page » à la fois : la première
+      // diapositive coupée à droite vient au début, ou l'inverse en reculant.
+      const aller = (sens: 1 | -1) => {
+        const debut = piste.getBoundingClientRect().left
+        const positions = diapositives.map((d) => d.getBoundingClientRect().left - debut + piste.scrollLeft)
+        const gauche = piste.scrollLeft
+        let cible: number
+        if (sens === 1) {
+          const bord = gauche + piste.clientWidth
+          const i = diapositives.findIndex((d, n) => positions[n] + d.offsetWidth > bord + 1)
+          // Une diapositive plus large que la piste, déjà au début : la suivante
+          const j = i !== -1 && positions[i] <= gauche + 1 ? i + 1 : i
+          cible = j === -1 || j >= positions.length ? piste.scrollWidth : positions[j]
+        } else {
+          cible = positions.find((p) => p >= gauche - piste.clientWidth - 1) ?? 0
+          if (cible >= gauche - 1) cible = positions.findLast((p) => p < gauche - 1) ?? 0
+        }
+        piste.scrollTo({ left: cible, behavior: reduit.matches ? 'auto' : 'smooth' })
+      }
+
+      precedent.addEventListener('click', () => precedent.getAttribute('aria-disabled') !== 'true' && aller(-1))
+      suivant.addEventListener('click', () => suivant.getAttribute('aria-disabled') !== 'true' && aller(1))
+      piste.addEventListener('scroll', maj, { passive: true })
+      const observateur = new ResizeObserver(maj)
+      observateur.observe(piste)
+      auDepart(signal, () => observateur.disconnect())
+      racine.toggleAttribute('data-pret', true)
+      maj()
+    }
+  })
 </script>
 
 <style>
@@ -235,7 +242,7 @@ const FLECHE = 'm16.492 24.587 7.031-7.031a.586.586 0 0 1 .828.828l-6.03 6.031h1
     background: transparent;
     color: var(--couleur-lien);
     cursor: pointer;
-    transition: background-color var(--duree-courte-3) var(--courbe-standard);
+    transition: background-color var(--duree-tres-courte) var(--courbe-standard);
   }
 
   .commande:hover {

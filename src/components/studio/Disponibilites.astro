@@ -42,15 +42,18 @@ const notice = (oclc: string) => `https://umontreal.on.worldcat.org/oclc/${oclc}
 </div>
 
 <script>
+  import { aChaquePage } from '@/lib/pages'
   import { pluriel } from '@/lib/texte'
 
   const API = 'https://api.bib.umontreal.ca/atrium/docs'
 
   type Statut = { permalien: string; disponibles: number }
 
-  async function statut(oclc: string): Promise<Statut> {
-    // Délai de 8 s : une API muette ne laisse pas la liste « en chargement » indéfiniment
-    const reponse = await fetch(`${API}/${encodeURIComponent(oclc)}/statut-circulation`, { signal: AbortSignal.timeout(8000) })
+  async function statut(oclc: string, signal: AbortSignal): Promise<Statut> {
+    // Délai de 8 s : une API muette ne laisse pas la liste « en chargement » indéfiniment ;
+    // la requête s'arrête aussi quand on quitte la page (AbortSignal.any absent : délai seul)
+    const delai = AbortSignal.timeout(8000)
+    const reponse = await fetch(`${API}/${encodeURIComponent(oclc)}/statut-circulation`, { signal: AbortSignal.any?.([signal, delai]) ?? delai })
     if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`)
     const json = await reponse.json()
     if (!json?.permalien) throw new Error('Réponse incomplète')
@@ -59,40 +62,44 @@ const notice = (oclc: string) => `https://umontreal.on.worldcat.org/oclc/${oclc}
 
   const texteDisponibles = (n: number) => (n > 0 ? pluriel(n, 'disponible') : 'Aucun exemplaire disponible pour le moment')
 
-  for (const bloc of document.querySelectorAll<HTMLElement>('[data-disponibilites]')) {
-    const liste = bloc.querySelector('.fiches-etat')
-    const annonce = bloc.querySelector<HTMLElement>('[data-annonce]')
-    const fiches = Array.from(bloc.querySelectorAll<HTMLAnchorElement>('[data-oclc]'))
-    liste?.setAttribute('aria-busy', 'true')
-    for (const fiche of fiches) {
-      fiche.querySelector('[data-etat]')!.textContent = 'Chargement de la disponibilité…'
-      fiche.dataset.statut = 'chargement'
-    }
-    Promise.all(
-      fiches.map(async (fiche) => {
-        const etat = fiche.querySelector('[data-etat]')!
-        try {
-          const { permalien, disponibles } = await statut(fiche.dataset.oclc!)
-          fiche.href = permalien
-          etat.textContent = texteDisponibles(disponibles)
-          fiche.dataset.statut = disponibles > 0 ? 'disponible' : 'indisponible'
-          return true
-        } catch {
-          // Le lien vers la notice Sofia reste : on peut y vérifier soi-même
-          etat.textContent = 'Disponibilité impossible à afficher pour le moment. Vérifier dans Sofia'
-          fiche.dataset.statut = 'erreur'
-          return false
-        }
-      }),
-    ).then((resultats) => {
-      liste?.removeAttribute('aria-busy')
-      if (annonce) {
-        annonce.textContent = resultats.every(Boolean)
-          ? 'Disponibilités à jour.'
-          : 'Disponibilités à jour, sauf pour certaines bibliothèques : leur lien mène à Sofia.'
+  aChaquePage((signal) => {
+    for (const bloc of document.querySelectorAll<HTMLElement>('[data-disponibilites]')) {
+      const liste = bloc.querySelector('.fiches-etat')
+      const annonce = bloc.querySelector<HTMLElement>('[data-annonce]')
+      const fiches = Array.from(bloc.querySelectorAll<HTMLAnchorElement>('[data-oclc]'))
+      liste?.setAttribute('aria-busy', 'true')
+      for (const fiche of fiches) {
+        fiche.querySelector('[data-etat]')!.textContent = 'Chargement de la disponibilité…'
+        fiche.dataset.statut = 'chargement'
       }
-    })
-  }
+      Promise.all(
+        fiches.map(async (fiche) => {
+          const etat = fiche.querySelector('[data-etat]')!
+          try {
+            const { permalien, disponibles } = await statut(fiche.dataset.oclc!, signal)
+            fiche.href = permalien
+            etat.textContent = texteDisponibles(disponibles)
+            fiche.dataset.statut = disponibles > 0 ? 'disponible' : 'indisponible'
+            return true
+          } catch {
+            // Le lien vers la notice Sofia reste : on peut y vérifier soi-même
+            etat.textContent = 'Disponibilité impossible à afficher pour le moment. Vérifier dans Sofia'
+            fiche.dataset.statut = 'erreur'
+            return false
+          }
+        }),
+      ).then((resultats) => {
+        // Page quittée : ces éléments ne sont plus affichés
+        if (signal.aborted) return
+        liste?.removeAttribute('aria-busy')
+        if (annonce) {
+          annonce.textContent = resultats.every(Boolean)
+            ? 'Disponibilités à jour.'
+            : 'Disponibilités à jour, sauf pour certaines bibliothèques : leur lien mène à Sofia.'
+        }
+      })
+    }
+  })
 </script>
 
 <style>

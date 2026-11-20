@@ -1,5 +1,5 @@
 /*
- * Couleurs du thème vers les jetons de tokens.css.
+ * Couleurs du thème vers les jetons de harmonium.
  *
  * Deux lectures coexistent : `couleurTheme` pour le
  * texte (Typography, Box : `color="text.secondary"`, l'orange passe par sa
@@ -7,23 +7,22 @@
  * (`bgColor="vertPale"`, l'orange reste l'orange graphique).
  */
 
-// Jetons de tokens.css, sous leur nom de palette dans le contenu
-const JETONS = new Set([
-  'bleu-principal',
-  'bleu-fonce',
-  'bleu-100',
-  'bleu-200',
-  'bleu-600',
-  'jaune',
-  'jaune-pale',
-  'rose-100',
-  'rose-300',
-  'rose-500',
-  'rouge-orange',
-  'vert-fonce',
-  'vert-pale',
-  'violet-fonce',
-])
+// Noms de palette du contenu vers les jetons de harmonium (src/jetons/jetons.css)
+const JETONS: Record<string, string> = {
+  'bleu-principal': 'bleu-principal',
+  'bleu-fonce': 'bleu-fonce',
+  'bleu-100': 'bleu-10',
+  'bleu-200': 'bleu-20',
+  'bleu-600': 'bleu-principal-fonce',
+  jaune: 'jaune',
+  'jaune-pale': 'jaune-40',
+  'rose-100': 'rose-50',
+  'rose-300': 'rose',
+  'rose-500': 'rouge-orange-40',
+  'rouge-orange': 'rouge-orange',
+  'vert-fonce': 'vert-fonce',
+  'vert-pale': 'vert',
+}
 
 /**
  * Clé de palette du contenu (`vertPale`, `bleu600`, `primary`) vers son jeton ;
@@ -38,7 +37,7 @@ export function couleurPalette(nom: string | undefined): string | undefined {
     .replace(/([A-Z])/g, '-$1')
     .replace(/(\d+)/, '-$1')
     .toLowerCase()
-  return JETONS.has(jeton) ? `var(--${jeton})` : nom
+  return jeton in JETONS ? `var(--${JETONS[jeton]})` : nom
 }
 
 /**
@@ -54,8 +53,8 @@ const COULEURS: Record<string, string> = {
   inherit: 'inherit',
   bleuPrincipal: 'var(--bleu-principal)',
   bleuFonce: 'var(--bleu-fonce)',
-  bleu600: 'var(--bleu-600)',
-  rougeOrange: 'var(--rouge-orange-texte)',
+  bleu600: 'var(--bleu-principal-fonce)',
+  rougeOrange: 'var(--couleur-texte-accent)',
   vertFonce: 'var(--vert-fonce)',
   white: 'var(--couleur-sur-fonce)',
   blanc: 'var(--couleur-sur-fonce)',

@@ -10,7 +10,7 @@
  */
 import ColonneQuoiDeNeuf from './ColonneQuoiDeNeuf.astro'
 import Element from './Element.astro'
-import EtatErreur from './EtatErreur.astro'
+import EtatErreur from 'harmonium/astro/EtatErreur.astro'
 import type { Style } from '@/lib/styles'
 
 interface Props {
@@ -71,41 +71,44 @@ const limite = typeof limiteDemandee === 'number' && limiteDemandee > 0 ? limite
 
 <script>
   import { brancherReessayer, chargerAvecDelai, cloner, montrerEtat, remplir } from './chargement'
+  import { aChaquePage } from '@/lib/pages'
 
   type Formation = { url: string; titre: string; date: string; debut?: string; fin?: string; imageVedette?: string; lieu?: string; typeLocalisation?: string }
 
-  for (const racine of document.querySelectorAll<HTMLElement>('[data-liste-formations-accueil]')) {
-    const liste = racine.querySelector<HTMLElement>('[data-liste]')!
-    const gabarit = racine.querySelector<HTMLTemplateElement>('template[data-gabarit]')!
-    const limite = Number(racine.dataset.limite) || 4
-    const limiteMobile = Number(racine.dataset.limiteMobile) || Infinity
+  aChaquePage(() => {
+    for (const racine of document.querySelectorAll<HTMLElement>('[data-liste-formations-accueil]')) {
+      const liste = racine.querySelector<HTMLElement>('[data-liste]')!
+      const gabarit = racine.querySelector<HTMLTemplateElement>('template[data-gabarit]')!
+      const limite = Number(racine.dataset.limite) || 4
+      const limiteMobile = Number(racine.dataset.limiteMobile) || Infinity
 
-    function charger() {
-      montrerEtat(racine, 'chargement')
-      chargerAvecDelai<Formation[]>(racine.dataset.service!, (r) => r.json(), { delai: 8000, tentatives: 3 })
-        .then((formations) => {
-          const items = (Array.isArray(formations) ? formations : []).slice(0, limite)
-          liste.replaceChildren(
-            ...items.map(({ url, titre, date, debut, fin, imageVedette, lieu, typeLocalisation }) => {
-              const element = cloner(gabarit)
-              remplir(element, { url, titre, image: imageVedette })
-              const champDate = element.querySelector('[data-champ="date"]')
-              if (champDate) champDate.textContent = `${date}${debut ? ` · ${debut}${fin ? `–${fin}` : ''}` : ''}`
-              const champLieu = element.querySelector('[data-champ="lieu"]')
-              if (champLieu) champLieu.textContent = typeLocalisation === 'en-ligne' ? 'En ligne' : lieu || 'Lieu non précisé'
-              return element
-            }),
-          )
-          // Au-delà de la limite mobile : masqués sous 900 px (voir le CSS)
-          liste.querySelectorAll('li').forEach((li, i) => li.toggleAttribute('data-hors-mobile', i >= limiteMobile))
-          montrerEtat(racine, items.length ? 'pret' : 'vide')
-        })
-        .catch(() => montrerEtat(racine, 'erreur'))
+      function charger() {
+        montrerEtat(racine, 'chargement')
+        chargerAvecDelai<Formation[]>(racine.dataset.service!, (r) => r.json(), { delai: 8000, tentatives: 3 })
+          .then((formations) => {
+            const items = (Array.isArray(formations) ? formations : []).slice(0, limite)
+            liste.replaceChildren(
+              ...items.map(({ url, titre, date, debut, fin, imageVedette, lieu, typeLocalisation }) => {
+                const element = cloner(gabarit)
+                remplir(element, { url, titre, image: imageVedette })
+                const champDate = element.querySelector('[data-champ="date"]')
+                if (champDate) champDate.textContent = `${date}${debut ? ` · ${debut}${fin ? `–${fin}` : ''}` : ''}`
+                const champLieu = element.querySelector('[data-champ="lieu"]')
+                if (champLieu) champLieu.textContent = typeLocalisation === 'en-ligne' ? 'En ligne' : lieu || 'Lieu non précisé'
+                return element
+              }),
+            )
+            // Au-delà de la limite mobile : masqués sous 900 px (voir le CSS)
+            liste.querySelectorAll('li').forEach((li, i) => li.toggleAttribute('data-hors-mobile', i >= limiteMobile))
+            montrerEtat(racine, items.length ? 'pret' : 'vide')
+          })
+          .catch(() => montrerEtat(racine, 'erreur'))
+      }
+
+      brancherReessayer(racine, charger)
+      charger()
     }
-
-    brancherReessayer(racine, charger)
-    charger()
-  }
+  })
 </script>
 
 <style>
@@ -166,7 +169,7 @@ const limite = typeof limiteDemandee === 'number' && limiteDemandee > 0 ? limite
     width: 9rem;
     height: 1.3em;
     border-radius: var(--rayon-minuscule);
-    background-color: var(--couleur-squelette);
+    background-color: color-mix(in srgb, var(--bleu-fonce) 11%, transparent);
   }
 
   .sans-js {

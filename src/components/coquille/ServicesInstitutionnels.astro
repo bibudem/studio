@@ -1,22 +1,35 @@
 ---
 /*
- * Web components institutionnels, chargés depuis la bibliothèque commune
- * bibudem/ui.
+ * Web components institutionnels de harmonium (paquet npm, version fixée
+ * dans package.json) : urgence, avis et consentement. Les scripts sont
+ * publiés avec le site (?url) plutôt que servis par jsDelivr.
  *
  * - position « haut » : <udem-urgence>, puis <bib-avis> pour les pages de
  *   niveau 0 et 1, au-dessus de l'en-tête et pleine largeur.
  * - position « avis » : <bib-avis> des pages de niveau 2 et plus, placé APRÈS la bannière de section (SuperHeroLvl2), aligné sur les
  *   gouttières du contenu : cette position se rend donc après le slot
  *   « avant-contenu » de Base.astro. Elle ne rend rien sous le niveau 2.
- * - position « bas » : consentement et analytique (Consentement.astro), après
- *   le pied de page.
+ * - position « bas » : <bib-consentement> (statistiques Google Analytics et
+ *   Clarity, chargées seulement après accord), juste avant </body>. Le
+ *   bouton « Paramètres des témoins » du pied de page le rouvre
+ *   (événement bib:parametres-temoins).
  *
  * Les scripts sont des modules : ils s'exécutent après l'analyse du document
  * où qu'ils soient placés, et une même URL n'est exécutée qu'une fois même si
  * deux positions la déclarent. Les placer à côté de leurs éléments évite de
  * dépendre de <head> et garde chaque pièce autonome.
+ *
+ * Navigation côté client (ClientRouter) : chaque script ne s'exécute qu'une
+ * fois par visite ; les éléments de la nouvelle page sont pris en charge
+ * d'eux-mêmes (éléments personnalisés déjà définis).
  */
-import Consentement from './Consentement.astro'
+import urgence from 'harmonium/dist/udem-urgence.min.js?url'
+import avis from 'harmonium/dist/bib-avis.min.js?url'
+import consentement from 'harmonium/dist/bib-consentement.min.js?url'
+
+/** Identifiants de statistiques propres à studio·bib */
+const MESURE_GA = 'G-V8J6YFFD4F'
+const PROJET_CLARITY = 'r5bxj4q7vj'
 
 interface Props {
   position: 'haut' | 'avis' | 'bas'
@@ -25,14 +38,13 @@ interface Props {
 }
 
 const { position, niveau = 0 } = Astro.props
-const CDN = 'https://cdn.jsdelivr.net/gh/bibudem/ui@1/dist'
 ---
 
 {
   position === 'haut' && (
     <>
-      <script is:inline type="module" src={`${CDN}/udem-urgence.min.js`}></script>
-      <script is:inline type="module" src={`${CDN}/bib-avis.min.js`}></script>
+      <script is:inline type="module" src={urgence}></script>
+      <script is:inline type="module" src={avis}></script>
       <udem-urgence class="bandeau-institutionnel"></udem-urgence>
       {niveau < 2 && <bib-avis bouton-fermer class="bandeau-institutionnel avis-pleine-largeur"></bib-avis>}
     </>
@@ -42,7 +54,7 @@ const CDN = 'https://cdn.jsdelivr.net/gh/bibudem/ui@1/dist'
 {
   position === 'avis' && niveau >= 2 && (
     <>
-      <script is:inline type="module" src={`${CDN}/bib-avis.min.js`}></script>
+      <script is:inline type="module" src={avis}></script>
       <bib-avis bouton-fermer class="avis-contenu"></bib-avis>
     </>
   )
@@ -50,7 +62,10 @@ const CDN = 'https://cdn.jsdelivr.net/gh/bibudem/ui@1/dist'
 
 {
   position === 'bas' && (
-    <Consentement />
+    <>
+      <script is:inline type="module" src={consentement}></script>
+      <bib-consentement ga-id={MESURE_GA} clarity-id={PROJET_CLARITY}></bib-consentement>
+    </>
   )
 }
 
@@ -70,7 +85,10 @@ const CDN = 'https://cdn.jsdelivr.net/gh/bibudem/ui@1/dist'
      un repositionnement au défilement observé sur Safari iOS entre ces deux
      éléments à z-index élevé. */
   .avis-pleine-largeur {
-    --bib-avis-spacing-inline: 0;
+    /* Fond pleine largeur, texte aligné sur le contenu de la page : même
+       largeur maximale (1536 px, dans harmonium) et mêmes gouttières que
+       .conteneur (20 px, puis 64 px dès 900 px) */
+    --bib-avis-spacing-inline: var(--gouttiere);
     transform: translateZ(0);
   }
 

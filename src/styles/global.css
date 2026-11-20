@@ -6,7 +6,8 @@
  */
 @import '@fontsource-variable/figtree/wght.css';
 @import '@fontsource-variable/lora/wght.css';
-@import './tokens.css';
+/* Jetons de design : ceux de harmonium seulement (paquet npm, src/jetons/jetons.css) */
+@import 'harmonium/jetons.css';
 
 /* Polices de repli ajustées pour limiter le décalage au chargement (CLS).
    Une face par plage de graisse : Figtree et Lora s'élargissent avec la
@@ -370,7 +371,7 @@ main a:not(.sans-icone-pdf, .no-pdf-icon)[href*='.pdf?']::after {
   height: 0.9em;
   margin-left: 0.35em;
   vertical-align: text-bottom;
-  background-color: var(--couleur-pdf);
+  background-color: var(--rouge-orange);
   mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 256 256'%3E%3Cpath d='M224 152a8 8 0 0 1-8 8h-24v16h16a8 8 0 0 1 0 16h-16v16a8 8 0 0 1-16 0v-56a8 8 0 0 1 8-8h32a8 8 0 0 1 8 8M92 172a28 28 0 0 1-28 28h-8v8a8 8 0 0 1-16 0v-56a8 8 0 0 1 8-8h16a28 28 0 0 1 28 28m-16 0a12 12 0 0 0-12-12h-8v24h8a12 12 0 0 0 12-12m88 8a36 36 0 0 1-36 36h-16a8 8 0 0 1-8-8v-56a8 8 0 0 1 8-8h16a36 36 0 0 1 36 36m-16 0a20 20 0 0 0-20-20h-8v40h8a20 20 0 0 0 20-20M40 112V40a16 16 0 0 1 16-16h96a8 8 0 0 1 5.66 2.34l56 56A8 8 0 0 1 216 88v24a8 8 0 0 1-16 0V96h-48a8 8 0 0 1-8-8V40H56v72a8 8 0 0 1-16 0m120-32h28.69L160 51.31Z'/%3E%3C/svg%3E")
     center / contain no-repeat;
 }
@@ -385,7 +386,7 @@ main a:not(.sans-icone-pdf, .no-pdf-icon)[href*='.pdf?']::after {
   color: inherit;
   font-size: 0.6em;
   opacity: 0;
-  transition: opacity var(--duree-courte-3) var(--courbe-standard);
+  transition: opacity var(--duree-tres-courte) var(--courbe-standard);
 }
 
 .titre-ancre:hover .ancre-titre,
@@ -424,11 +425,11 @@ main a:not(.sans-icone-pdf, .no-pdf-icon)[href*='.pdf?']::after {
 }
 
 /* ---- Focus : toujours visible au clavier (WCAG 2.4.7 et 2.4.11) ---- */
-/* Double anneau : jaune à l'extérieur, bleu foncé collé à l'élément (voir --couleur-focus dans tokens.css) */
+/* Double anneau de harmonium : --couleur-focus à l'extérieur, --couleur-focus-interieur collé à l'élément */
 :focus-visible {
   outline: 3px solid var(--couleur-focus);
   outline-offset: 2px;
-  box-shadow: 0 0 0 2px var(--couleur-focus-contour);
+  box-shadow: 0 0 0 2px var(--couleur-focus-interieur);
   border-radius: var(--rayon-minuscule);
 }
 
@@ -451,30 +452,9 @@ main a:not(.sans-icone-pdf, .no-pdf-icon)[href*='.pdf?']::after {
   border: 0 !important;
 }
 
-/* Lien d'évitement : premier élément focalisable de la page (WCAG 2.4.1) */
-.lien-evitement {
-  position: fixed;
-  top: 0.5rem;
-  left: 0.5rem;
-  z-index: calc(var(--z-modale) + 1);
-  padding: 0.75rem 1.25rem;
-  border-radius: var(--rayon-plein);
-  background: var(--action-fond);
-  color: var(--action-texte);
-  font-weight: var(--graisse-forte);
-  text-decoration: none;
-  transform: translateY(-150%);
-  transition: transform var(--duree-courte-4) var(--courbe-standard);
-}
-
-.lien-evitement:focus {
-  transform: none;
-  color: var(--action-texte);
-}
-
 /* Surface claire (carte, papier) posée dans une Section foncée : Section y
    redéfinit les couleurs de lien, de focus et d’orange pour le fond foncé ;
-   la carte reprend celles du thème en cours (tokens.css, rôles des
+   la carte reprend celles du thème en cours (jetons de harmonium, rôles des
    couleurs), sinon les liens seraient blancs sur blanc. */
 .surface-claire {
   color: var(--couleur-texte);
@@ -514,8 +494,8 @@ main a:not(.sans-icone-pdf, .no-pdf-icon)[href*='.pdf?']::after {
 }
 
 /* Passage d'une page à l'autre sur mobile, comme les écrans d'une
-   application (transitions de vue entre documents, sans routeur JS : chaque
-   page reste une vraie page). La nouvelle page glisse depuis la droite et
+   application (transitions de vue entre documents : navigations complètes,
+   le ClientRouter de Base.astro animant les autres). La nouvelle page glisse depuis la droite et
    recouvre l'ancienne ; au retour (bouton Précédent, page plus haute dans
    l'arborescence : type « retour », posé dans Base.astro), le mouvement
    s'inverse. L'en-tête et la barre des liens rapides restent en place.
@@ -527,7 +507,9 @@ main a:not(.sans-icone-pdf, .no-pdf-icon)[href*='.pdf?']::after {
     navigation: auto;
   }
 
-  .entete {
+  /* L'en-tête du site seulement : d'autres composants ont une classe
+     .entete, et un nom en double annule la transition */
+  [data-entete] {
     view-transition-name: entete;
   }
 
@@ -543,19 +525,23 @@ main a:not(.sans-icone-pdf, .no-pdf-icon)[href*='.pdf?']::after {
   }
 
   ::view-transition-old(root) {
-    animation: page-sortie-gauche var(--duree-moyenne-4) var(--courbe-emphase-deceleree) both;
+    animation: page-sortie-gauche var(--duree-moyenne) var(--courbe-entree) both;
   }
 
   ::view-transition-new(root) {
-    animation: page-entree-droite var(--duree-moyenne-4) var(--courbe-emphase-deceleree) both;
+    animation: page-entree-droite var(--duree-moyenne) var(--courbe-entree) both;
   }
 
-  /* Retour : l'ancienne page part vers la droite, par-dessus la nouvelle */
+  /* Retour : l'ancienne page part vers la droite, par-dessus la nouvelle.
+     Type « retour » au chargement d'une page (Base.astro) ; en navigation
+     côté client (ClientRouter), Astro pose data-astro-transition="back" */
+  :root[data-astro-transition='back']::view-transition-old(root),
   :root:active-view-transition-type(retour)::view-transition-old(root) {
     z-index: 1;
     animation-name: page-sortie-droite;
   }
 
+  :root[data-astro-transition='back']::view-transition-new(root),
   :root:active-view-transition-type(retour)::view-transition-new(root) {
     animation-name: page-entree-gauche;
   }
@@ -587,17 +573,147 @@ main a:not(.sans-icone-pdf, .no-pdf-icon)[href*='.pdf?']::after {
 
 /* ---- studio·bib : action douce ----
    Bouton ou carte-lien secondaire : surface, contour gris (3,7:1, WCAG 1.4.11), texte bleu foncé ;
-   jaune au survol (jetons --action-douce-*, tokens.css). Le composant garde sa forme (taille,
+   jaune au survol (jetons --jaune et --couleur-surface de harmonium). Le composant garde sa forme (taille,
    arrondi, marges) ; seule l'apparence vient d'ici. Désactivé ou état choisi : pas de survol. */
 .action-douce {
-  border: 1px solid var(--action-contour);
-  background-color: var(--action-douce-fond);
-  color: var(--action-texte);
-  transition: background-color var(--duree-courte-4) var(--courbe-standard);
+  border: 1px solid var(--couleur-contour);
+  background-color: var(--couleur-surface);
+  color: var(--bleu-fonce);
+  transition: background-color var(--duree-courte) var(--courbe-standard);
 }
 
 @media (hover: hover) and (pointer: fine) {
   .action-douce:hover:not(:disabled, [aria-disabled='true'], [aria-pressed='true']) {
-    background-color: var(--action-douce-fond-survol);
+    background-color: var(--jaune);
   }
 }
+
+/* Consentement de harmonium (<bib-consentement>, ServicesInstitutionnels) :
+   carte et panneau aux couleurs du site */
+bib-consentement {
+  --bib-consentement-fond: var(--couleur-surface);
+  --bib-consentement-texte: var(--couleur-texte);
+  --bib-consentement-bordure: var(--couleur-bordure);
+  --bib-consentement-focus: var(--couleur-focus);
+  --bib-consentement-focus-contour: var(--couleur-focus-interieur);
+  --bib-consentement-rayon: var(--rayon-carte);
+  --bib-consentement-z-index: var(--z-tiroir);
+  --bib-consentement-ombre: var(--ombre-2);
+}
+
+/* Alertes de harmonium (directive :::alerte) : les couleurs viennent des
+   jetons --alerte-* du site ; texte et taille gardés comme avant */
+.bib-alerte {
+  --bib-alerte-texte: var(--couleur-texte-neutre);
+  --bib-alerte-taille: 0.875rem;
+}
+
+/* ---- Habillage studio·bib des composants de harmonium ----
+   Les composants gardent leur HTML et leur feuille ; ces règles remettent
+   l'identité du site : actions en jaune (--jaune, survol --jaune-40, texte
+   --bleu-fonce) et cartes à image comme avant. Variables d'habillage de
+   harmonium quand elles existent ; sinon `:root` devant le sélecteur pour
+   l'emporter sur la feuille du composant, quel que soit l'ordre de chargement. */
+:root {
+  /* Pastille à flèche des cartes (compacte, à icône, à image) : blanche à
+     contour gris au repos, jaune au survol et au focus (bleu foncé chez harmonium) */
+  --bib-pastille-active-fond: var(--jaune);
+  --bib-pastille-active-encre: var(--bleu-fonce);
+}
+
+/* Bouton de harmonium (bib-bouton) : jaune, texte bleu foncé, survol jaune pâle, plein sur fond
+   clair comme sur fond foncé (variante clair) */
+:root {
+  --bib-bouton-plein-fond: var(--jaune);
+  --bib-bouton-plein-texte: var(--bleu-fonce);
+  --bib-bouton-plein-fond-survol: var(--jaune-40);
+  --bib-bouton-clair-fond: var(--jaune);
+  --bib-bouton-clair-texte: var(--bleu-fonce);
+  --bib-bouton-clair-fond-survol: var(--jaune-40);
+}
+
+/* Boutons « Accepter », « Refuser » et « Enregistrer » du consentement */
+bib-consentement {
+  --bib-consentement-bouton-fond: var(--jaune);
+  --bib-consentement-bouton-texte: var(--bleu-fonce);
+  --bib-consentement-bouton-survol: var(--jaune-40);
+}
+
+/* Horaire de la semaine : jour et flèches de semaine jaunes au survol (le jour
+   choisi reste bleu foncé) */
+.bib-horaire-semaine {
+  --bib-horaire-semaine-action-survol: var(--jaune);
+}
+
+/* Bouton « Copier » : jaune au survol (valeurs par défaut de harmonium, posées
+   ici pour qu'elles suivent le site) */
+.bib-copier {
+  --bib-copier-fond: var(--couleur-surface);
+  --bib-copier-fond-survol: var(--jaune);
+  --bib-copier-texte: var(--bleu-fonce);
+}
+
+/* Cartes à photo de l'accueil : voile plus léger que celui de harmonium
+   (diagonale de 90 % à 25 % de noir). Il monte du bas : sombre derrière le
+   titre et la description, en bas de la carte, puis transparent ; la photo
+   reste lisible en haut. 60 % à mi-hauteur, où passe un titre de deux lignes :
+   blanc sur la photo la plus claire, au moins 3:1 (grand texte, WCAG 1.4.3). */
+.bib-carte-photo {
+  --bib-carte-photo-voile: linear-gradient(
+    to top,
+    color-mix(in srgb, var(--couleur-voile) 80%, transparent) 0%,
+    color-mix(in srgb, var(--couleur-voile) 60%, transparent) 50%,
+    transparent 100%
+  );
+}
+
+/* Carte à image (:::cartes{forme=image}) : fond blanc, contour et ombre
+   légère ; photo de 170 px ; la description suit le titre, en couleur de
+   texte ; seule la pastille descend en bas à droite. */
+:root .bib-carte-image {
+  min-height: 400px;
+  background-color: var(--couleur-surface);
+  box-shadow: var(--ombre-1);
+}
+
+:root .bib-carte-image__photo {
+  height: 170px;
+}
+
+:root .bib-carte-image .bib-carte-image__titre {
+  margin-block: 0.5em var(--espace-1);
+  font-size: var(--texte-moyen);
+  font-weight: var(--graisse-forte);
+}
+
+@media (width >= 900px) {
+  :root .bib-carte-image .bib-carte-image__titre {
+    font-size: 1.375rem;
+  }
+}
+
+:root .bib-carte-image__pied {
+  flex-direction: column;
+  flex-grow: 1;
+  align-items: stretch;
+  gap: var(--espace-2);
+  margin-top: 0;
+  --bib-pastille-fleche-contour: var(--couleur-contour);
+  --bib-pastille-fleche-fond: var(--couleur-surface);
+  --bib-pastille-fleche-encre: var(--couleur-texte);
+  --bib-pastille-fleche-contour-actif: var(--bib-pastille-active-fond);
+  --bib-pastille-fleche-fond-actif: var(--bib-pastille-active-fond);
+  --bib-pastille-fleche-encre-actif: var(--bib-pastille-active-encre);
+}
+
+:root .bib-carte-image__plus {
+  flex-grow: 0;
+  color: var(--couleur-texte);
+  font-size: 0.875rem;
+}
+
+:root .bib-carte-image__pied > .bib-pastille-fleche {
+  align-self: flex-end;
+  margin-top: auto;
+}
+

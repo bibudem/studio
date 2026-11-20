@@ -35,7 +35,7 @@ if (icon === undefined && !Astro.slots.has('default')) throw new Error('IconeCar
 
 const fond = couleurPalette(color) ?? 'transparent'
 // Fonds trop foncés pour une icône assombrie (voir plus haut)
-const fondFonce = fond === 'var(--bleu-600)' || fond === 'var(--vert-fonce)'
+const fondFonce = fond === 'var(--bleu-principal-fonce)' || fond === 'var(--vert-fonce)'
 ---
 
 <div class:list={['carre', { 'fond-fonce': fondFonce }, classes(classe, className)]} style={fusionnerStyles({ '--_fond': fond }, style)} {...reste}>

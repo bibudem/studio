@@ -10,14 +10,14 @@
  * chargement s'anime aussi (voir CONVENTIONS, « Chiffres clés ») ; la
  * montée des nombres est le propos du bloc, et elle ne masque aucun texte.
  *
- * Durée : deux fois --duree-longue-2. Un chiffre clé est une explication, lue
+ * Durée : deux fois --duree-longue. Un chiffre clé est une explication, lue
  * une fois par visite : il peut prendre plus que les 300 ms d'une
- * interface. Courbe : --courbe-emphase-deceleree, appliquée aussi aux
+ * interface. Courbe : --courbe-entree, appliquée aussi aux
  * nombres par une animation Web vide dont on lit la progression.
  */
 
 const nombre = new Intl.NumberFormat('fr-CA')
-/** Décalage maximal entre unités d'un bloc (en pas de --duree-courte-1) */
+/** Décalage maximal entre unités d'un bloc (en pas de --duree-decalage) */
 const RANG_MAX = 5
 
 function jeton(nom: string) {
@@ -61,18 +61,26 @@ function compter(compteur: HTMLElement, duree: number, delai: number, courbe: st
   }
 }
 
-export function animerChiffres() {
+/** Changement de page côté client (ClientRouter) : vrai après le premier */
+let pageSuivante = false
+
+/** `signal` (lib/pages.ts) débranche tout quand la page est quittée */
+export function animerChiffres(signal?: AbortSignal) {
+  const suivante = pageSuivante
+  pageSuivante = true
   if (window.matchMedia('(prefers-reduced-motion: reduce)').matches || window.matchMedia('print').matches) return
   if (!('IntersectionObserver' in window) || typeof KeyframeEffect === 'undefined') return
+  // Rechargement ou retour : pas d'animation au premier chargement ; une
+  // page atteinte par un lien (navigation côté client) est une nouvelle visite
   const navigation = performance.getEntriesByType?.('navigation')[0] as PerformanceNavigationTiming | undefined
-  if (navigation && navigation.type !== 'navigate') return
+  if (!suivante && navigation && navigation.type !== 'navigate') return
 
   const blocs = [...document.querySelectorAll<HTMLElement>('[data-chiffres]:not(.a-animer)')]
   if (!blocs.length) return
 
-  const duree = 2 * enMs(jeton('--duree-longue-2'))
-  const pas = enMs(jeton('--duree-courte-1'))
-  const courbe = jeton('--courbe-emphase-deceleree')
+  const duree = 2 * enMs(jeton('--duree-longue'))
+  const pas = enMs(jeton('--duree-decalage'))
+  const courbe = jeton('--courbe-entree')
   const arrets = new Set<() => void>()
 
   for (const bloc of blocs) {
@@ -102,13 +110,27 @@ export function animerChiffres() {
   )
   blocs.forEach((bloc) => observateur.observe(bloc))
 
+  // Départ de la page : plus d'observation ni de nombres qui défilent
+  signal?.addEventListener(
+    'abort',
+    () => {
+      observateur.disconnect()
+      arrets.forEach((arret) => arret())
+    },
+    { once: true },
+  )
+
   // À l'impression, les valeurs finales et les barres pleines
-  window.addEventListener('beforeprint', () => {
-    observateur.disconnect()
-    arrets.forEach((arret) => arret())
-    for (const bloc of blocs) {
-      bloc.classList.remove('a-animer', 'anime')
-      bloc.querySelectorAll<HTMLElement>('[data-compteur]').forEach((compteur) => afficher(compteur, false))
-    }
-  })
+  window.addEventListener(
+    'beforeprint',
+    () => {
+      observateur.disconnect()
+      arrets.forEach((arret) => arret())
+      for (const bloc of blocs) {
+        bloc.classList.remove('a-animer', 'anime')
+        bloc.querySelectorAll<HTMLElement>('[data-compteur]').forEach((compteur) => afficher(compteur, false))
+      }
+    },
+    { signal },
+  )
 }

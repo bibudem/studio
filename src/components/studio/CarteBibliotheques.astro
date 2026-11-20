@@ -166,141 +166,149 @@ const donneesStructurees = {
 </div>
 
 <script>
+  import { aChaquePage, auDepart } from '@/lib/pages'
+
   type Lieu = { element: HTMLElement; nom: string; region: string; coords: [number, number] }
 
   const reduit = () => window.matchMedia('(prefers-reduced-motion: reduce)').matches
 
-  for (const racine of document.querySelectorAll<HTMLElement>('[data-carte-bibliotheques]')) {
-    const zone = racine.querySelector<HTMLElement>('[data-zone-carte]')!
-    const conteneur = racine.querySelector<HTMLElement>('[data-carte]')!
-    const etat = racine.querySelector<HTMLElement>('[data-etat-carte]')!
-    const regions = racine.querySelector<HTMLElement>('[data-regions]')
-    const lieux: Lieu[] = [...racine.querySelectorAll<HTMLElement>('[data-lieu]')].map((element) => ({
-      element,
-      nom: element.dataset.lieu!,
-      region: element.dataset.region!,
-      coords: [Number(element.dataset.lat), Number(element.dataset.lng)],
-    }))
+  aChaquePage((signal) => {
+    for (const racine of document.querySelectorAll<HTMLElement>('[data-carte-bibliotheques]')) {
+      const zone = racine.querySelector<HTMLElement>('[data-zone-carte]')!
+      const conteneur = racine.querySelector<HTMLElement>('[data-carte]')!
+      const etat = racine.querySelector<HTMLElement>('[data-etat-carte]')!
+      const regions = racine.querySelector<HTMLElement>('[data-regions]')
+      const lieux: Lieu[] = [...racine.querySelectorAll<HTMLElement>('[data-lieu]')].map((element) => ({
+        element,
+        nom: element.dataset.lieu!,
+        region: element.dataset.region!,
+        coords: [Number(element.dataset.lat), Number(element.dataset.lng)],
+      }))
 
-    zone.hidden = false
-    if (regions) regions.hidden = false
-    for (const bouton of racine.querySelectorAll<HTMLElement>('[data-voir]')) bouton.hidden = false
+      zone.hidden = false
+      if (regions) regions.hidden = false
+      for (const bouton of racine.querySelectorAll<HTMLElement>('[data-voir]')) bouton.hidden = false
 
-    let carte: any
-    let chargement: Promise<void> | undefined
-    const groupes = new Map<string, any>()
-    const marqueurs = new Map<string, any>()
+      let carte: any
+      let chargement: Promise<void> | undefined
+      const groupes = new Map<string, any>()
+      const marqueurs = new Map<string, any>()
 
-    const mettreEnEvidence = (nom: string | null) => {
-      for (const lieu of lieux) lieu.element.toggleAttribute('data-actif', lieu.nom === nom)
-    }
-
-    const cadrer = (region: string) => {
-      const groupe = groupes.get(region)
-      if (carte && groupe) carte.fitBounds(groupe.getBounds(), { padding: [40, 40], maxZoom: 15, animate: !reduit() })
-      for (const bouton of regions?.querySelectorAll<HTMLElement>('[data-region]') ?? []) bouton.setAttribute('aria-pressed', String(bouton.dataset.region === region))
-    }
-
-    // Contenu de la bulle, construit en DOM à partir de la liste (aucun HTML injecté)
-    const bulle = (lieu: Lieu) => {
-      const div = document.createElement('div')
-      const titre = document.createElement('strong')
-      titre.className = 'bulle-titre'
-      titre.textContent = lieu.nom
-      div.append(titre)
-      const pastilles = [...lieu.element.querySelectorAll('[data-pastilles] li')].map((li) => li.textContent!.trim())
-      if (pastilles.length) {
-        const ul = document.createElement('ul')
-        ul.className = 'bulle-liste'
-        for (const texte of pastilles) ul.append(Object.assign(document.createElement('li'), { textContent: texte }))
-        div.append(ul)
+      const mettreEnEvidence = (nom: string | null) => {
+        for (const lieu of lieux) lieu.element.toggleAttribute('data-actif', lieu.nom === nom)
       }
-      const details = [...lieu.element.querySelectorAll('[data-details] li')].map((li) => li.textContent!.trim())
-      if (details.length) div.append(Object.assign(document.createElement('p'), { className: 'bulle-details', textContent: details.join(' · ') }))
-      const lien = Object.assign(document.createElement('a'), { href: lieu.element.dataset.itineraire!, textContent: 'Itinéraire Google Maps' })
-      div.append(lien)
-      return div
-    }
 
-    const charger = () =>
-      (chargement ??= (async () => {
-        etat.textContent = 'Chargement de la carte…'
-        try {
-          const [{ default: L }] = await Promise.all([import('leaflet'), import('leaflet/dist/leaflet.css')])
-          conteneur.replaceChildren()
-          // La carte prend sa hauteur avant que Leaflet la mesure
-          racine.toggleAttribute('data-carte-active', true)
-          carte = L.map(conteneur, { scrollWheelZoom: false, zoomControl: false })
-          L.control.zoom({ zoomInTitle: 'Zoom avant', zoomOutTitle: 'Zoom arrière' }).addTo(carte)
-          L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            maxZoom: 19,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-          }).addTo(carte)
-          carte.attributionControl.setPrefix(false)
+      const cadrer = (region: string) => {
+        const groupe = groupes.get(region)
+        if (carte && groupe) carte.fitBounds(groupe.getBounds(), { padding: [40, 40], maxZoom: 15, animate: !reduit() })
+        for (const bouton of regions?.querySelectorAll<HTMLElement>('[data-region]') ?? []) bouton.setAttribute('aria-pressed', String(bouton.dataset.region === region))
+      }
 
-          lieux.forEach((lieu, i) => {
-            if (!groupes.has(lieu.region)) groupes.set(lieu.region, L.featureGroup().addTo(carte))
-            const icone = L.divIcon({ className: 'marqueur', html: `<span aria-hidden="true">${i + 1}</span>`, iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -13] })
-            const marqueur = L.marker(lieu.coords, { icon: icone, title: `${i + 1}. ${lieu.nom}`, alt: lieu.nom }).bindPopup(bulle(lieu)).addTo(groupes.get(lieu.region))
-            marqueurs.set(lieu.nom, marqueur)
-            // Clavier : à l'ouverture, le focus entre dans la bulle ; à la fermeture, il revient au marqueur
-            marqueur.on('popupopen', (e: any) => {
-              const element = e.popup.getElement() as HTMLElement | null
-              const fermer = element?.querySelector('.leaflet-popup-close-button')
-              fermer?.setAttribute('aria-label', 'Fermer')
-              fermer?.setAttribute('title', 'Fermer')
-              element?.querySelector<HTMLElement>('a[href]:not(.leaflet-popup-close-button)')?.focus({ preventScroll: true })
-              mettreEnEvidence(lieu.nom)
-            })
-            marqueur.on('popupclose', (e: any) => {
-              const element = e.popup.getElement() as HTMLElement | null
-              if (!element || element.contains(document.activeElement) || document.activeElement === document.body) marqueur.getElement()?.focus({ preventScroll: true })
-            })
-          })
-          // Échap dans une bulle la ferme (Leaflet ne l'écoute que sur le fond de carte)
-          conteneur.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape' && (e.target as HTMLElement).closest('.leaflet-popup')) carte.closePopup()
-          })
-          cadrer(lieux[0].region)
-          etat.textContent = ''
-          racine.toggleAttribute('data-carte-prete', true)
-        } catch (erreur) {
-          console.error('Carte des bibliothèques :', erreur)
-          chargement = undefined
-          etat.textContent = 'La carte n’a pas pu être chargée. La liste des bibliothèques reste à jour.'
+      // Contenu de la bulle, construit en DOM à partir de la liste (aucun HTML injecté)
+      const bulle = (lieu: Lieu) => {
+        const div = document.createElement('div')
+        const titre = document.createElement('strong')
+        titre.className = 'bulle-titre'
+        titre.textContent = lieu.nom
+        div.append(titre)
+        const pastilles = [...lieu.element.querySelectorAll('[data-pastilles] li')].map((li) => li.textContent!.trim())
+        if (pastilles.length) {
+          const ul = document.createElement('ul')
+          ul.className = 'bulle-liste'
+          for (const texte of pastilles) ul.append(Object.assign(document.createElement('li'), { textContent: texte }))
+          div.append(ul)
         }
-      })())
+        const details = [...lieu.element.querySelectorAll('[data-details] li')].map((li) => li.textContent!.trim())
+        if (details.length) div.append(Object.assign(document.createElement('p'), { className: 'bulle-details', textContent: details.join(' · ') }))
+        const lien = Object.assign(document.createElement('a'), { href: lieu.element.dataset.itineraire!, textContent: 'Itinéraire Google Maps' })
+        div.append(lien)
+        return div
+      }
 
-    racine.querySelector('[data-afficher]')?.addEventListener('click', async () => {
-      await charger()
-      // Le bouton a disparu avec l'invite : le focus passe à la carte
-      conteneur.focus({ preventScroll: true })
-    })
+      const charger = () =>
+        (chargement ??= (async () => {
+          etat.textContent = 'Chargement de la carte…'
+          try {
+            const [{ default: L }] = await Promise.all([import('leaflet'), import('leaflet/dist/leaflet.css')])
+            // Page quittée pendant le chargement : pas de carte à créer
+            if (signal.aborted) return
+            conteneur.replaceChildren()
+            // La carte prend sa hauteur avant que Leaflet la mesure
+            racine.toggleAttribute('data-carte-active', true)
+            carte = L.map(conteneur, { scrollWheelZoom: false, zoomControl: false })
+            // Carte détruite au départ de la page (écouteurs de Leaflet sur window et document)
+            auDepart(signal, () => carte.remove())
+            L.control.zoom({ zoomInTitle: 'Zoom avant', zoomOutTitle: 'Zoom arrière' }).addTo(carte)
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+              maxZoom: 19,
+              attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            }).addTo(carte)
+            carte.attributionControl.setPrefix(false)
 
-    // Un onglet de région charge la carte si elle ne l'est pas encore, puis la cadre
-    regions?.addEventListener('click', async (e) => {
-      const bouton = (e.target as HTMLElement).closest<HTMLElement>('[data-region]')
-      if (!bouton) return
-      await charger()
-      cadrer(bouton.dataset.region!)
-    })
+            lieux.forEach((lieu, i) => {
+              if (!groupes.has(lieu.region)) groupes.set(lieu.region, L.featureGroup().addTo(carte))
+              const icone = L.divIcon({ className: 'marqueur', html: `<span aria-hidden="true">${i + 1}</span>`, iconSize: [26, 26], iconAnchor: [13, 13], popupAnchor: [0, -13] })
+              const marqueur = L.marker(lieu.coords, { icon: icone, title: `${i + 1}. ${lieu.nom}`, alt: lieu.nom }).bindPopup(bulle(lieu)).addTo(groupes.get(lieu.region))
+              marqueurs.set(lieu.nom, marqueur)
+              // Clavier : à l'ouverture, le focus entre dans la bulle ; à la fermeture, il revient au marqueur
+              marqueur.on('popupopen', (e: any) => {
+                const element = e.popup.getElement() as HTMLElement | null
+                const fermer = element?.querySelector('.leaflet-popup-close-button')
+                fermer?.setAttribute('aria-label', 'Fermer')
+                fermer?.setAttribute('title', 'Fermer')
+                element?.querySelector<HTMLElement>('a[href]:not(.leaflet-popup-close-button)')?.focus({ preventScroll: true })
+                mettreEnEvidence(lieu.nom)
+              })
+              marqueur.on('popupclose', (e: any) => {
+                const element = e.popup.getElement() as HTMLElement | null
+                if (!element || element.contains(document.activeElement) || document.activeElement === document.body) marqueur.getElement()?.focus({ preventScroll: true })
+              })
+            })
+            // Échap dans une bulle la ferme (Leaflet ne l'écoute que sur le fond de carte)
+            conteneur.addEventListener('keydown', (e) => {
+              if (e.key === 'Escape' && (e.target as HTMLElement).closest('.leaflet-popup')) carte.closePopup()
+            })
+            cadrer(lieux[0].region)
+            etat.textContent = ''
+            racine.toggleAttribute('data-carte-prete', true)
+          } catch (erreur) {
+            console.error('Carte des bibliothèques :', erreur)
+            chargement = undefined
+            etat.textContent = 'La carte n’a pas pu être chargée. La liste des bibliothèques reste à jour.'
+          }
+        })())
 
-    for (const lieu of lieux) {
-      lieu.element.querySelector('[data-voir]')!.addEventListener('click', async () => {
+      racine.querySelector('[data-afficher]')?.addEventListener('click', async () => {
         await charger()
-        const marqueur = marqueurs.get(lieu.nom)
-        if (!carte || !marqueur) return
-        cadrer(lieu.region)
-        mettreEnEvidence(lieu.nom)
-        // Sur mobile, la carte est au-dessus de la liste : la ramener à l'écran
-        const r = zone.getBoundingClientRect()
-        if (r.top < 0 || r.bottom > window.innerHeight) zone.scrollIntoView({ block: 'nearest', behavior: reduit() ? 'auto' : 'smooth' })
-        // Zoom 17 : sépare les bibliothèques voisines du campus principal
-        carte.setView(marqueur.getLatLng(), Math.max(carte.getZoom(), 17), { animate: !reduit() })
-        marqueur.openPopup()
+        // Le bouton a disparu avec l'invite : le focus passe à la carte
+        conteneur.focus({ preventScroll: true })
       })
+
+      // Un onglet de région charge la carte si elle ne l'est pas encore, puis la cadre
+      regions?.addEventListener('click', async (e) => {
+        const bouton = (e.target as HTMLElement).closest<HTMLElement>('[data-region]')
+        if (!bouton) return
+        await charger()
+        cadrer(bouton.dataset.region!)
+      })
+
+      for (const lieu of lieux) {
+        lieu.element.querySelector('[data-voir]')!.addEventListener('click', async () => {
+          await charger()
+          const marqueur = marqueurs.get(lieu.nom)
+          if (!carte || !marqueur) return
+          cadrer(lieu.region)
+          mettreEnEvidence(lieu.nom)
+          // Sur mobile, la carte est au-dessus de la liste : la ramener à l'écran
+          const r = zone.getBoundingClientRect()
+          if (r.top < 0 || r.bottom > window.innerHeight) zone.scrollIntoView({ block: 'nearest', behavior: reduit() ? 'auto' : 'smooth' })
+          // Zoom 17 : sépare les bibliothèques voisines du campus principal
+          carte.setView(marqueur.getLatLng(), Math.max(carte.getZoom(), 17), { animate: !reduit() })
+          marqueur.openPopup()
+        })
+      }
     }
-  }
+  })
 </script>
 
 <style>
@@ -332,14 +340,14 @@ const donneesStructurees = {
 
   /* Région choisie : état choisi, bleu foncé plein et texte blanc */
   .region[aria-pressed='true'] {
-    background: var(--selection-fond);
-    border-color: var(--selection-fond);
-    color: var(--selection-texte);
+    background: var(--couleur-fond-fort);
+    border-color: var(--couleur-fond-fort);
+    color: var(--couleur-sur-fonce);
   }
 
   @media (hover: hover) and (pointer: fine) {
     .region[aria-pressed='true']:hover {
-      background: var(--selection-fond);
+      background: var(--couleur-fond-fort);
     }
   }
 
@@ -368,7 +376,7 @@ const donneesStructurees = {
     border: 1px solid var(--couleur-bordure);
     border-radius: var(--rayon-carte);
     /* studio·bib : gris neutre avant le chargement (une information, ni bleu ni jaune) */
-    background: var(--couleur-fond-neutre);
+    background: var(--gris-100);
   }
 
   /* studio·bib : la carte garde sa hauteur avant d'être chargée (l'invite est centrée
@@ -401,15 +409,15 @@ const donneesStructurees = {
     padding: 0 var(--espace-3);
     border: 0;
     border-radius: var(--rayon-plein);
-    background: var(--action-fond);
-    color: var(--action-texte);
+    background: var(--jaune);
+    color: var(--bleu-fonce);
     font: inherit;
     font-weight: var(--graisse-forte);
     cursor: pointer;
   }
 
   .bouton-carte:hover {
-    background: var(--action-fond-survol);
+    background: var(--jaune-40);
   }
 
   .etat {
@@ -479,7 +487,7 @@ const donneesStructurees = {
     margin: 0;
     padding: var(--espace-1) var(--espace-2);
     border-bottom: 1px solid var(--couleur-bordure);
-    background: var(--couleur-fond-neutre);
+    background: var(--gris-100);
     font-size: 0.875rem;
   }
 
@@ -507,7 +515,7 @@ const donneesStructurees = {
     margin: 0;
     padding: 0.75rem var(--espace-2);
     border-bottom: 1px solid var(--couleur-bordure);
-    transition: background-color var(--duree-courte-4) var(--courbe-standard);
+    transition: background-color var(--duree-courte) var(--courbe-standard);
   }
 
   .lieu:last-child {
@@ -516,8 +524,8 @@ const donneesStructurees = {
 
   /* studio·bib : lieu choisi comme la page en cours du menu : fond gris pâle, filet bleu foncé */
   .lieu[data-actif] {
-    background: var(--navigation-fond-survol);
-    box-shadow: inset 4px 0 0 var(--navigation-courant);
+    background: var(--couleur-teinte);
+    box-shadow: inset 4px 0 0 var(--couleur-texte);
   }
 
   /* Numéro du lieu, le même que celui du marqueur */
@@ -599,7 +607,7 @@ const donneesStructurees = {
     padding: 0.15rem 0.55rem;
     border: 1px solid var(--couleur-bordure);
     border-radius: var(--rayon-plein);
-    background: var(--couleur-fond-neutre);
+    background: var(--gris-100);
     color: var(--couleur-texte);
     font-size: 0.8rem;
     font-weight: var(--graisse-forte);
@@ -608,7 +616,7 @@ const donneesStructurees = {
   }
 
   a.pastille:hover {
-    border-color: var(--action-contour);
+    border-color: var(--couleur-contour);
     text-decoration: underline;
   }
 

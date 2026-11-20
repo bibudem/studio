@@ -26,14 +26,14 @@ const { class: classe, className, style, sx: _sx, ...reste } = Astro.props
   .details-accordeon {
     padding: 1.5em;
     border-radius: 0 0 var(--rayon-petit) var(--rayon-petit);
-    background-color: var(--accordeon-fond, var(--bleu-100));
+    background-color: var(--accordeon-fond, var(--bleu-10));
   }
 
   /* Repli des navigateurs sans ::details-content ou sans interpolate-size
      (Accordeon anime alors hauteur et opacité) : fondu à l'ouverture */
   @supports not ((interpolate-size: allow-keywords) and selector(::details-content)) {
     .details-accordeon {
-      animation: apparition var(--duree-moyenne-3) var(--courbe-emphase-deceleree);
+      animation: apparition var(--duree-moyenne) var(--courbe-entree);
     }
   }
 

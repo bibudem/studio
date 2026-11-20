@@ -5,7 +5,7 @@
   "private": true,
   "description": "studio·bib, les services technologiques et créatifs des Bibliothèques de l'UdeM (Astro)",
   "engines": {
-    "node": ">=22.22.0"
+    "node": ">=22.23.4"
   },
   "scripts": {
     "dev": "astro dev --port 4323",
@@ -32,13 +32,15 @@
     "@types/react-dom": "^19.3.0",
     "astro": "^7.4.1",
     "github-slugger": "^2.0.0",
+    "harmonium": "github:bibudem/harmonium#v1.1.0",
     "leaflet": "^1.9.4",
     "minisearch": "^7.2.0",
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "remark-directive": "^4.0.0",
     "sharp": "^0.35.5",
-    "unist-util-visit": "^5.2.0"
+    "unist-util-visit": "^5.2.0",
+    "yaml": "^2.8.1"
   },
   "devDependencies": {
     "axe-core": "^4.14.0",

@@ -13,7 +13,7 @@
  *   poliment, seulement quand il change.
  * - Sans JS : un renvoi vers la procédure de connexion.
  */
-import EtatErreur from '@/components/contenu/dynamiques/EtatErreur.astro'
+import EtatErreur from 'harmonium/astro/EtatErreur.astro'
 import { niveauTitre } from '@/lib/directives'
 import '@/styles/fiches.css'
 
@@ -47,6 +47,7 @@ const Titre = `h${niveauTitre(niveau)}`
 
 <script>
   import { brancherReessayer } from '@/components/contenu/dynamiques/chargement'
+  import { aChaquePage, auDepart } from '@/lib/pages'
   import { pluriel } from '@/lib/texte'
 
   const API = 'https://api.bib.umontreal.ca/disponibilite/ordinateurs/?lieu=RDP'
@@ -86,94 +87,105 @@ const Titre = `h${niveauTitre(niveau)}`
 
   type Poste = { id?: string; enabled?: boolean; state?: string }
 
-  for (const racine of document.querySelectorAll<HTMLElement>('[data-postes]')) {
-    const zone = racine.dataset.postes!
-    const message = racine.querySelector<HTMLElement>('[data-message]')!
-    const annonce = racine.querySelector<HTMLElement>('[data-annonce]')!
-    const liste = racine.querySelector<HTMLUListElement>('[data-liste]')!
-    const compte = racine.querySelector<HTMLElement>('[data-compte]')
-    const erreur = racine.querySelector<HTMLElement>('.etat-erreur')!
-    let precedents = ''
-    let minuterie: number | undefined
-    let echecs = 0
+  aChaquePage((signal) => {
+    for (const racine of document.querySelectorAll<HTMLElement>('[data-postes]')) {
+      const zone = racine.dataset.postes!
+      const message = racine.querySelector<HTMLElement>('[data-message]')!
+      const annonce = racine.querySelector<HTMLElement>('[data-annonce]')!
+      const liste = racine.querySelector<HTMLUListElement>('[data-liste]')!
+      const compte = racine.querySelector<HTMLElement>('[data-compte]')
+      const erreur = racine.querySelector<HTMLElement>('.bib-etat-erreur')!
+      let precedents = ''
+      let minuterie: number | undefined
+      let echecs = 0
 
-    message.textContent = 'Chargement des postes disponibles…'
+      message.textContent = 'Chargement des postes disponibles…'
 
-    const afficher = (ids: string[]) => {
-      const cle = ids.join('|')
-      if (cle === precedents && !liste.hidden) return
-      precedents = cle
-      liste.replaceChildren(
-        ...ids.map((id) => {
-          const adresse = adresseDe(id)
-          const lien = document.createElement('a')
-          lien.className = 'fiche-etat'
-          // Toujours libre, et un fichier à télécharger : filet jaune, flèche vers le bas
-          lien.dataset.statut = 'disponible'
-          lien.dataset.fleche = 'bas'
-          lien.href = `data:application/x-rdp;charset=utf-8,${encodeURIComponent(configuration(adresse))}`
-          lien.download = `${adresse}.rdp`
-          const libelle = Object.assign(document.createElement('span'), { className: 'libelle', textContent: id })
-          const etat = Object.assign(document.createElement('span'), { className: 'etat', textContent: 'Disponible' })
-          const masque = Object.assign(document.createElement('span'), { className: 'visuellement-masque', textContent: ' (fichier de connexion .rdp)' })
-          lien.append(libelle, etat, masque, telechargement())
-          const li = document.createElement('li')
-          li.append(lien)
-          return li
-        }),
-      )
-      liste.hidden = !ids.length
-      message.hidden = Boolean(ids.length)
-      message.textContent = 'Aucun poste disponible pour le moment.'
-      const texte = ids.length ? pluriel(ids.length, 'poste', 'disponible') : 'Aucun poste disponible'
-      if (compte) compte.textContent = texte
-      annonce.textContent = texte
-    }
+      const afficher = (ids: string[]) => {
+        const cle = ids.join('|')
+        if (cle === precedents && !liste.hidden) return
+        precedents = cle
+        liste.replaceChildren(
+          ...ids.map((id) => {
+            const adresse = adresseDe(id)
+            const lien = document.createElement('a')
+            lien.className = 'fiche-etat'
+            // Toujours libre, et un fichier à télécharger : filet jaune, flèche vers le bas
+            lien.dataset.statut = 'disponible'
+            lien.dataset.fleche = 'bas'
+            lien.href = `data:application/x-rdp;charset=utf-8,${encodeURIComponent(configuration(adresse))}`
+            lien.download = `${adresse}.rdp`
+            const libelle = Object.assign(document.createElement('span'), { className: 'libelle', textContent: id })
+            const etat = Object.assign(document.createElement('span'), { className: 'etat', textContent: 'Disponible' })
+            const masque = Object.assign(document.createElement('span'), { className: 'visuellement-masque', textContent: ' (fichier de connexion .rdp)' })
+            lien.append(libelle, etat, masque, telechargement())
+            const li = document.createElement('li')
+            li.append(lien)
+            return li
+          }),
+        )
+        liste.hidden = !ids.length
+        message.hidden = Boolean(ids.length)
+        message.textContent = 'Aucun poste disponible pour le moment.'
+        const texte = ids.length ? pluriel(ids.length, 'poste', 'disponible') : 'Aucun poste disponible'
+        if (compte) compte.textContent = texte
+        annonce.textContent = texte
+      }
 
-    // Chaque chargement a son numéro : seul le plus récent programme la relecture suivante (sinon,
-    // une requête terminée après un retour au premier plan lançait une seconde boucle, jamais arrêtée)
-    let tour = 0
-    const charger = async () => {
-      clearTimeout(minuterie)
-      const ceTour = ++tour
-      try {
-        const reponse = await fetch(`${API}&zone=${encodeURIComponent(zone)}`, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(8000) })
-        if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`)
-        const donnees: Poste[] = await reponse.json()
-        if (!Array.isArray(donnees)) throw new Error('La réponse n’est pas une liste.')
-        echecs = 0
-        erreur.hidden = true
-        afficher(donnees.filter((p) => p?.id && p.enabled === true && p.state !== 'active').map((p) => String(p.id).trim()))
-      } catch (e) {
-        console.error(`Postes disponibles (${zone}) :`, e)
-        echecs++
-        // Une relecture manquée ne vide pas la liste ; l'erreur ne s'affiche qu'au premier chargement ou après trois échecs
-        if (!precedents || echecs >= 3) {
-          liste.hidden = true
-          message.hidden = true
-          erreur.hidden = false
-        }
-      } finally {
-        racine.setAttribute('aria-busy', 'false')
-        if (ceTour === tour && !document.hidden) {
-          clearTimeout(minuterie)
-          minuterie = window.setTimeout(charger, INTERVALLE)
+      // Chaque chargement a son numéro : seul le plus récent programme la relecture suivante (sinon,
+      // une requête terminée après un retour au premier plan lançait une seconde boucle, jamais arrêtée)
+      let tour = 0
+      const charger = async () => {
+        clearTimeout(minuterie)
+        const ceTour = ++tour
+        try {
+          // Requête arrêtée aussi au départ de la page (AbortSignal.any absent : délai seul)
+          const delai = AbortSignal.timeout(8000)
+          const reponse = await fetch(`${API}&zone=${encodeURIComponent(zone)}`, { headers: { Accept: 'application/json' }, signal: AbortSignal.any?.([signal, delai]) ?? delai })
+          if (!reponse.ok) throw new Error(`HTTP ${reponse.status}`)
+          const donnees: Poste[] = await reponse.json()
+          if (!Array.isArray(donnees)) throw new Error('La réponse n’est pas une liste.')
+          echecs = 0
+          erreur.hidden = true
+          afficher(donnees.filter((p) => p?.id && p.enabled === true && p.state !== 'active').map((p) => String(p.id).trim()))
+        } catch (e) {
+          if (signal.aborted) return
+          console.error(`Postes disponibles (${zone}) :`, e)
+          echecs++
+          // Une relecture manquée ne vide pas la liste ; l'erreur ne s'affiche qu'au premier chargement ou après trois échecs
+          if (!precedents || echecs >= 3) {
+            liste.hidden = true
+            message.hidden = true
+            erreur.hidden = false
+          }
+        } finally {
+          racine.setAttribute('aria-busy', 'false')
+          // Page quittée : la relecture s'arrête
+          if (ceTour === tour && !document.hidden && !signal.aborted) {
+            clearTimeout(minuterie)
+            minuterie = window.setTimeout(charger, INTERVALLE)
+          }
         }
       }
-    }
 
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) clearTimeout(minuterie)
-      else charger()
-    })
-    brancherReessayer(racine, () => {
-      erreur.hidden = true
-      message.hidden = false
-      message.textContent = 'Chargement des postes disponibles…'
+      document.addEventListener(
+        'visibilitychange',
+        () => {
+          if (document.hidden) clearTimeout(minuterie)
+          else charger()
+        },
+        { signal },
+      )
+      auDepart(signal, () => clearTimeout(minuterie))
+      brancherReessayer(racine, () => {
+        erreur.hidden = true
+        message.hidden = false
+        message.textContent = 'Chargement des postes disponibles…'
+        charger()
+      })
       charger()
-    })
-    charger()
-  }
+    }
+  })
 </script>
 
 <style>

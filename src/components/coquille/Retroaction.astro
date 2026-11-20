@@ -79,6 +79,8 @@ const MAX = 500
 </aside>
 
 <script>
+  import { aChaquePage } from '@/lib/pages'
+
   const FORMULAIRE = 43784
   const CHAMP_VOTE = 1582731
   const CHAMP_COMMENTAIRE = 1582733
@@ -119,67 +121,69 @@ const MAX = 500
     fetch(WEBHOOK, { method: 'POST', headers: entetes, body: corps }).catch((e) => console.error('Webhook n8n :', e))
   }
 
-  for (const bloc of document.querySelectorAll<HTMLElement>('[data-retroaction]')) {
-    const formulaire = bloc.querySelector<HTMLFormElement>('[data-formulaire]')!
-    const pouces = [...bloc.querySelectorAll<HTMLButtonElement>('[data-vote]')]
-    const section = bloc.querySelector<HTMLElement>('[data-commentaire]')!
-    const champ = bloc.querySelector<HTMLTextAreaElement>('textarea')!
-    const compteur = bloc.querySelector<HTMLElement>('[data-compteur]')!
-    const bouton = bloc.querySelector<HTMLButtonElement>('[data-envoyer]')!
-    const erreur = bloc.querySelector<HTMLElement>('[data-erreur]')!
-    const merci = bloc.querySelector<HTMLElement>('[data-merci]')!
-    let enCours = false
+  aChaquePage(() => {
+    for (const bloc of document.querySelectorAll<HTMLElement>('[data-retroaction]')) {
+      const formulaire = bloc.querySelector<HTMLFormElement>('[data-formulaire]')!
+      const pouces = [...bloc.querySelectorAll<HTMLButtonElement>('[data-vote]')]
+      const section = bloc.querySelector<HTMLElement>('[data-commentaire]')!
+      const champ = bloc.querySelector<HTMLTextAreaElement>('textarea')!
+      const compteur = bloc.querySelector<HTMLElement>('[data-compteur]')!
+      const bouton = bloc.querySelector<HTMLButtonElement>('[data-envoyer]')!
+      const erreur = bloc.querySelector<HTMLElement>('[data-erreur]')!
+      const merci = bloc.querySelector<HTMLElement>('[data-merci]')!
+      let enCours = false
 
-    const choisir = (vote: string) => {
-      for (const p of pouces) p.setAttribute('aria-pressed', String(p.dataset.vote === vote))
-    }
-    const occupe = (oui: boolean) => {
-      enCours = oui
-      for (const b of [...pouces, bouton]) b.disabled = oui
-      bouton.textContent = oui ? 'Envoi en cours…' : 'Envoyer mon retour'
-    }
-    const soumettre = async (vote: string, commentaire = '') => {
-      if (enCours) return
-      erreur.hidden = true
-      occupe(true)
-      try {
-        await envoyer(vote, commentaire)
-        formulaire.hidden = true
-        merci.hidden = false
-        merci.focus()
-      } catch (e) {
-        console.error('Rétroaction :', e)
-        erreur.hidden = false
-        occupe(false)
+      const choisir = (vote: string) => {
+        for (const p of pouces) p.setAttribute('aria-pressed', String(p.dataset.vote === vote))
       }
-    }
-
-    for (const pouce of pouces) {
-      pouce.addEventListener('click', () => {
-        const vote = pouce.dataset.vote!
-        choisir(vote)
-        if (vote === 'oui') {
-          section.hidden = true
-          champ.value = ''
-          soumettre('oui')
-        } else {
-          erreur.hidden = true
-          section.hidden = false
-          champ.focus()
+      const occupe = (oui: boolean) => {
+        enCours = oui
+        for (const b of [...pouces, bouton]) b.disabled = oui
+        bouton.textContent = oui ? 'Envoi en cours…' : 'Envoyer mon retour'
+      }
+      const soumettre = async (vote: string, commentaire = '') => {
+        if (enCours) return
+        erreur.hidden = true
+        occupe(true)
+        try {
+          await envoyer(vote, commentaire)
+          formulaire.hidden = true
+          merci.hidden = false
+          merci.focus()
+        } catch (e) {
+          console.error('Rétroaction :', e)
+          erreur.hidden = false
+          occupe(false)
         }
-      })
-    }
-    champ.addEventListener('input', () => {
-      erreur.hidden = true
-      compteur.textContent = `${champ.value.length}/${champ.maxLength}`
-    })
-    formulaire.addEventListener('submit', (e) => {
-      e.preventDefault()
-      soumettre('non', champ.value.trim())
-    })
+      }
 
-    bloc.hidden = false
-  }
+      for (const pouce of pouces) {
+        pouce.addEventListener('click', () => {
+          const vote = pouce.dataset.vote!
+          choisir(vote)
+          if (vote === 'oui') {
+            section.hidden = true
+            champ.value = ''
+            soumettre('oui')
+          } else {
+            erreur.hidden = true
+            section.hidden = false
+            champ.focus()
+          }
+        })
+      }
+      champ.addEventListener('input', () => {
+        erreur.hidden = true
+        compteur.textContent = `${champ.value.length}/${champ.maxLength}`
+      })
+      formulaire.addEventListener('submit', (e) => {
+        e.preventDefault()
+        soumettre('non', champ.value.trim())
+      })
+
+      bloc.hidden = false
+    }
+  })
 </script>
 
 <style>
@@ -224,8 +228,8 @@ const MAX = 500
     color: var(--couleur-texte);
     cursor: pointer;
     transition:
-      background-color var(--duree-courte-4) var(--courbe-standard),
-      color var(--duree-courte-4) var(--courbe-standard);
+      background-color var(--duree-courte) var(--courbe-standard),
+      color var(--duree-courte) var(--courbe-standard);
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -314,7 +318,7 @@ const MAX = 500
     font: inherit;
     font-weight: var(--graisse-moyenne);
     cursor: pointer;
-    transition: background-color var(--duree-courte-4) var(--courbe-standard);
+    transition: background-color var(--duree-courte) var(--courbe-standard);
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -345,7 +349,7 @@ const MAX = 500
     display: inline-flex;
     align-items: center;
     gap: 0.45rem;
-    color: var(--rouge-orange-texte);
+    color: var(--couleur-texte-accent);
   }
 
   @media (max-width: 768px) {

@@ -137,45 +137,50 @@ const donnees = [
 </Base>
 
 <script>
+  import { aChaquePage } from '@/lib/pages'
+
   // « Sur cette page » suit le défilement : le lien de la section en cours est marqué
   // (aria-current="true"), dans la colonne comme dans le volet repliable. Un titre est « en
   // cours » une fois monté dans les 40 % supérieurs de l'écran ; en haut de page, aucun.
-  const liens = [...document.querySelectorAll<HTMLAnchorElement>('.colonne-sommaire a[href^="#"], .sommaire-repliable a[href^="#"]')]
-  const titres = [...new Set(liens.map((a) => decodeURIComponent(a.hash.slice(1))))]
-    .map((id) => document.getElementById(id))
-    .filter((e): e is HTMLElement => !!e)
-  if (titres.length) {
-    let attente = false
-    const maj = () => {
-      attente = false
-      const seuil = window.innerHeight * 0.4
-      let actuel: HTMLElement | undefined
-      for (const t of titres) if (t.getBoundingClientRect().top <= seuil) actuel = t
-      // Tout en bas de la page, la dernière section est celle en cours même si son titre n'a pas atteint le seuil
-      if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) actuel = titres.at(-1)
-      for (const a of liens) {
-        if (actuel && decodeURIComponent(a.hash.slice(1)) === actuel.id) a.setAttribute('aria-current', 'true')
-        else if (a.getAttribute('aria-current') === 'true') a.removeAttribute('aria-current')
+  // Navigation côté client : rebranché à chaque page (src/lib/pages.ts)
+  aChaquePage((signal) => {
+    const liens = [...document.querySelectorAll<HTMLAnchorElement>('.colonne-sommaire a[href^="#"], .sommaire-repliable a[href^="#"]')]
+    const titres = [...new Set(liens.map((a) => decodeURIComponent(a.hash.slice(1))))]
+      .map((id) => document.getElementById(id))
+      .filter((e): e is HTMLElement => !!e)
+    if (titres.length) {
+      let attente = false
+      const maj = () => {
+        attente = false
+        const seuil = window.innerHeight * 0.4
+        let actuel: HTMLElement | undefined
+        for (const t of titres) if (t.getBoundingClientRect().top <= seuil) actuel = t
+        // Tout en bas de la page, la dernière section est celle en cours même si son titre n'a pas atteint le seuil
+        if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) actuel = titres.at(-1)
+        for (const a of liens) {
+          if (actuel && decodeURIComponent(a.hash.slice(1)) === actuel.id) a.setAttribute('aria-current', 'true')
+          else if (a.getAttribute('aria-current') === 'true') a.removeAttribute('aria-current')
+        }
+        // La colonne garde le lien en cours à l'écran quand le sommaire défile lui-même
+        const colonne = document.querySelector<HTMLElement>('.colonne-sommaire')
+        const courant = colonne?.querySelector<HTMLElement>('[aria-current="true"]')
+        if (colonne && courant && colonne.scrollHeight > colonne.clientHeight) {
+          const c = colonne.getBoundingClientRect()
+          const l = courant.getBoundingClientRect()
+          if (l.top < c.top || l.bottom > c.bottom) colonne.scrollTop += l.top - c.top - c.height / 2
+        }
       }
-      // La colonne garde le lien en cours à l'écran quand le sommaire défile lui-même
-      const colonne = document.querySelector<HTMLElement>('.colonne-sommaire')
-      const courant = colonne?.querySelector<HTMLElement>('[aria-current="true"]')
-      if (colonne && courant && colonne.scrollHeight > colonne.clientHeight) {
-        const c = colonne.getBoundingClientRect()
-        const l = courant.getBoundingClientRect()
-        if (l.top < c.top || l.bottom > c.bottom) colonne.scrollTop += l.top - c.top - c.height / 2
+      const planifier = () => {
+        if (!attente) {
+          attente = true
+          requestAnimationFrame(maj)
+        }
       }
+      addEventListener('scroll', planifier, { passive: true, signal })
+      addEventListener('resize', planifier, { signal })
+      maj()
     }
-    const planifier = () => {
-      if (!attente) {
-        attente = true
-        requestAnimationFrame(maj)
-      }
-    }
-    addEventListener('scroll', planifier, { passive: true })
-    addEventListener('resize', planifier)
-    maj()
-  }
+  })
 </script>
 
 <style>
@@ -186,7 +191,7 @@ const donnees = [
   /* Accueil de section : les cartes laissent voir un peu de l'icône en filigrane (fond à 70 %).
      Le texte reste au contraste du jeton : l'icône est elle-même presque invisible. Cartes à icône
      (--_fond) ou à image (fond de surface). */
-  .cartes-translucides :global(.carte) {
+  .cartes-translucides :global(:is(.bib-carte-compacte, .bib-carte-image)) {
     background-color: color-mix(in srgb, var(--_fond, var(--couleur-surface)) 70%, transparent);
   }
 

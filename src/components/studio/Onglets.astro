@@ -48,7 +48,7 @@ const descendu = html.replace(/<h([2-6])(\s[^>]*\bdata-titre-panneau\b[^>]*)>([\
   .onglets-studio {
     margin-block: var(--espace-bloc);
     /* Carrousel mobile : la pastille de l'onglet actif est celle de l'état choisi (bleu foncé) */
-    --onglets-indicateur: var(--selection-fond);
+    --onglets-indicateur: var(--couleur-fond-fort);
   }
 
   /* Rangée d'onglets alignée à gauche, comme le texte (JeuOnglets la centre) */
@@ -71,8 +71,8 @@ const descendu = html.replace(/<h([2-6])(\s[^>]*\bdata-titre-panneau\b[^>]*)>([\
 
   /* L'onglet choisi est un état, pas une action : bleu foncé plein, texte blanc ; le survol jaune pâle */
   .onglets-studio.onglets-studio :global(.liste .onglet[data-selectionne='true']) {
-    background-color: var(--selection-fond);
-    color: var(--selection-texte);
+    background-color: var(--couleur-fond-fort);
+    color: var(--couleur-sur-fonce);
   }
 
   /* Carrousel mobile : une fois la pastille en place, c'est elle qui fait le fond (l'onglet reste transparent) */
@@ -81,7 +81,7 @@ const descendu = html.replace(/<h([2-6])(\s[^>]*\bdata-titre-panneau\b[^>]*)>([\
   }
 
   .onglets-studio.onglets-studio :global(.liste .onglet:not([data-selectionne='true']):hover) {
-    background-color: var(--action-douce-fond-survol);
+    background-color: var(--jaune);
   }
 
   .onglets-studio.onglets-studio :global(.panneau) {

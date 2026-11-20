@@ -53,7 +53,7 @@ const COULEURS = { jaune: 'var(--jaune)', 'rouge-orange': 'var(--rouge-orange)',
   ) : (
     <div class:list={['encart', variante]} data-encart-animation={animation} style={`--_couleur-icone: ${COULEURS[couleur]}`}>
       <span class="icone" aria-hidden="true">
-        <Icone size="8rem" weight="duotone" aria-hidden="true" focusable="false" />
+        <Icone size={variante === 'centree' ? '4.5rem' : '8rem'} weight="duotone" aria-hidden="true" focusable="false" />
       </span>
       <div class="contenu">
         <Titre class="titre">{titre}</Titre>
@@ -65,22 +65,27 @@ const COULEURS = { jaune: 'var(--jaune)', 'rouge-orange': 'var(--rouge-orange)',
 }
 
 <script>
-  // Une seule fois, à l'entrée dans l'écran ; le mouvement réduit coupe
-  // l'animation (règle globale de global.css)
-  const encarts = document.querySelectorAll<HTMLElement>('[data-encart-animation]')
-  if (encarts.length && 'IntersectionObserver' in window) {
-    const observateur = new IntersectionObserver(
-      (entrees) => {
-        for (const entree of entrees) {
-          if (!entree.isIntersecting) continue
-          entree.target.setAttribute('data-anime', '')
-          observateur.unobserve(entree.target)
-        }
-      },
-      { threshold: 0.6 },
-    )
-    encarts.forEach((encart) => observateur.observe(encart))
-  }
+  import { aChaquePage, auDepart } from '@/lib/pages'
+
+  aChaquePage((signal) => {
+    // Une seule fois, à l'entrée dans l'écran ; le mouvement réduit coupe
+    // l'animation (règle globale de global.css)
+    const encarts = document.querySelectorAll<HTMLElement>('[data-encart-animation]')
+    if (encarts.length && 'IntersectionObserver' in window) {
+      const observateur = new IntersectionObserver(
+        (entrees) => {
+          for (const entree of entrees) {
+            if (!entree.isIntersecting) continue
+            entree.target.setAttribute('data-anime', '')
+            observateur.unobserve(entree.target)
+          }
+        },
+        { threshold: 0.6 },
+      )
+      encarts.forEach((encart) => observateur.observe(encart))
+      auDepart(signal, () => observateur.disconnect())
+    }
+  })
 </script>
 
 <style>
@@ -116,12 +121,16 @@ const COULEURS = { jaune: 'var(--jaune)', 'rouge-orange': 'var(--rouge-orange)',
   }
 
   /* ---- Centrée (accueil) ---- */
+  /* Bloc de fin de l'accueil, resserré : main de 72 px, titre de 2 rem au plus. Ni marge
+     ni remplissage vertical : seul l'écart entre les blocs de l'accueil le sépare des
+     formations, comme les autres sections (il prenait sinon presque tout un écran) */
   .centree {
     display: flex;
     flex-direction: column;
-    gap: var(--espace-element);
+    gap: var(--espace-1);
     align-items: center;
-    padding: var(--espace-6) var(--espace-2);
+    margin-block: 0;
+    padding: 0 var(--espace-2);
     text-align: center;
   }
 
@@ -132,14 +141,14 @@ const COULEURS = { jaune: 'var(--jaune)', 'rouge-orange': 'var(--rouge-orange)',
   }
 
   .centree .titre {
-    font-size: clamp(1.75rem, 1.2rem + 2vw, 2.75rem);
+    margin-block-end: var(--espace-1);
+    font-size: clamp(1.5rem, 1.2rem + 1vw, 2rem);
     line-height: 1.25;
   }
 
   .centree .texte {
     max-inline-size: 40rem;
-    font-size: 1.125rem;
-    line-height: 1.7;
+    line-height: 1.6;
   }
 
   /* ---- En ligne (documentation) ---- */
@@ -272,7 +281,7 @@ const COULEURS = { jaune: 'var(--jaune)', 'rouge-orange': 'var(--rouge-orange)',
   }
 
   [data-encart-animation='vague'][data-anime] .icone > :global(svg) {
-    animation: vague calc(var(--duree-moyenne-2) * 2) var(--courbe-standard) 2;
+    animation: vague calc(var(--duree-moyenne) * 2) var(--courbe-standard) 2;
   }
 
   [data-encart-animation='cloche'] .icone > :global(svg) {
@@ -280,7 +289,7 @@ const COULEURS = { jaune: 'var(--jaune)', 'rouge-orange': 'var(--rouge-orange)',
   }
 
   [data-encart-animation='cloche'][data-anime] .icone > :global(svg) {
-    animation: cloche calc(var(--duree-longue-2) * 3) var(--courbe-standard);
+    animation: cloche calc(var(--duree-longue) * 3) var(--courbe-standard);
   }
 
   @media (prefers-reduced-motion: reduce) {

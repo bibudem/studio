@@ -46,6 +46,8 @@ const ouvert = defaultExpanded === true || defaultExpanded === '' || defaultExpa
 </details>
 
 <script>
+  import { aChaquePage } from '@/lib/pages'
+
   // Ouvre les volets qui contiennent la cible de l'ancre, puis la ramène en
   // vue : ouvrir un volet après le saut décale la page.
   function ouvrirSelonAncre() {
@@ -70,7 +72,9 @@ const ouvert = defaultExpanded === true || defaultExpanded === '' || defaultExpa
       })
   }
 
-  ouvrirSelonAncre()
+  // À chaque page (lien vers une ancre d'une autre page) ; l'écouteur
+  // ci-dessous, sur window, vaut pour toutes les pages
+  aChaquePage(() => ouvrirSelonAncre())
   window.addEventListener('hashchange', ouvrirSelonAncre)
 </script>
 
@@ -92,9 +96,9 @@ const ouvert = defaultExpanded === true || defaultExpanded === '' || defaultExpa
       overflow-y: clip;
       opacity: 0;
       transition:
-        block-size var(--duree-moyenne-1) var(--courbe-emphase),
-        opacity var(--duree-moyenne-1) var(--courbe-emphase),
-        content-visibility var(--duree-moyenne-1) allow-discrete;
+        block-size var(--duree-moyenne) var(--courbe-standard),
+        opacity var(--duree-moyenne) var(--courbe-standard),
+        content-visibility var(--duree-moyenne) allow-discrete;
     }
 
     .accordeon[open]::details-content {

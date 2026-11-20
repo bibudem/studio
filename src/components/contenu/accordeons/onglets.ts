@@ -22,6 +22,10 @@
  * aussi dans l'adresse (?<groupe>=<valeur>), qui l'emporte au chargement.
  * suivreGroupe() permet à d'autres composants (MasquerSi) de suivre un groupe.
  *
+ * Navigation côté client (lib/pages.ts) : brancherOnglets(signal) est appelé
+ * à chaque page ; au départ de la page, les jeux et les valeurs des groupes
+ * de la page sont oubliés, les écouteurs et observateurs débranchés.
+ *
  * studio·bib, onglets horizontaux sous 900 px : les panneaux sont côte à côte et défilent à
  * l'horizontale, aimantés sur chacun ; on passe de l'un à l'autre d'un
  * glissement du doigt ou en touchant un onglet. La pastille de l'onglet actif
@@ -84,16 +88,21 @@ function annoncer(groupe: string, valeur: string) {
   abonnes.get(groupe)?.forEach((rappel) => rappel(valeur))
 }
 
-/** Appelle `rappel` tout de suite avec la valeur du groupe, puis à chaque changement */
-export function suivreGroupe(groupe: string, rappel: Rappel) {
+/**
+ * Appelle `rappel` tout de suite avec la valeur du groupe, puis à chaque
+ * changement ; `signal` (lib/pages.ts) le désabonne au départ de la page
+ */
+export function suivreGroupe(groupe: string, rappel: Rappel, signal?: AbortSignal) {
+  if (signal?.aborted) return
   if (!abonnes.has(groupe)) abonnes.set(groupe, new Set())
   abonnes.get(groupe)!.add(rappel)
+  signal?.addEventListener('abort', () => abonnes.get(groupe)?.delete(rappel), { once: true })
   rappel(valeurDuGroupe(groupe))
 }
 
 const valeurOnglet = (onglet: HTMLElement) => onglet.dataset.valeur ?? ''
 
-function initialiser(racine: HTMLElement) {
+function initialiser(racine: HTMLElement, signal?: AbortSignal) {
   if (racine.hasAttribute('data-onglets-pret')) return
   const liste = racine.querySelector<HTMLElement>(':scope > [data-onglets-liste]')
   if (!liste) return
@@ -178,11 +187,12 @@ function initialiser(racine: HTMLElement) {
   }
 
   if (indicateur) {
-    new ResizeObserver(() => {
+    const observateurListe = new ResizeObserver(() => {
       placerIndicateur()
       // Pas de glissement de la pastille à la première mise en place
       requestAnimationFrame(() => liste.classList.add('pret'))
-    }).observe(liste)
+    })
+    observateurListe.observe(liste)
     const observateur = new ResizeObserver(ajusterHauteur)
     panneauxSurs.forEach((p) => observateur.observe(p))
 
@@ -213,7 +223,16 @@ function initialiser(racine: HTMLElement) {
       },
       { passive: true },
     )
-    large.addEventListener('change', mettreEnPage)
+    large.addEventListener('change', mettreEnPage, { signal })
+    signal?.addEventListener(
+      'abort',
+      () => {
+        observateurListe.disconnect()
+        observateur.disconnect()
+        clearTimeout(minuterieFin)
+      },
+      { once: true },
+    )
   }
 
   const groupe = racine.dataset.groupe
@@ -283,7 +302,7 @@ function initialiser(racine: HTMLElement) {
   if (orientationLarge) {
     const appliquer = () => liste.setAttribute('aria-orientation', large.matches ? orientationLarge : 'horizontal')
     appliquer()
-    large.addEventListener('change', appliquer)
+    large.addEventListener('change', appliquer, { signal })
   }
 
   // Onglet de départ : celui du groupe (adresse, puis choix gardé) s'il
@@ -329,6 +348,19 @@ function suivreAncre() {
   if (change) cible.scrollIntoView({ behavior: 'instant' })
 }
 
-document.querySelectorAll<HTMLElement>('[data-onglets]').forEach(initialiser)
-suivreAncre()
-window.addEventListener('hashchange', suivreAncre)
+/** Branche les jeux d'onglets de la page ; `signal` (lib/pages.ts) les débranche au départ de la page */
+export function brancherOnglets(signal?: AbortSignal) {
+  document.querySelectorAll<HTMLElement>('[data-onglets]').forEach((racine) => initialiser(racine, signal))
+  suivreAncre()
+  window.addEventListener('hashchange', suivreAncre, { signal })
+  // Les jeux et les valeurs des groupes ne valent que pour cette page : sur
+  // la suivante, l'adresse et le choix gardé décident de nouveau
+  signal?.addEventListener(
+    'abort',
+    () => {
+      jeux.length = 0
+      valeursGroupes.clear()
+    },
+    { once: true },
+  )
+}

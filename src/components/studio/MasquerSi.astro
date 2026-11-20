@@ -19,9 +19,12 @@ const { groupe, valeur } = Astro.props
 
 <script>
   import { suivreGroupe } from '@/components/contenu/accordeons/onglets'
+  import { aChaquePage } from '@/lib/pages'
 
-  for (const bloc of document.querySelectorAll<HTMLElement>('[data-masquer-si]')) {
-    const { groupe, valeur } = bloc.dataset
-    if (groupe) suivreGroupe(groupe, (choisie) => (bloc.hidden = choisie === valeur))
-  }
+  aChaquePage((signal) => {
+    for (const bloc of document.querySelectorAll<HTMLElement>('[data-masquer-si]')) {
+      const { groupe, valeur } = bloc.dataset
+      if (groupe) suivreGroupe(groupe, (choisie) => (bloc.hidden = choisie === valeur), signal)
+    }
+  })
 </script>

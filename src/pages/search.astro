@@ -62,83 +62,92 @@ const FILTRES = [{ cle: 'tout', libelle: 'Tout le site' }, ...SECTIONS.map(({ cl
 <script>
   import { chargerIndex, chercher, type Resultat } from '@/lib/recherche'
   import { pluriel } from '@/lib/texte'
+  import { aChaquePage } from '@/lib/pages'
 
-  const page = document.querySelector<HTMLElement>('[data-page-resultats]')!
-  const trouver = <T extends Element>(selecteur: string) => page.querySelector<T>(selecteur)!
-  const PAR_PAGE = Number(page.dataset.parPage)
-  const champ = trouver<HTMLInputElement>('input[type="search"]')
-  const sources = trouver<HTMLFieldSetElement>('[data-sources]')
-  const statut = trouver<HTMLElement>('[data-statut]')
-  const liste = trouver<HTMLElement>('[data-liste]')
-  const plus = trouver<HTMLButtonElement>('[data-plus]')
-  const modele = trouver<HTMLTemplateElement>('[data-modele]')
-  const radios = [...page.querySelectorAll<HTMLInputElement>('input[name="section"]')]
+  // Navigation côté client : relancé à chaque arrivée sur la page de
+  // résultats (nouvelle recherche comprise)
+  aChaquePage((signal) => {
 
-  const requete = new URLSearchParams(location.search).get('q')?.trim() ?? ''
-  let resultats: Resultat[] = []
-  let montres = PAR_PAGE
+    const page = document.querySelector<HTMLElement>('[data-page-resultats]')
+    if (!page) return
+    const trouver = <T extends Element>(selecteur: string) => page.querySelector<T>(selecteur)!
+    const PAR_PAGE = Number(page.dataset.parPage)
+    const champ = trouver<HTMLInputElement>('input[type="search"]')
+    const sources = trouver<HTMLFieldSetElement>('[data-sources]')
+    const statut = trouver<HTMLElement>('[data-statut]')
+    const liste = trouver<HTMLElement>('[data-liste]')
+    const plus = trouver<HTMLButtonElement>('[data-plus]')
+    const modele = trouver<HTMLTemplateElement>('[data-modele]')
+    const radios = [...page.querySelectorAll<HTMLInputElement>('input[name="section"]')]
 
-  champ.value = requete
-  if (requete) document.title = `« ${requete} » – ${document.title}`
+    const requete = new URLSearchParams(location.search).get('q')?.trim() ?? ''
+    let resultats: Resultat[] = []
+    let montres = PAR_PAGE
 
-  const deSection = (cle: string) => resultats.filter((r) => cle === 'tout' || r.cleSection === cle)
-  const phraseResultats = (n: number) => `${pluriel(n, 'résultat')} pour « ${requete} »`
+    champ.value = requete
+    if (requete) document.title = `« ${requete} » – ${document.title}`
 
-  function element({ titre, url, description, section }: Resultat) {
-    const li = modele.content.firstElementChild!.cloneNode(true) as HTMLElement
-    li.querySelector('a')!.href = url
-    li.querySelector('.section')!.textContent = section
-    li.querySelector('.titre')!.textContent = titre
-    const extrait = li.querySelector('.extrait')!
-    if (description) extrait.textContent = description
-    else extrait.remove()
-    return li
-  }
+    const deSection = (cle: string) => resultats.filter((r) => cle === 'tout' || r.cleSection === cle)
+    const phraseResultats = (n: number) => `${pluriel(n, 'résultat')} pour « ${requete} »`
 
-  function rendre() {
-    const visibles = deSection(radios.find((r) => r.checked)!.value)
-    liste.replaceChildren(...visibles.slice(0, montres).map(element))
-    plus.hidden = visibles.length <= montres
-    statut.textContent = visibles.length ? phraseResultats(visibles.length) : `Aucun résultat pour « ${requete} » dans cette section.`
-  }
+    function element({ titre, url, description, section }: Resultat) {
+      const li = modele.content.firstElementChild!.cloneNode(true) as HTMLElement
+      li.querySelector('a')!.href = url
+      li.querySelector('.section')!.textContent = section
+      li.querySelector('.titre')!.textContent = titre
+      const extrait = li.querySelector('.extrait')!
+      if (description) extrait.textContent = description
+      else extrait.remove()
+      return li
+    }
 
-  if (!requete) statut.textContent = 'Tapez votre recherche ci-dessus.'
-  else {
-    statut.textContent = 'Chargement des résultats…'
-    chargerIndex()
-      .then((index) => {
-        resultats = chercher(index, requete)
-        if (!resultats.length) {
-          statut.textContent = `Aucun résultat pour « ${requete} ». Essayez un autre mot ou une orthographe plus courte.`
-          return
-        }
-        // Une section sans résultat ne sert à rien comme filtre
-        for (const radio of radios) {
-          const n = deSection(radio.value).length
-          page.querySelector(`[data-compte="${CSS.escape(radio.value)}"]`)!.textContent = String(n)
-          radio.closest('label')!.hidden = n === 0
-        }
-        sources.hidden = false
+    function rendre() {
+      const visibles = deSection(radios.find((r) => r.checked)!.value)
+      liste.replaceChildren(...visibles.slice(0, montres).map(element))
+      plus.hidden = visibles.length <= montres
+      statut.textContent = visibles.length ? phraseResultats(visibles.length) : `Aucun résultat pour « ${requete} » dans cette section.`
+    }
+
+    if (!requete) statut.textContent = 'Tapez votre recherche ci-dessus.'
+    else {
+      statut.textContent = 'Chargement des résultats…'
+      chargerIndex()
+        .then((index) => {
+          // Page quittée pendant le chargement : rien à afficher
+          if (signal.aborted) return
+          resultats = chercher(index, requete)
+          if (!resultats.length) {
+            statut.textContent = `Aucun résultat pour « ${requete} ». Essayez un autre mot ou une orthographe plus courte.`
+            return
+          }
+          // Une section sans résultat ne sert à rien comme filtre
+          for (const radio of radios) {
+            const n = deSection(radio.value).length
+            page.querySelector(`[data-compte="${CSS.escape(radio.value)}"]`)!.textContent = String(n)
+            radio.closest('label')!.hidden = n === 0
+          }
+          sources.hidden = false
+          rendre()
+        })
+        .catch(() => {
+          statut.textContent = "Les résultats n'ont pas pu être chargés. Réessayez dans un moment."
+        })
+    }
+
+    for (const radio of radios) {
+      radio.addEventListener('change', () => {
+        montres = PAR_PAGE
         rendre()
       })
-      .catch(() => {
-        statut.textContent = "Les résultats n'ont pas pu être chargés. Réessayez dans un moment."
-      })
-  }
+    }
 
-  for (const radio of radios) {
-    radio.addEventListener('change', () => {
-      montres = PAR_PAGE
+    plus.addEventListener('click', () => {
+      const premierNouveau = montres
+      montres += PAR_PAGE
       rendre()
+      // Le focus va au premier résultat ajouté, pas en haut de la liste
+      liste.children[premierNouveau]?.querySelector('a')?.focus()
     })
-  }
-
-  plus.addEventListener('click', () => {
-    const premierNouveau = montres
-    montres += PAR_PAGE
-    rendre()
-    // Le focus va au premier résultat ajouté, pas en haut de la liste
-    liste.children[premierNouveau]?.querySelector('a')?.focus()
   })
 </script>
 
@@ -199,9 +208,9 @@ const FILTRES = [{ cle: 'tout', libelle: 'Tout le site' }, ...SECTIONS.map(({ cl
 
   /* studio·bib : source choisie (état) : bleu foncé plein, texte blanc */
   .source:has(input:checked) {
-    border-color: var(--selection-fond);
-    background: var(--selection-fond);
-    color: var(--selection-texte);
+    border-color: var(--couleur-fond-fort);
+    background: var(--couleur-fond-fort);
+    color: var(--couleur-sur-fonce);
   }
 
   .source:has(input:focus-visible) {
@@ -211,7 +220,7 @@ const FILTRES = [{ cle: 'tout', libelle: 'Tout le site' }, ...SECTIONS.map(({ cl
 
   @media (hover: hover) and (pointer: fine) {
     .source:not(:has(input:checked)):hover {
-      background: var(--action-douce-fond-survol);
+      background: var(--jaune);
     }
   }
 

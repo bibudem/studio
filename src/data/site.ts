@@ -13,8 +13,6 @@ export const SITE = {
   url: URL_SITE,
   description,
   courriel: 'studio@bib.umontreal.ca',
-  /** Onglet flottant du clavardage LibChat */
-  clavardage: '2cdfcaf0f2e776291e8bfc9296e8b7573083d9b6ad33c930fa46024633447cce',
   ORGANISATION_ID: `${URL_SITE}/#organisation`,
   SITE_ID: `${URL_SITE}/#site`,
   donneesStructurees: {

@@ -23,10 +23,10 @@ import { DIRECTIVES_TITREES, VOCABULAIRE_STUDIO, traiterStudio } from './directi
 
 const ALERTES = ['info', 'succes', 'attention', 'erreur']
 
-/** Couleurs permises pour :icone[nom]{couleur=…} → jeton de tokens.css */
+/** Couleurs permises pour :icone[nom]{couleur=…} → jeton de harmonium */
 export const COULEURS_ICONE = {
   texte: 'var(--couleur-texte)',
-  neutre700: 'var(--couleur-neutre-700)',
+  neutre700: 'var(--couleur-texte-neutre)',
   bleuPrincipal: 'var(--bleu-principal)',
   bleuFonce: 'var(--bleu-fonce)',
   vertFonce: 'var(--vert-fonce)',

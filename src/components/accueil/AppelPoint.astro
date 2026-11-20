@@ -1,0 +1,447 @@
+---
+/*
+ * « Le point studio·bib » : bande d'appel en bas de l'accueil, sur toute la largeur de l'écran,
+ * juste avant le pied de page. Hors harmonium : c'est la signature de l'accueil.
+ *
+ * - Le point jaune du logo devient une trame de points (halftone) sur fond bleu nuit : un grand
+ *   disque jaune, fait de centaines de points, suit le pointeur (souris ou doigt) avec un léger
+ *   retard ; un clic envoie une onde dans la trame. Rien ne bouge de lui-même : sans pointeur, la
+ *   trame revient se poser derrière le logo et l'animation s'arrête (WCAG 2.2.2).
+ * - Canvas 2D natif (pas de bibliothèque) : rendu à la densité de l'écran, animation arrêtée hors
+ *   de l'écran et dans un onglet caché ; image fixe si le mouvement réduit est demandé. Le disque
+ *   suit le pointeur partout, texte compris : un halo bleu nuit autour des lettres garde le
+ *   texte blanc lisible quand le jaune passe dessous.
+ * - La trame est décorative (aria-hidden). Le titre, le texte et les actions sont du HTML,
+ *   à gauche, sur un dégradé qui garde le texte blanc lisible quelle que soit la trame derrière.
+ * - Une seule action : « Nous joindre », le Bouton de harmonium (variante claire, pour fond foncé),
+ *   jaune comme les autres boutons du site (habillage dans global.css).
+ * - À droite, le logo studio·bib (public/img/logo-studiobib.svg), intégré en ligne pour être
+ *   animé tracé par tracé, une seule fois, quand la bande arrive à l'écran : le disque s'ouvre,
+ *   les lettres montent l'une après l'autre, puis le point jaune descend et se pose, sans
+ *   rebond. Un clic sur le logo rejoue l'animation ; rien ne bouge en continu. Au repos, la
+ *   trame se pose derrière.
+ */
+import Bouton from 'harmonium/astro/Bouton.astro'
+import logoBrut from '../../../public/img/logo-studiobib.svg?raw'
+
+// Chaque tracé reçoit son rang (--i) et son rôle : 0 le disque, 1 le point jaune, les autres les lettres
+let rang = 0
+const logo = logoBrut
+  .replace(/<svg[^>]*>/, '<svg class="logo-svg" viewBox="0 0 328 328" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" focusable="false">')
+  .replace(/<path/g, () => {
+    const i = rang++
+    const role = i === 0 ? 'disque' : i === 1 ? 'point-logo' : 'lettre'
+    return `<path class="${role}" style="--i:${Math.max(0, i - 2)}"`
+  })
+---
+
+<section class="appel surface-foncee" aria-labelledby="appel-titre" data-appel-point>
+  <canvas class="trame" aria-hidden="true"></canvas>
+  <div class="conteneur interieur">
+    <h2 id="appel-titre" class="titre"><span class="ligne">Une idée<span class="jaune">?</span></span> <span class="ligne">Une question<span class="jaune">?</span></span></h2>
+    <p class="texte">
+      Un balado à enregistrer ou un objet à imprimer en 3D, un logiciel à installer ou un accès à distance à configurer : notre équipe est là pour
+      vous accompagner.
+    </p>
+    <div class="actions">
+      <Bouton href="/a-propos/nous-joindre" clair taille="grand">Nous joindre</Bouton>
+    </div>
+    <div class="logo" data-logo set:html={logo} />
+  </div>
+</section>
+
+<script>
+  import { aChaquePage, auDepart } from '@/lib/pages'
+
+  type Vague = { x: number; y: number; debut: number }
+
+  aChaquePage((signal) => {
+    const bande = document.querySelector<HTMLElement>('[data-appel-point]')
+    const canvas = bande?.querySelector('canvas')
+    const ctx = canvas?.getContext('2d')
+    if (!bande || !canvas || !ctx) return
+
+    const logo = bande.querySelector<HTMLElement>('[data-logo]')
+    // Un clic sur le logo rejoue son animation : on retire l'attribut, on force le calcul du
+    // style, puis on le remet (les animations CSS repartent de zéro)
+    logo?.addEventListener('click', () => {
+      if (!logo.hasAttribute('data-anime')) return
+      logo.removeAttribute('data-anime')
+      void logo.offsetWidth
+      logo.setAttribute('data-anime', '')
+    })
+
+    const styles = getComputedStyle(document.documentElement)
+    const JAUNE = styles.getPropertyValue('--jaune').trim() || '#ffca40'
+    const reduit = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+
+    let largeur = 0
+    let hauteur = 0
+    let pas = 18
+    // Point affiché, cible qu'il suit, et état du pointeur
+    const point = { x: 0, y: 0 }
+    const cible = { x: 0, y: 0 }
+    let pointeurActif = false
+    let dernierMouvement = 0
+    const vagues: Vague[] = []
+
+    const dimensionner = () => {
+      const dpr = Math.min(window.devicePixelRatio || 1, 2)
+      largeur = bande.clientWidth
+      hauteur = bande.clientHeight
+      canvas.width = Math.round(largeur * dpr)
+      canvas.height = Math.round(hauteur * dpr)
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0)
+      // Trame plus serrée sur téléphone
+      pas = largeur < 700 ? 14 : 18
+      repos = centreLogo()
+      if (!point.x) {
+        point.x = cible.x = repos.x
+        point.y = cible.y = repos.y
+      }
+    }
+
+    /** Centre du logo dans la bande : le point de repos de la trame */
+    const centreLogo = () => {
+      if (!logo) return { x: largeur * 0.72, y: hauteur * 0.5 }
+      const b = bande.getBoundingClientRect()
+      const l = logo.getBoundingClientRect()
+      return { x: l.left - b.left + l.width / 2, y: l.top - b.top + l.height / 2 }
+    }
+    let repos = { x: 0, y: 0 }
+
+
+    const rayonDisque = () => Math.max(Math.min(largeur, hauteur) * 0.36, (logo?.offsetWidth ?? 0) * 0.85)
+
+    const dessiner = (t: number) => {
+      ctx.clearRect(0, 0, largeur, hauteur)
+      const rayon = rayonDisque()
+      const tailleMax = pas * 0.46
+      // Vagues encore visibles (1,6 s)
+      for (let i = vagues.length - 1; i >= 0; i--) if ((t - vagues[i].debut) / 1000 > 1.6) vagues.splice(i, 1)
+
+      const decalage = pas / 2
+      ctx.fillStyle = 'rgb(255 255 255 / 0.13)'
+      const jaunes: [number, number, number, number][] = []
+      ctx.beginPath()
+      for (let y = decalage; y < hauteur; y += pas) {
+        for (let x = decalage; x < largeur; x += pas) {
+          const d = Math.hypot(x - point.x, y - point.y)
+          let s = Math.max(0, 1 - d / rayon)
+          s = s * s * (3 - 2 * s)
+          for (const v of vagues) {
+            const age = (t - v.debut) / 1000
+            const front = age * 620
+            const ecart = Math.hypot(x - v.x, y - v.y) - front
+            s += Math.exp(-(ecart * ecart) / 1800) * (1 - age / 1.6) * 0.9
+          }
+          s = Math.min(s, 1)
+          if (s < 0.04) {
+            ctx.moveTo(x + 1.1, y)
+            ctx.arc(x, y, 1.1, 0, Math.PI * 2)
+          } else {
+            jaunes.push([x, y, 1.1 + s * tailleMax, s])
+          }
+        }
+      }
+      ctx.fill()
+      // Points jaunes : leur opacité suit leur taille
+      ctx.fillStyle = JAUNE
+      for (const [x, y, r, s] of jaunes) {
+        ctx.globalAlpha = 0.35 + 0.65 * s
+        ctx.beginPath()
+        ctx.arc(x, y, r, 0, Math.PI * 2)
+        ctx.fill()
+      }
+      ctx.globalAlpha = 1
+    }
+
+    // Mouvement réduit : une image fixe, le point à sa place de repos
+    if (reduit) {
+      dimensionner()
+      dessiner(0)
+      const observateur = new ResizeObserver(() => {
+        dimensionner()
+        dessiner(0)
+      })
+      observateur.observe(bande)
+      auDepart(signal, () => observateur.disconnect())
+      return
+    }
+
+    let visible = false
+    let image = 0
+    // Rien ne bouge de lui-même (WCAG 2.2.2) : sans pointeur, la trame revient se poser derrière le
+    // logo, puis l'animation s'arrête ; le pointeur ou un clic la relance
+    const boucle = (t: number) => {
+      if (!pointeurActif || t - dernierMouvement > 2500) {
+        cible.x = repos.x
+        cible.y = repos.y
+      }
+      // Ressort amorti : le point rattrape sa cible sans à-coup
+      point.x += (cible.x - point.x) * 0.075
+      point.y += (cible.y - point.y) * 0.075
+      dessiner(t)
+      const auRepos = !pointeurActif && !vagues.length && Math.hypot(cible.x - point.x, cible.y - point.y) < 0.5
+      image = auRepos ? 0 : requestAnimationFrame(boucle)
+    }
+    const demarrer = () => {
+      if (!image && visible && !document.hidden) image = requestAnimationFrame(boucle)
+    }
+    const arreter = () => {
+      cancelAnimationFrame(image)
+      image = 0
+    }
+
+    const local = (e: PointerEvent) => {
+      const zone = bande.getBoundingClientRect()
+      return { x: e.clientX - zone.left, y: e.clientY - zone.top }
+    }
+    bande.addEventListener('pointermove', (e) => {
+      const p = local(e)
+      cible.x = p.x
+      cible.y = p.y
+      pointeurActif = true
+      dernierMouvement = performance.now()
+      demarrer()
+    })
+    bande.addEventListener('pointerleave', () => {
+      pointeurActif = false
+      demarrer()
+    })
+    bande.addEventListener('pointerdown', (e) => {
+      // Pas d'onde au clic sur un lien : l'action passe avant l'effet
+      if ((e.target as Element).closest('a, button')) return
+      const p = local(e)
+      vagues.push({ ...p, debut: performance.now() })
+      demarrer()
+    })
+
+    dimensionner()
+    const redimension = new ResizeObserver(() => {
+      dimensionner()
+      if (!image) dessiner(performance.now())
+    })
+    redimension.observe(bande)
+    const ecran = new IntersectionObserver(([entree]) => {
+      visible = entree.isIntersecting
+      // Le logo s'anime une fois, à sa première apparition
+      if (visible) logo?.setAttribute('data-anime', '')
+      visible ? demarrer() : arreter()
+    })
+    ecran.observe(bande)
+    document.addEventListener('visibilitychange', () => (document.hidden ? arreter() : demarrer()), { signal })
+
+    auDepart(signal, () => {
+      arreter()
+      redimension.disconnect()
+      ecran.disconnect()
+    })
+  })
+</script>
+
+<style>
+  .appel {
+    position: relative;
+    isolation: isolate;
+    display: flex;
+    align-items: center;
+    overflow: hidden;
+    background:
+      radial-gradient(120% 90% at 80% 40%, color-mix(in srgb, var(--bleu-principal) 35%, transparent), transparent 60%),
+      var(--bleu-fonce);
+    color: var(--couleur-sur-fonce);
+    /* La trame réagit au doigt : pas de défilement horizontal accidentel */
+    touch-action: pan-y;
+  }
+
+  .trame {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* Le texte blanc reste lisible : la trame s'efface derrière la colonne de gauche */
+  .appel::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    background: linear-gradient(90deg, var(--bleu-fonce) 0%, color-mix(in srgb, var(--bleu-fonce) 85%, transparent) 35%, transparent 65%);
+    pointer-events: none;
+  }
+
+  /* Texte à gauche, logo à droite (dès 900 px) ; sur téléphone, le logo passe sous le bouton */
+  .interieur {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    align-items: center;
+    column-gap: var(--espace-6);
+    /* Hauteur dictée par le contenu : peu de marge au-dessus et au-dessous */
+    padding-block: var(--espace-5);
+  }
+
+  .interieur > :not(.logo) {
+    grid-column: 1;
+  }
+
+  .logo {
+    justify-self: center;
+    inline-size: clamp(9rem, 40vw, 13rem);
+    margin-top: var(--espace-4);
+  }
+
+  @media (width >= 900px) {
+    .interieur {
+      grid-template-columns: minmax(0, 1fr) auto;
+    }
+
+    .logo {
+      grid-column: 2;
+      grid-row: 1 / span 4;
+      inline-size: clamp(14rem, 22vw, 21rem);
+      margin: 0;
+    }
+  }
+
+  .logo :global(.logo-svg) {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+  }
+
+  /* ---- Animation du logo ----
+     Avant l'apparition : disque réduit, lettres et point invisibles (seulement avec JavaScript et
+     sans mouvement réduit : sans eux, le logo est simplement là) */
+  .logo :global(path) {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .logo:not([data-anime]) :global(.disque) {
+      scale: 0.6;
+      opacity: 0;
+    }
+
+    .logo:not([data-anime]) :global(.lettre),
+    .logo:not([data-anime]) :global(.point-logo) {
+      opacity: 0;
+    }
+
+    /* Le disque s'ouvre avec un léger dépassement */
+    .logo[data-anime] :global(.disque) {
+      animation: disque-ouverture 700ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    /* Les lettres montent l'une après l'autre */
+    .logo[data-anime] :global(.lettre) {
+      animation: lettre-monte 520ms var(--courbe-entree) both;
+      animation-delay: calc(350ms + var(--i) * 55ms);
+    }
+
+    /* Le point descend et se pose en ralentissant (sans rebond), puis reste immobile */
+    .logo[data-anime] :global(.point-logo) {
+      animation: point-chute 650ms var(--courbe-entree) 1.05s both;
+    }
+
+    /* Un clic sur le logo rejoue l'animation */
+    .logo[data-anime] {
+      cursor: pointer;
+    }
+  }
+
+  @keyframes disque-ouverture {
+    from {
+      scale: 0.6;
+      opacity: 0;
+    }
+  }
+
+  @keyframes lettre-monte {
+    from {
+      translate: 0 14px;
+      opacity: 0;
+    }
+  }
+
+  @keyframes point-chute {
+    from {
+      translate: 0 -48px;
+      opacity: 0;
+    }
+  }
+
+
+
+  .jaune {
+    color: var(--jaune);
+  }
+
+  .titre {
+    margin: 0;
+    /* 2,25 rem au minimum : « Une question? » tient à 320 px de large (zoom à 400 %, WCAG 1.4.10) */
+    font-size: clamp(2.25rem, 1.2rem + 5vw, 5.5rem);
+    overflow-wrap: break-word;
+    font-weight: var(--graisse-forte);
+    line-height: 0.98;
+    letter-spacing: -0.03em;
+    color: inherit;
+  }
+
+  /* Lisibilité quand le disque jaune passe sous le texte : halo bleu nuit diffus autour des lettres.
+     Invisible sur le fond bleu nuit, il garde le blanc détaché du jaune (WCAG 1.4.3). */
+  .titre,
+  .texte {
+    text-shadow:
+      0 0 2px var(--bleu-fonce),
+      0 0 10px var(--bleu-fonce),
+      0 0 24px color-mix(in srgb, var(--bleu-fonce) 85%, transparent);
+  }
+
+  /* Une question par ligne : création, puis soutien informatique */
+  .titre .ligne {
+    display: block;
+  }
+
+  .texte {
+    max-inline-size: 34rem;
+    margin: var(--espace-3) 0 0;
+    font-size: var(--texte-moyen);
+    line-height: 1.6;
+    color: color-mix(in srgb, var(--couleur-sur-fonce) 88%, transparent);
+  }
+
+  .actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--espace-1-5);
+    margin-top: var(--espace-3);
+  }
+
+  /* Téléphone : le texte occupe toute la largeur, en haut, et le logo est en bas. Le voile couvre
+     seulement le texte, puis s'efface vers le logo : la trame y garde tout son jaune. */
+  @media (width < 700px) {
+    .appel::before {
+      background: linear-gradient(
+        180deg,
+        color-mix(in srgb, var(--bleu-fonce) 80%, transparent) 0%,
+        color-mix(in srgb, var(--bleu-fonce) 72%, transparent) 50%,
+        transparent 66%
+      );
+    }
+
+  }
+
+  @media (forced-colors: active) {
+    .trame,
+    .appel::before {
+      display: none;
+    }
+  }
+</style>

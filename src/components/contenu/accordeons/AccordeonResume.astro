@@ -48,7 +48,7 @@ const Titre = niveauTitre ? `h${niveauTitre}` : 'span'
     border-bottom: 1px solid var(--accordeon-filet, var(--couleur-accent));
     list-style: none;
     cursor: pointer;
-    transition: color var(--duree-moyenne-3) var(--courbe-emphase);
+    transition: color var(--duree-moyenne) var(--courbe-standard);
   }
 
   .sommaire::-webkit-details-marker {
@@ -88,8 +88,8 @@ const Titre = niveauTitre ? `h${niveauTitre}` : 'span'
     inset: 0;
     z-index: -1;
     border-radius: var(--rayon-plein);
-    background-color: var(--accordeon-pastille, var(--bleu-100));
-    transition: opacity var(--duree-moyenne-3) var(--courbe-emphase);
+    background-color: var(--accordeon-pastille, var(--bleu-10));
+    transition: opacity var(--duree-moyenne) var(--courbe-standard);
   }
 
   :global(details[open]) > .sommaire .indicateur::after {
@@ -104,8 +104,8 @@ const Titre = niveauTitre ? `h${niveauTitre}` : 'span'
     display: block;
     grid-area: 1 / 1;
     transition:
-      opacity var(--duree-courte-4) var(--courbe-standard),
-      transform var(--duree-courte-4) var(--courbe-standard);
+      opacity var(--duree-courte) var(--courbe-standard),
+      transform var(--duree-courte) var(--courbe-standard);
   }
 
   .moins {

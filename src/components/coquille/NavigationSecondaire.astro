@@ -142,13 +142,21 @@ const attributsEnveloppe = repliable ? { class: 'section-repliable', lang } : {}
 }
 
 <script>
+  import { aChaquePage } from '@/lib/pages'
+
   // Flèche d'une page à sous-pages : ouvre ou ferme sa liste
-  document.addEventListener('click', (e) => {
-    const bouton = (e.target as Element).closest<HTMLButtonElement>('.navigation-secondaire .bascule')
-    if (!bouton) return
-    const ouvrir = bouton.getAttribute('aria-expanded') !== 'true'
-    bouton.setAttribute('aria-expanded', String(ouvrir))
-    document.getElementById(bouton.getAttribute('aria-controls')!)?.toggleAttribute('data-ferme', !ouvrir)
+  aChaquePage((signal) => {
+    document.addEventListener(
+      'click',
+      (e) => {
+        const bouton = (e.target as Element).closest<HTMLButtonElement>('.navigation-secondaire .bascule')
+        if (!bouton) return
+        const ouvrir = bouton.getAttribute('aria-expanded') !== 'true'
+        bouton.setAttribute('aria-expanded', String(ouvrir))
+        document.getElementById(bouton.getAttribute('aria-controls')!)?.toggleAttribute('data-ferme', !ouvrir)
+      },
+      { signal },
+    )
   })
 </script>
 
@@ -182,14 +190,14 @@ const attributsEnveloppe = repliable ? { class: 'section-repliable', lang } : {}
   li a {
     display: block;
     padding: 0.5rem 0.75rem;
-    border-inline-start: 2px solid var(--navigation-filet);
+    border-inline-start: 2px solid var(--couleur-bordure);
     border-radius: 0 var(--rayon-tres-petit) var(--rayon-tres-petit) 0;
     color: var(--couleur-texte);
     text-decoration: none;
     overflow-wrap: anywhere;
     transition:
-      background-color var(--duree-courte-4) var(--courbe-standard),
-      border-color var(--duree-courte-4) var(--courbe-standard);
+      background-color var(--duree-courte) var(--courbe-standard),
+      border-color var(--duree-courte) var(--courbe-standard);
   }
 
   li a :global(.externe) {
@@ -222,7 +230,7 @@ const attributsEnveloppe = repliable ? { class: 'section-repliable', lang } : {}
   }
 
   .bascule:hover {
-    background-color: var(--navigation-fond-survol);
+    background-color: var(--couleur-teinte);
   }
 
   /* La flèche n'existe qu'avec JavaScript, comme le repli des sous-pages */
@@ -240,8 +248,8 @@ const attributsEnveloppe = repliable ? { class: 'section-repliable', lang } : {}
   }
 
   li a:hover {
-    border-inline-start-color: var(--navigation-courant);
-    background-color: var(--navigation-fond-survol);
+    border-inline-start-color: var(--couleur-texte);
+    background-color: var(--couleur-teinte);
   }
 
   /* studio·bib : aria-current="true" marque la section en cours dans « Sur cette page » */
@@ -253,7 +261,7 @@ const attributsEnveloppe = repliable ? { class: 'section-repliable', lang } : {}
 
   /* « Sur cette page » : la section en cours a aussi le fond gris pâle */
   .est-sommaire li [aria-current='true'] {
-    background-color: var(--navigation-fond-survol);
+    background-color: var(--couleur-teinte);
   }
 
   .recommande {
@@ -266,18 +274,18 @@ const attributsEnveloppe = repliable ? { class: 'section-repliable', lang } : {}
   .categorie > summary {
     min-height: auto;
     padding: 0.5rem 0.75rem;
-    border-inline-start: 2px solid var(--navigation-filet);
+    border-inline-start: 2px solid var(--couleur-bordure);
     font-weight: var(--graisse-normale);
   }
 
   .categorie > summary:hover {
-    border-inline-start-color: var(--navigation-courant);
-    background-color: var(--navigation-fond-survol);
+    border-inline-start-color: var(--couleur-texte);
+    background-color: var(--couleur-teinte);
   }
 
   li [aria-current='page'],
   li [aria-current='true'] {
-    border-inline-start: 4px solid var(--navigation-courant);
+    border-inline-start: 4px solid var(--couleur-texte);
   }
 
   /* ---- Variante repliable (< 1200 px) ---- */
@@ -311,7 +319,7 @@ const attributsEnveloppe = repliable ? { class: 'section-repliable', lang } : {}
     border-block-end: 2px solid currentColor;
     border-inline-end: 2px solid currentColor;
     transform: rotate(45deg);
-    transition: transform var(--duree-courte-4) var(--courbe-standard);
+    transition: transform var(--duree-courte) var(--courbe-standard);
   }
 
   [open] > summary .chevron {

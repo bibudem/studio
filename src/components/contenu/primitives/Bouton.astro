@@ -134,9 +134,9 @@ const listeClasses = ['bouton', `variante-${variante}`, `couleur-${couleur}`, `t
     text-transform: none;
     cursor: pointer;
     transition:
-      background-color var(--duree-moyenne-1) var(--courbe-standard),
-      color var(--duree-moyenne-1) var(--courbe-standard),
-      border-color var(--duree-moyenne-1) var(--courbe-standard);
+      background-color var(--duree-moyenne) var(--courbe-standard),
+      color var(--duree-moyenne) var(--courbe-standard),
+      border-color var(--duree-moyenne) var(--courbe-standard);
   }
 
   .bouton:hover {
@@ -153,7 +153,7 @@ const listeClasses = ['bouton', `variante-${variante}`, `couleur-${couleur}`, `t
     flex-shrink: 0;
     margin-inline-end: -4px;
     fill: currentColor;
-    transition: transform var(--duree-courte-4) var(--courbe-standard-deceleree);
+    transition: transform var(--duree-courte) var(--courbe-entree);
   }
 
   /* Survol et focus : la flèche avance d'un cran vers sa destination (→ vers
@@ -178,7 +178,7 @@ const listeClasses = ['bouton', `variante-${variante}`, `couleur-${couleur}`, `t
     flex-shrink: 0;
     margin-inline-start: -4px;
     fill: currentColor;
-    transition: transform var(--duree-courte-4) var(--courbe-standard-deceleree);
+    transition: transform var(--duree-courte) var(--courbe-entree);
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -198,14 +198,14 @@ const listeClasses = ['bouton', `variante-${variante}`, `couleur-${couleur}`, `t
   /* ---- Plein ---- */
   /* Survol : bleu principal, comme les boutons des listes de liens (un bleu
      presque noir se distinguerait à peine). Blanc sur bleu principal : 7,10:1. */
-  /* studio·bib : les boutons sont jaunes, texte bleu foncé ; au survol, un jaune plus clair (jetons --action-*, tokens.css). */
+  /* studio·bib : les boutons sont jaunes, texte bleu foncé ; au survol, un jaune plus clair (jetons --jaune, --jaune-40 et --bleu-fonce de harmonium). */
   .variante-contained,
   .variante-contained.couleur-bleuPrincipal,
   .variante-contained.couleur-blue,
   .variante-contained.couleur-primary {
-    --bouton-fond: var(--action-fond);
-    --bouton-texte: var(--action-texte);
-    --bouton-fond-survol: var(--action-fond-survol);
+    --bouton-fond: var(--jaune);
+    --bouton-texte: var(--bleu-fonce);
+    --bouton-fond-survol: var(--jaune-40);
   }
 
   /* ---- Texte et contour ---- */
@@ -222,18 +222,18 @@ const listeClasses = ['bouton', `variante-${variante}`, `couleur-${couleur}`, `t
   /* studio·bib : le bouton secondaire est jaune pâle à contour
      jaune foncé, pour se distinguer d'un fond blanc ; au survol, il passe au jaune */
   .variante-text:not(.clair) {
-    --bouton-fond: var(--action-douce-fond);
-    --bouton-texte: var(--action-texte);
-    --bouton-bordure: var(--action-contour);
-    --bouton-fond-survol: var(--action-douce-fond-survol);
+    --bouton-fond: var(--couleur-surface);
+    --bouton-texte: var(--bleu-fonce);
+    --bouton-bordure: var(--couleur-contour);
+    --bouton-fond-survol: var(--jaune);
   }
 
   /* ---- Fond foncé (light) ---- */
   .clair.variante-contained {
-    --bouton-fond: var(--action-fond);
-    --bouton-texte: var(--action-texte);
+    --bouton-fond: var(--jaune);
+    --bouton-texte: var(--bleu-fonce);
     /* Un bouton jaune plein s'éclaircit au survol, aussi sur fond foncé */
-    --bouton-fond-survol: var(--action-fond-survol);
+    --bouton-fond-survol: var(--jaune-40);
   }
 
   .clair.variante-text,

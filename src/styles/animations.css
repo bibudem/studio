@@ -14,9 +14,9 @@
 :root {
   /* Légère translation : assez pour donner une direction, pas un trajet */
   --revelation-decalage: 0.75rem;
-  --revelation-duree: var(--duree-moyenne-4);
+  --revelation-duree: var(--duree-moyenne);
   /* Décélération forte : l'élément arrive vite et se pose */
-  --revelation-courbe: var(--courbe-emphase-deceleree);
+  --revelation-courbe: var(--courbe-entree);
 }
 
 .a-reveler {
@@ -42,7 +42,7 @@
     opacity var(--revelation-duree) var(--revelation-courbe),
     translate var(--revelation-duree) var(--revelation-courbe),
     scale var(--revelation-duree) var(--revelation-courbe);
-  transition-delay: calc(var(--rang, 0) * var(--duree-courte-1));
+  transition-delay: calc(var(--rang, 0) * var(--duree-decalage));
 }
 
 /* Ceinture et bretelles : la classe n'est pas posée dans ces cas, mais rien
@@ -78,7 +78,7 @@
    panneau passe de display: none à affiché, et seulement après
    l'initialisation : le premier panneau n'est pas animé au chargement. */
 [data-onglets-anime] [role='tabpanel'] {
-  transition: opacity var(--duree-courte-4) var(--courbe-standard-deceleree);
+  transition: opacity var(--duree-courte) var(--courbe-entree);
 }
 
 @starting-style {

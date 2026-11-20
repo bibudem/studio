@@ -15,16 +15,15 @@
  */
 import type { ImageMetadata } from 'astro'
 import { Picture, getImage } from 'astro:assets'
-import Modalites from '@/components/contenu/modalites/Modalites.astro'
-import Modalite from '@/components/contenu/modalites/Modalite.astro'
+import Modalites from 'harmonium/astro/Modalites.astro'
+import Modalite from 'harmonium/astro/Modalite.astro'
 import CommandesCarrousel from '@/components/studio/CommandesCarrousel.astro'
-import Alerte from '@/components/contenu/primitives/Alerte.astro'
-import TitreAlerte from '@/components/contenu/primitives/TitreAlerte.astro'
-import Citation from '@/components/contenu/primitives/Citation.astro'
+import Alerte from 'harmonium/astro/Alerte.astro'
+import Citation from 'harmonium/astro/Citation.astro'
 import Bouton from '@/components/contenu/primitives/Bouton.astro'
 import Lien from '@/components/contenu/primitives/Lien.astro'
 import Grille from '@/components/contenu/primitives/Grille.astro'
-import Separateur from '@/components/contenu/primitives/Separateur.astro'
+import Separateur from 'harmonium/astro/Separateur.astro'
 import Typographie from '@/components/contenu/primitives/Typographie.astro'
 import IconeCarree from '@/components/contenu/cartes/IconeCarree.astro'
 import Surface from '@/components/contenu/primitives/Surface.astro'
@@ -39,8 +38,8 @@ import HeroImage from '@/components/contenu/mise-en-page/HeroImage.astro'
 import ListeRiche from '@/components/contenu/mise-en-page/ListeRiche.astro'
 import ListeRicheElementLien from '@/components/contenu/mise-en-page/ListeRicheElementLien.astro'
 import Chiffres from '@/components/contenu/mise-en-page/Chiffres.astro'
-import CarteIcone from '@/components/contenu/cartes/CarteIcone.astro'
-import CarteImage from '@/components/contenu/cartes/CarteImage.astro'
+import CarteIcone from 'harmonium/astro/CarteIcone.astro'
+import CarteImage from 'harmonium/astro/CarteImage.astro'
 import AccordeonGroupe from '@/components/contenu/accordeons/AccordeonGroupe.astro'
 import Accordeon from '@/components/contenu/accordeons/Accordeon.astro'
 import AccordeonResume from '@/components/contenu/accordeons/AccordeonResume.astro'
@@ -171,7 +170,11 @@ function largeursHauteur(image: ImageMetadata, hauteur: number) {
   const widths = [largeur, largeur * 2].filter((l) => l <= image.width)
   return { widths: widths.length ? widths : [image.width], sizes: `${largeur}px` }
 }
-const SEVERITES: Record<string, string> = { info: 'info', succes: 'success', attention: 'warning', erreur: 'error' }
+// Couleurs de la directive :::cartes → couleurs des cartes de harmonium. Le défaut du site (bleu
+// principal) était une carte blanche à contour : c'est la couleur « neutre » de harmonium.
+const COULEURS_CARTE: Record<string, 'neutre' | 'vertFonce' | 'rose' | 'jaune'> = { primary: 'neutre', bleuPrincipal: 'neutre', vertFonce: 'vertFonce', rose300: 'rose', jaune: 'jaune' }
+// Types de la directive ::: alerte → types de l'alerte de harmonium
+const TYPES_ALERTE = { info: 'info', succes: 'succes', attention: 'avertissement', erreur: 'erreur' } as const
 // Largeur minimale des tableaux (650 px) : sur un téléphone, le tableau défile au lieu de s'écraser. Un
 // tableau de deux colonnes tient dans l'écran : il n'en a pas, pour ne pas
 // défiler à l'horizontale (libellé à gauche, valeur à droite).
@@ -204,14 +207,13 @@ const TAILLE_CARTE = { xs: 12, sm: 6 }
         )
       case 'modalite':
         return (
-          <Modalite Icon={ressources.get(noeud)} taille={a.taille} couleur={a.couleur}>
+          <Modalite Icone={ressources.get(noeud)} taille={a.taille} couleur={a.couleur}>
             <Astro.self noeuds={enfants} />
           </Modalite>
         )
       case 'alerte':
         return (
-          <Alerte severity={SEVERITES[a.type ?? 'info'] as 'info'}>
-            {a.titre && <TitreAlerte>{a.titre}</TitreAlerte>}
+          <Alerte type={TYPES_ALERTE[(a.type ?? 'info') as keyof typeof TYPES_ALERTE]} titre={a.titre}>
             <Astro.self noeuds={enfants} />
           </Alerte>
         )
@@ -251,7 +253,7 @@ const TAILLE_CARTE = { xs: 12, sm: 6 }
             <div class="cartes-carrousel" data-cartes-carrousel>
               <div class="cartes-images" data-revelation="groupe" data-piste>
                 {cartes.map((carte) => (
-                  <CarteImage title={carte.attributs.titre} Image={ressources.get(carte)} href={carte.attributs.lien} moreText={carte.attributs.appel} niveauTitre={a.niveau} />
+                  <CarteImage titre={carte.attributs.titre} image={ressources.get(carte)} href={carte.attributs.lien} textePlus={carte.attributs.appel} niveauTitre={a.niveau} />
                 ))}
               </div>
               {/* studio·bib, mobile : flèches et indicateur sous la rangée (le carrousel n'existe que sous 600 px) */}
@@ -266,8 +268,8 @@ const TAILLE_CARTE = { xs: 12, sm: 6 }
             <Grille container spacing="var(--espace-grille)" alignItems="stretch" data-revelation="groupe">
               {cartes.map((carte) => (
                 <Grille size={TAILLE_CARTE}>
-                  {/* studio·bib : toutes les cartes à icône sont des CarteIcone compactes (jaune pâle), avec ou sans texte d'appel */}
-                  <CarteIcone title={carte.attributs.titre} Icon={ressources.get(carte)} href={carte.attributs.lien} moreText={carte.attributs.appel} etiquette={carte.attributs.etiquette} color={a.couleur} fullWidth />
+                  {/* studio·bib : toutes les cartes à icône sont des cartes compactes (pleine largeur), avec ou sans texte d'appel */}
+                  <CarteIcone titre={carte.attributs.titre} Icone={ressources.get(carte)} href={carte.attributs.lien} textePlus={carte.attributs.appel} etiquette={carte.attributs.etiquette} couleur={COULEURS_CARTE[a.couleur ?? ''] ?? 'neutre'} pleineLargeur />
                 </Grille>
               ))}
             </Grille>
@@ -450,8 +452,11 @@ const TAILLE_CARTE = { xs: 12, sm: 6 }
 <script>
   // Carrousel mobile des cartes à photo : flèches, points et annonce (src/lib/commandes-carrousel.ts)
   import { brancherCommandes } from '@/lib/commandes-carrousel'
+  import { aChaquePage } from '@/lib/pages'
 
-  for (const racine of document.querySelectorAll<HTMLElement>('[data-cartes-carrousel]')) brancherCommandes(racine)
+  aChaquePage((signal) => {
+    for (const racine of document.querySelectorAll<HTMLElement>('[data-cartes-carrousel]')) brancherCommandes(racine, signal)
+  })
 </script>
 
 <style>
@@ -473,7 +478,7 @@ const TAILLE_CARTE = { xs: 12, sm: 6 }
   }
 
   /* studio·bib : les cartes d'une rangée ont la même hauteur (celle de la plus haute) */
-  .cartes-icones :global(.carte) {
+  .cartes-icones :global(.bib-carte-compacte) {
     height: 100%;
   }
 
@@ -708,7 +713,7 @@ const TAILLE_CARTE = { xs: 12, sm: 6 }
       display: none;
     }
 
-    .cartes-images > :global(.carte) {
+    .cartes-images > :global(.bib-carte-image) {
       flex: 0 0 min(280px, 80%);
       scroll-snap-align: start;
     }
@@ -729,7 +734,7 @@ const TAILLE_CARTE = { xs: 12, sm: 6 }
       grid-template-columns: repeat(auto-fill, minmax(min(100%, max(280px, calc((100% - 2 * var(--espace-grille)) / 3))), 1fr));
     }
 
-    .cartes-images > :global(.carte) {
+    .cartes-images > :global(.bib-carte-image) {
       width: auto;
     }
 

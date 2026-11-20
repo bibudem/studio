@@ -1,5 +1,5 @@
 /*
- * Jetons de mouvement (src/styles/tokens.css) lus depuis le CSS, pour les animations en
+ * Jetons de mouvement (jetons de harmonium) lus depuis le CSS, pour les animations en
  * JavaScript (Web Animations API) : aucune durée ni courbe en dur dans les scripts.
  */
 const valeur = (nom: string) => getComputedStyle(document.documentElement).getPropertyValue(nom).trim()

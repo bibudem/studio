@@ -103,19 +103,23 @@ const courant = (url: string) => {
 </header>
 {/* Mode « JavaScript actif » posé dès l'analyse, avant le premier affichage : sinon la barre
     s'affiche d'abord dans sa forme sans JS (menu sur plusieurs lignes) puis se compacte,
-    et tout le contenu remonte (CLS mesuré : 0,11 à 390 px). */}
-<script is:inline>
+    et tout le contenu remonte (CLS mesuré : 0,11 à 390 px). data-astro-rerun : rejoué à chaque
+    changement de page (navigation côté client), <html> et l'en-tête étant remplacés. */}
+<script is:inline data-astro-rerun>
   document.documentElement.setAttribute('data-menu-js', '')
   document.querySelector('[data-outils]').hidden = false
 </script>
 
 <script>
-  import './entete-menu'
+  import { brancherMenu } from './entete-menu'
+  import { aChaquePage } from '@/lib/pages'
+
+  aChaquePage((signal) => brancherMenu(signal))
 </script>
 
 <style>
   /* Hauteur réelle de cet en-tête (mesurée : 76 px sur mobile, 89 px dès 1200 px),
-     plus basse que la valeur par défaut de tokens.css : sert au scroll-padding des ancres
+     plus basse que la valeur par défaut des jetons de harmonium : sert au scroll-padding des ancres
      et aux colonnes collantes. En rem, elle suit le texte agrandi. */
   :global(:root) {
     --hauteur-entete: 4.5rem;
@@ -186,7 +190,7 @@ const courant = (url: string) => {
   /* studio·bib : au survol, chaque marque baisse légèrement d'opacité, séparément */
   .logo-bib,
   .nom-site {
-    transition: opacity var(--duree-courte-4) var(--courbe-standard);
+    transition: opacity var(--duree-courte) var(--courbe-standard);
   }
 
   @media (hover: hover) and (pointer: fine) {
@@ -363,7 +367,7 @@ const courant = (url: string) => {
   @media (hover: hover) and (pointer: fine) {
     .bouton-icone:hover {
       /* studio·bib : jaune pâle de l'action douce, au lieu de la teinte bleue */
-      background: var(--action-douce-fond-survol);
+      background: var(--jaune);
     }
   }
 
@@ -527,7 +531,7 @@ const courant = (url: string) => {
   }
 
   .deplier-bouton :global(.deplier-fleche) {
-    transition: transform var(--duree-courte-4) var(--courbe-standard-deceleree);
+    transition: transform var(--duree-courte) var(--courbe-entree);
   }
 
   .deplier-bouton:focus-visible {
@@ -541,8 +545,8 @@ const courant = (url: string) => {
 
   @media (hover: hover) and (pointer: fine) {
     .deplier-bouton:hover {
-      background: var(--action-douce-fond-survol);
-      color: var(--action-texte);
+      background: var(--jaune);
+      color: var(--bleu-fonce);
     }
 
     .deplier-bouton:hover :global(.deplier-fleche) {
@@ -663,20 +667,20 @@ const courant = (url: string) => {
   @media (prefers-reduced-motion: no-preference) {
     .rideau {
       clip-path: inset(0 -100vw -200vh -100vw);
-      transition: display var(--duree-moyenne-1) allow-discrete;
+      transition: display var(--duree-moyenne) allow-discrete;
     }
 
     .rideau[hidden] {
-      transition-duration: var(--duree-courte-4);
+      transition-duration: var(--duree-courte);
     }
 
     .feuille {
-      transition: transform var(--duree-moyenne-1) var(--courbe-emphase-deceleree);
+      transition: transform var(--duree-moyenne) var(--courbe-entree);
     }
 
     .rideau[hidden] .feuille {
       transform: translateY(-100%);
-      transition-duration: var(--duree-courte-4);
+      transition-duration: var(--duree-courte);
       transition-timing-function: var(--courbe-standard);
     }
 
@@ -688,13 +692,13 @@ const courant = (url: string) => {
 
     .feuille > * {
       transition:
-        opacity var(--duree-moyenne-1) var(--courbe-emphase-deceleree),
-        translate var(--duree-moyenne-1) var(--courbe-emphase-deceleree);
-      transition-delay: var(--duree-courte-2);
+        opacity var(--duree-moyenne) var(--courbe-entree),
+        translate var(--duree-moyenne) var(--courbe-entree);
+      transition-delay: var(--duree-tres-courte);
     }
 
     .feuille > :nth-child(n + 2) {
-      transition-delay: calc(var(--duree-courte-2) + var(--duree-courte-1));
+      transition-delay: calc(var(--duree-tres-courte) + var(--duree-decalage));
     }
 
     @starting-style {
@@ -707,18 +711,18 @@ const courant = (url: string) => {
     .rideau[hidden] .feuille > * {
       opacity: 0;
       transition-delay: 0s;
-      transition-duration: var(--duree-courte-3);
+      transition-duration: var(--duree-tres-courte);
     }
 
     .voile-menu {
       transition:
-        opacity var(--duree-moyenne-1) var(--courbe-emphase-deceleree),
-        display var(--duree-moyenne-1) allow-discrete;
+        opacity var(--duree-moyenne) var(--courbe-entree),
+        display var(--duree-moyenne) allow-discrete;
     }
 
     .voile-menu[hidden] {
       opacity: 0;
-      transition-duration: var(--duree-courte-4);
+      transition-duration: var(--duree-courte);
     }
 
     @starting-style {

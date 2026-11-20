@@ -6,9 +6,10 @@
  */
 const DUREE_MS = 2000
 
-export function copierLienAncre() {
+export function copierLienAncre(signal?: AbortSignal) {
   // Région présente dès le chargement : une région créée au moment de
-  // l'annonce n'est pas toujours lue.
+  // l'annonce n'est pas toujours lue. Navigation côté client : une par page,
+  // l'écouteur part avec `signal`.
   const annonce = document.createElement('p')
   annonce.setAttribute('role', 'status')
   annonce.className = 'visuellement-masque'
@@ -38,5 +39,5 @@ export function copierLienAncre() {
       // Presse-papier refusé : la navigation vers l'ancre suffit
       () => {},
     )
-  })
+  }, { signal })
 }

@@ -4,6 +4,10 @@
  * partage, données structurées), lien d'évitement, coquille commune aux sites
  * des Bibliothèques (avis institutionnels, en-tête, pied de page, consentement,
  * retour en haut) et outils de studio·bib (clavardage, outil d'accessibilité).
+ *
+ * Navigation côté client (ClientRouter) : la page ne se recharge pas d'un
+ * lien à l'autre, et la conversation du clavardage continue. Les scripts du
+ * site se rebranchent à chaque page (src/lib/pages.ts).
  */
 import '@/styles/global.css'
 import '@/styles/animations.css'
@@ -12,9 +16,12 @@ import Entete from '@/components/coquille/Entete.astro'
 import PiedDePage from '@/components/coquille/PiedDePage.astro'
 import ServicesInstitutionnels from '@/components/coquille/ServicesInstitutionnels.astro'
 import RetourHaut from '@/components/coquille/RetourHaut.astro'
+import LienEvitement from 'harmonium/astro/LienEvitement.astro'
+import clavardage from 'harmonium/dist/bib-clavardage.min.js?url'
 import { SITE } from '@/data/site'
 import { normaliser } from '@/lib/contenu'
 import { jsonLd } from '@/lib/json-ld'
+import { ClientRouter } from 'astro:transitions'
 
 interface Props {
   titre?: string
@@ -92,10 +99,12 @@ const indexable = !noindex && process.env.SITE_ENV === 'production'
         }
       })
     </script>
+    {/* Navigation côté client : voir l'en-tête de ce fichier */}
+    <ClientRouter fallback="swap" />
     <slot name="head" />
   </head>
   <body>
-    <a class="lien-evitement" href="#contenu-principal">Aller au contenu principal</a>
+    <LienEvitement cible="contenu-principal">Aller au contenu principal</LienEvitement>
     <ServicesInstitutionnels position="haut" niveau={niveau} />
     <Entete />
     <slot name="avant-contenu" />
@@ -104,19 +113,75 @@ const indexable = !noindex && process.env.SITE_ENV === 'production'
     <PiedDePage />
     <ServicesInstitutionnels position="bas" niveau={niveau} />
     <RetourHaut />
-    {/* Onglet flottant du clavardage (LibChat), sur toutes les pages */}
-    <div id={`libchat_${SITE.clavardage}`}></div>
-    <script is:inline async src={`https://unequestion.bib.umontreal.ca/load_chat.php?hash=${SITE.clavardage}`}></script>
+    {/* Clavardage flottant de harmonium (LibChat des Bibliothèques), sur toutes les pages.
+        Script classique et non module : il lit ses réglages data-* sur sa propre balise.
+        Il ne s'exécute qu'une fois par visite (même adresse sur chaque page). */}
+    <script is:inline async src={clavardage}></script>
+    <script>
+      /*
+       * Navigation côté client : à chaque changement de page, Astro remplace
+       * le <body> et retire du <head> ce que la nouvelle page n'a pas. Pour
+       * que la conversation continue, le bloc de LibChat sort du <body> dès son
+       * apparition, avec les deux feuilles de style du clavardage (celle de
+       * harmonium, data-bib-clavardage, et celle de LibChat) : ils deviennent
+       * des enfants de <html>, après le <body>, qu'Astro ne touche jamais.
+       * L'iframe de la conversation n'est ni déplacée ni rechargée ensuite.
+       * Le bloc est en position fixe : sa place à l'écran ne change pas.
+       */
+      const ID = 's-lch-widget-9467'
+      const sortir = () => {
+        const bloc = document.getElementById(ID)
+        const harmonium = document.querySelector('style[data-bib-clavardage]')
+        // Celle de LibChat, ajoutée à la fin du <head> (celle de harmonium aussi
+        // mentionne la classe, d'où l'exclusion)
+        const libchat = [...document.head.querySelectorAll('style')].find((st) => !st.hasAttribute('data-bib-clavardage') && st.textContent?.includes('.s-lch-widget-float'))
+        if (!bloc || !harmonium || !libchat) return false
+        if (bloc.parentElement !== document.documentElement) document.documentElement.append(harmonium, libchat, bloc)
+        return true
+      }
+      if (!sortir()) {
+        const obs = new MutationObserver(() => sortir() && obs.disconnect())
+        obs.observe(document.documentElement, { childList: true, subtree: true })
+        // LibChat indisponible : on cesse d'attendre (harmonium abandonne aussi après 30 s)
+        setTimeout(() => obs.disconnect(), 35_000)
+      }
+    </script>
+    {/* Lien d'évitement : le focus passe au contenu principal. Délégation sur
+        le document : vaut pour le lien de chaque page */}
     <script>
       import '@/lib/animations'
       import { focaliserTemporairement } from '@/lib/focus'
       import { copierLienAncre } from '@/lib/ancres-copie'
+      import { aChaquePage } from '@/lib/pages'
 
-      document.querySelector('.lien-evitement')?.addEventListener('click', () => {
+      document.addEventListener('click', (e) => {
+        if (!(e.target as Element | null)?.closest?.('.bib-lien-evitement')) return
         const principal = document.getElementById('contenu-principal')
         if (principal) focaliserTemporairement(principal, { preventScroll: true })
       })
-      copierLienAncre()
+      aChaquePage((signal) => copierLienAncre(signal))
+    </script>
+    {/* Liens vers un fichier (PDF, document, flux…) : navigation ordinaire.
+        Sinon le routeur télécharge le fichier entier avant de passer la main
+        au navigateur. En capture, pour poser l'attribut avant que le routeur
+        lise le clic. */}
+    <script>
+      document.addEventListener(
+        'click',
+        (e) => {
+          const lien = (e.target as Element | null)?.closest?.('a[href]') as HTMLAnchorElement | null
+          if (!lien || lien.origin !== location.origin) return
+          if (/\.(?!html?$)[a-z0-9]{2,5}$/i.test(lien.pathname)) lien.setAttribute('data-astro-reload', '')
+        },
+        true,
+      )
+
+      // Astro recopie les attributs de <html> depuis la nouvelle page, qui n'a
+      // pas data-menu-js (posé par le script de l'en-tête) : sans ce report,
+      // l'en-tête montrerait sa forme sans JavaScript le temps d'une image
+      document.addEventListener('astro:before-swap', (e) => {
+        if (document.documentElement.hasAttribute('data-menu-js')) e.newDocument.documentElement.setAttribute('data-menu-js', '')
+      })
     </script>
   </body>
 </html>

@@ -81,12 +81,12 @@ const { total } = Astro.props
     background: var(--couleur-bordure);
     /* Exception voulue : le point actif s'allonge en pastille ; un scale déformerait son arrondi */
     transition:
-      width var(--duree-courte-4) var(--courbe-standard),
-      background-color var(--duree-courte-4) var(--courbe-standard);
+      width var(--duree-courte) var(--courbe-standard),
+      background-color var(--duree-courte) var(--courbe-standard);
   }
 
   .point[data-actif] {
     width: 1.25rem;
-    background: var(--selection-fond);
+    background: var(--couleur-fond-fort);
   }
 </style>

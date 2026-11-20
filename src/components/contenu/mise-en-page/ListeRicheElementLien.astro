@@ -81,7 +81,7 @@ const Titre = `h${niveauTitre}`
     padding: var(--espace-element) 1.25rem;
     border-radius: var(--rayon-moyen);
     background-color: var(--carte-fond);
-    transition: background-color var(--duree-courte-4) var(--courbe-standard);
+    transition: background-color var(--duree-courte) var(--courbe-standard);
   }
 
   /* Espace entre les cartes, et sous le texte d'introduction */
@@ -94,7 +94,7 @@ const Titre = `h${niveauTitre}`
   }
 
   .couleur-vertFonce {
-    --pastille-fond: var(--vert-pale);
+    --pastille-fond: var(--vert);
     --pastille-fond-survol: var(--couleur-sur-fonce);
     --pastille-fleche: var(--bleu-fonce);
     --carte-fond: color-mix(in srgb, currentColor 7%, transparent);
@@ -201,17 +201,17 @@ const Titre = `h${niveauTitre}`
      (rétroaction, transform seulement). Survol réservé aux pointeurs fins :
      au toucher, un survol fantôme resterait après le tapotement. */
   :is(.pastille, .bouton) > :global(svg) {
-    transition: transform var(--duree-courte-4) var(--courbe-standard-deceleree);
+    transition: transform var(--duree-courte) var(--courbe-entree);
   }
 
   .pastille {
     transition:
-      background-color var(--duree-courte-4) var(--courbe-standard),
-      scale var(--duree-courte-4) var(--courbe-standard-deceleree);
+      background-color var(--duree-courte) var(--courbe-standard),
+      scale var(--duree-courte) var(--courbe-entree);
   }
 
   .bouton {
-    transition: background-color var(--duree-courte-4) var(--courbe-standard);
+    transition: background-color var(--duree-courte) var(--courbe-standard);
   }
 
   @media (hover: hover) and (pointer: fine) {

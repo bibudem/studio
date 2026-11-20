@@ -64,9 +64,10 @@ const { images, phrase, nom } = Astro.props
   </section>
 </div>
 
-<script is:inline>
+<script is:inline data-astro-rerun>
   // Tirage de la photo (voir l'en-tête du composant). Une seule photo est affichée : la photo
   // tirée, qui apparaît en fondu une fois chargée (jamais une autre photo avant elle).
+  // data-astro-rerun : nouveau tirage à chaque retour sur l'accueil (navigation côté client).
   document.querySelectorAll('.banniere [data-tirage]').forEach((groupe) => {
     const elements = groupe.querySelectorAll('[data-element]')
     const choix = Math.floor(Math.random() * elements.length)
@@ -165,7 +166,7 @@ const { images, phrase, nom } = Astro.props
     width: 100%;
     height: 100%;
     object-fit: cover;
-    transition: opacity var(--duree-moyenne-2) var(--courbe-standard);
+    transition: opacity var(--duree-moyenne) var(--courbe-standard);
   }
 
   /* Photo tirée pas encore chargée : invisible, puis fondu (le fond de la bannière reste) */
