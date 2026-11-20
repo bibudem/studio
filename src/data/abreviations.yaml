@@ -1,0 +1,179 @@
+# Sigles et abréviations développés dans les pages (WCAG 3.1.4, exigé par le SGQRI 008 3.0).
+# Au build, src/plugins/rehype-abreviations.mjs entoure la première occurrence de chacun, dans
+# chaque page, d’un <abbr title="forme développée">. Lu et vérifié par src/data/abreviations.mjs ;
+# modifiable dans l’interface de rédaction (/admin/, « Abréviations »), qui réécrit ce fichier.
+#
+# sigle : tel qu’il s’écrit dans le texte (la casse compte) ; forme : forme développée ;
+# theme : classement dans l’interface.
+sigles:
+  - sigle: AVA
+    forme: Apportez votre appareil
+    theme: Lieux et services
+  - sigle: BLSH
+    forme: Bibliothèque des lettres et sciences humaines
+    theme: Lieux et services
+  - sigle: LSH
+    forme: lettres et sciences humaines
+    theme: Lieux et services
+  - sigle: SIUM
+    forme: Service d'impression de l'Université de Montréal
+    theme: Lieux et services
+  - sigle: STIC
+    forme: Frais d’amélioration des services technologiques et informatiques et des collections des bibliothèques
+    theme: Lieux et services
+  - sigle: TGD
+    forme: Thérèse-Gouin-Décarie
+    theme: Lieux et services
+  - sigle: TI
+    forme: technologies de l'information
+    theme: Lieux et services
+  - sigle: SGQRI
+    forme: Standard du gouvernement du Québec sur les ressources informationnelles
+    theme: Accessibilité
+  - sigle: WCAG
+    forme: Web Content Accessibility Guidelines (règles pour l’accessibilité des contenus Web)
+    theme: Accessibilité
+  - sigle: A2F
+    forme: authentification à deux facteurs
+    theme: Informatique et réseau
+  - sigle: DNS
+    forme: système de noms de domaine
+    theme: Informatique et réseau
+  - sigle: EAP
+    forme: Extensible Authentication Protocol
+    theme: Informatique et réseau
+  - sigle: IDE
+    forme: environnement de développement intégré
+    theme: Informatique et réseau
+  - sigle: IP
+    forme: protocole Internet
+    theme: Informatique et réseau
+  - sigle: NIP
+    forme: numéro d'identification personnel
+    theme: Informatique et réseau
+  - sigle: OCR
+    forme: reconnaissance optique de caractères
+    theme: Informatique et réseau
+  - sigle: PEAP
+    forme: Protected Extensible Authentication Protocol
+    theme: Informatique et réseau
+  - sigle: PR
+    forme: pull request (demande de fusion)
+    theme: Informatique et réseau
+  - sigle: RAM
+    forme: mémoire vive
+    theme: Informatique et réseau
+  - sigle: SSD
+    forme: disque électronique (solid-state drive)
+    theme: Informatique et réseau
+  - sigle: TCP
+    forme: Transmission Control Protocol
+    theme: Informatique et réseau
+  - sigle: URL
+    forme: adresse Web (Uniform Resource Locator)
+    theme: Informatique et réseau
+  - sigle: VPN
+    forme: réseau privé virtuel
+    theme: Informatique et réseau
+  - sigle: VRAM
+    forme: mémoire vive de la carte graphique
+    theme: Informatique et réseau
+  - sigle: NTSC
+    forme: National Television System Committee (norme vidéo nord-américaine)
+    theme: Connectique, supports et formats
+  - sigle: PAL
+    forme: Phase Alternating Line (norme vidéo européenne)
+    theme: Connectique, supports et formats
+  - sigle: STL
+    forme: stéréolithographie (format de modèle 3D)
+    theme: Connectique, supports et formats
+  - sigle: SVG
+    forme: Scalable Vector Graphics
+    theme: Connectique, supports et formats
+  - sigle: WAV
+    forme: Waveform Audio File Format
+    theme: Connectique, supports et formats
+  - sigle: DEL
+    forme: diode électroluminescente
+    theme: Image, son et vidéo
+  - sigle: DIP
+    forme: distance interpupillaire
+    theme: Image, son et vidéo
+  - sigle: EQ
+    forme: égalisation
+    theme: Image, son et vidéo
+  - sigle: FPS
+    forme: images par seconde (frames per second)
+    theme: Image, son et vidéo
+  - sigle: LCD
+    forme: écran à cristaux liquides
+    theme: Image, son et vidéo
+  - sigle: LUTs
+    forme: tables de correspondance des couleurs (look-up tables)
+    theme: Image, son et vidéo
+  - sigle: MAO
+    forme: musique assistée par ordinateur
+    theme: Image, son et vidéo
+  - sigle: PCM
+    forme: modulation par impulsions codées
+    theme: Image, son et vidéo
+  - sigle: RGB
+    forme: rouge, vert, bleu (red, green, blue)
+    theme: Image, son et vidéo
+  - sigle: RVB
+    forme: rouge, vert, bleu
+    theme: Image, son et vidéo
+  - sigle: UHD
+    forme: ultra-haute définition
+    theme: Image, son et vidéo
+  - sigle: VR
+    forme: réalité virtuelle
+    theme: Image, son et vidéo
+  - sigle: RFID
+    forme: identification par radiofréquence
+    theme: Électronique
+  - sigle: RX
+    forme: réception
+    theme: Électronique
+  - sigle: TX
+    forme: transmission
+    theme: Électronique
+  - sigle: ABS
+    forme: acrylonitrile butadiène styrène
+    theme: Impression 3D
+  - sigle: AMS
+    forme: Automatic Material System (changeur automatique de bobines)
+    theme: Impression 3D
+  - sigle: ASA
+    forme: acrylonitrile styrène acrylate
+    theme: Impression 3D
+  - sigle: BVOH
+    forme: copolymère butènediol-alcool vinylique
+    theme: Impression 3D
+  - sigle: CPE
+    forme: copolyester
+    theme: Impression 3D
+  - sigle: HIPS
+    forme: polystyrène choc
+    theme: Impression 3D
+  - sigle: PEI
+    forme: polyétherimide
+    theme: Impression 3D
+  - sigle: PETG
+    forme: polyéthylène téréphtalate glycolisé
+    theme: Impression 3D
+  - sigle: PLA
+    forme: acide polylactique
+    theme: Impression 3D
+  - sigle: PVA
+    forme: alcool polyvinylique
+    theme: Impression 3D
+  - sigle: PVB
+    forme: polyvinylbutyral
+    theme: Impression 3D
+  - sigle: CC
+    forme: Creative Commons
+    theme: Jeux et licences
+  - sigle: RPG
+    forme: jeu de rôle (role-playing game)
+    theme: Jeux et licences

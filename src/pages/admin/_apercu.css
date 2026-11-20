@@ -1,0 +1,112 @@
+/*
+ * Aperçu du brouillon (public/admin/apercu-page.js), ajouté à la page du site
+ * chargée dans le panneau d'aperçu. Les composants de harmonium ont leur
+ * propre feuille (composants.css, servie avec celle-ci par apercu.css.ts) ;
+ * ici, la forme simplifiée des composants propres à studio·bib (leurs styles
+ * sont limités à leur composant Astro) et les cases des données en direct.
+ */
+#apercu-bandeau {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border: 0;
+  border-radius: var(--rayon-tres-petit, 8px);
+  background: var(--alerte-erreur-icone, #b10000);
+  color: #fff;
+  font-size: 0.875rem;
+  font-weight: var(--graisse-forte, 600);
+}
+.contenu img { max-width: 100%; height: auto; }
+/* Ce qui flotte sur la page publiée et masquerait l'aperçu : bandeau des
+   témoins, clavardage */
+bib-consentement,
+#bib-clavardage,
+.bib-clavardage,
+[class*='s-lch-widget'] {
+  display: none !important;
+}
+.apercu-bloc,
+.apercu-masquer,
+.apercu-onglets,
+.apercu-lieu,
+.apercu-tableau {
+  margin-block: 1.25rem;
+}
+.apercu-cartes ul,
+.apercu-liens ul,
+.apercu-galerie ul,
+.apercu-logos ul {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr));
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+.apercu-cartes li,
+.apercu-liens li {
+  padding: 14px 16px;
+  border-radius: var(--rayon-carte, 12px);
+  background: var(--couleur-surface, #fff);
+  box-shadow: var(--ombre-1);
+}
+.apercu-encadres,
+.apercu-icone-texte,
+.apercu-section,
+.apercu-chiffres {
+  padding: 16px 20px;
+  border-radius: var(--rayon-carte, 12px);
+  background: var(--couleur-teinte, #e5eef7);
+}
+.apercu-image-texte {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: start;
+}
+.apercu-onglets {
+  display: grid;
+  gap: 12px;
+}
+.apercu-onglet,
+.apercu-lieu {
+  padding: 14px 18px;
+  border: 1px solid var(--couleur-bordure, #c3ccd5);
+  border-radius: var(--rayon-carte, 12px);
+  background: var(--couleur-surface, #fff);
+}
+.apercu-onglet__titre {
+  display: inline-block;
+  margin: 0 0 8px;
+  padding: 2px 12px;
+  border-radius: var(--rayon-plein, 9999px);
+  background: var(--couleur-fond-fort, #0b113a);
+  color: var(--couleur-sur-fonce, #fff);
+  font-weight: var(--graisse-forte, 600);
+}
+.apercu-colonnes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 24px;
+}
+.apercu-lieu__titre { margin-top: 0; }
+.apercu-adresse { color: var(--couleur-texte-secondaire, #4a5160); font-weight: var(--graisse-forte, 600); }
+.apercu-tableau__titre { margin-bottom: 4px; font-weight: var(--graisse-forte, 600); }
+.apercu-tableau table { width: 100%; border-collapse: collapse; }
+.apercu-tableau th,
+.apercu-tableau td { padding: 6px 10px; border: 1px solid var(--couleur-bordure, #c3ccd5); text-align: left; }
+.apercu-boutons { display: flex; flex-wrap: wrap; gap: 8px; }
+.apercu-media,
+.apercu-dynamique {
+  margin-block: 1.25rem;
+  padding: 16px 20px;
+  border: 2px dashed var(--couleur-bordure, #c3ccd5);
+  border-radius: var(--rayon-carte, 12px);
+  background: var(--couleur-fond, #f8fafb);
+}
+.apercu-media { display: grid; place-items: center; aspect-ratio: 16 / 9; background: var(--couleur-fond-fort, #0b113a); color: var(--couleur-sur-fonce, #fff); font-weight: var(--graisse-forte, 600); }
+.apercu-media p { margin: 0; }
+.apercu-dynamique__nom { margin: 0 0 4px; font-weight: var(--graisse-forte, 600); }
+.apercu-dynamique__aide { margin: 0; color: var(--couleur-texte-secondaire, #4a5160); font-size: 0.875rem; }
+.apercu-masquer { padding-left: 14px; border-left: 3px dotted var(--couleur-bordure, #c3ccd5); }
+.apercu-icone { color: var(--couleur-accent, #0057ac); }
+.apercu-copier code { padding: 1px 6px; border-radius: 4px; background: var(--couleur-teinte, #e5eef7); }
+.apercu-copier__bouton { margin-left: 6px; padding: 1px 8px; border: 1px solid currentColor; border-radius: var(--rayon-plein, 9999px); font-size: 0.75rem; }

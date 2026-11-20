@@ -1,0 +1,183 @@
+# Menu de studio·bib : une section par entrée du menu principal, avec son menu de section.
+# Lu par src/data/navigation.ts (qui le vérifie au build) et modifié par l'interface de rédaction
+# (/admin/, « Pages » : ordre par glisser-déposer).
+#
+# Un élément de menu est l'identifiant d'une page (son chemin sans barre initiale) : son libellé
+# est le titre de la page. Un objet sert pour :
+# - une catégorie (enfants), avec ou sans page à elle (page) et un libellé propre (titre) ;
+# - une page cachée (cache: true) : absente du menu, mais rattachée à sa catégorie pour le fil
+#   d'Ariane et la mise en évidence ;
+# - une page recommandée (recommande: true) : étoile à côté du libellé ;
+# - un lien vers une autre section ou un autre site (lien).
+# Une page absente de ces menus garde son fil d'Ariane d'après son chemin.
+- cle: espaces
+  titre: Espaces
+  menu:
+    - titre: Amphithéâtre
+      page: espaces/amphitheatre
+      enfants:
+        - page: espaces/guide/amphitheatre
+          cache: true
+    - espaces/ateliers
+    - espaces/zines
+    - titre: Laboratoire de visualisation
+      page: espaces/visualisation
+      enfants:
+        - page: espaces/guide/visualisation
+          cache: true
+    - titre: Salles de visionnement
+      page: espaces/visionnement
+      enfants:
+        - espaces/salledevisio
+        - espaces/placesdevisio
+    - titre: Studios balado
+      page: espaces/studiosbalado
+      enfants:
+        - espaces/studiosbaladoaudio
+        - espaces/studiobaladovideo
+    - titre: Studios vidéo
+      page: espaces/studiosvideo
+      enfants:
+        - espaces/studiovideolsh
+        - espaces/studiovideotgd
+- cle: informatique
+  titre: Ressources informatiques
+  menu:
+    - informatique/authentification
+    - titre: Accès hors campus
+      page: informatique/hors-campus
+      enfants:
+        - page: informatique/proxy
+          recommande: true
+        - informatique/vpn
+    - informatique/reseau
+    - informatique/impression
+    - titre: Numérisation
+      page: informatique/numerisation
+      enfants:
+        - informatique/vinyle
+        - informatique/czur
+        - informatique/microdocuments
+        - informatique/ocr
+        - informatique/numerisation-pdf-acrobat
+    - informatique/ordinateurs
+    - informatique/ava
+    - informatique/connexion-ecrans
+    - informatique/tablettes
+    - titre: Logiciels
+      page: informatique/logiciels
+      enfants:
+        - informatique/connexion-distance
+        - page: informatique/logiciels/acrobat
+          cache: true
+        - page: informatique/logiciels/office
+          cache: true
+        - page: informatique/logiciels/arcgis
+          cache: true
+        - page: informatique/logiciels/antidote
+          cache: true
+        - page: informatique/logiciels/spss
+          cache: true
+        - page: informatique/logiciels/adobe
+          cache: true
+        - page: informatique/logiciels/chemdraw
+          cache: true
+        - page: informatique/logiciels/cisco
+          cache: true
+        - page: informatique/logiciels/cmaptools
+          cache: true
+        - page: informatique/logiciels/davinciresolve
+          cache: true
+        - page: informatique/logiciels/endnote
+          cache: true
+        - page: informatique/logiciels/onedrive
+          cache: true
+        - page: informatique/logiciels/qdaminer
+          cache: true
+        - page: informatique/logiciels/rstudio
+          cache: true
+        - page: informatique/logiciels/zotero
+          cache: true
+        - page: informatique/logiciels/ableton
+          cache: true
+    - informatique/accessoires
+- cle: creatives
+  titre: Technologies créatives
+  menu:
+    - titre: Impression 3D
+      page: creatives/impression3d
+      enfants:
+        - creatives/impression3d/introduction
+        - creatives/impression3d/modeles3d
+        - creatives/impression3d/bambu
+        - creatives/impression3d/prusa
+        - creatives/impression3d/ultimaker
+    - titre: Réalité virtuelle
+      page: creatives/vr
+      enfants:
+        - creatives/vr/guide
+        - creatives/vr/catalogue
+        - creatives/vr/mise-en-garde
+    - titre: Électronique
+      page: creatives/electronique
+      enfants:
+        - creatives/electronique/trousses
+        - creatives/electronique/arduino
+        - creatives/electronique/raspberrypi
+        - creatives/electronique/pieces
+    - titre: Découpeuse
+      page: creatives/decoupeuse
+      enfants:
+        - creatives/decoupeuse/cameo
+        - creatives/decoupeuse/cricut
+        - creatives/decoupeuse/brother
+    - titre: Art textile
+      page: creatives/art-textile
+      enfants:
+        - creatives/textile/guidebrodeuse
+        - creatives/textile/modeles
+        - creatives/textile/inkscape-simple
+        - creatives/textile/inkscape-complexe
+        - creatives/textile/fils
+        - creatives/textile/faq
+    - creatives/robots
+    - creatives/projets
+- cle: medias
+  titre: Productions médias
+  menu:
+    - titre: Espaces
+      enfants:
+        - titre: Studios balado
+          lien: /espaces/studiosbalado
+        - titre: Studios vidéo
+          lien: /espaces/studiosvideo
+    - medias/postes-edition
+    - titre: Production audio
+      enfants:
+        - medias/balado
+        - medias/rodecaster
+        - medias/audacity
+    - titre: Production vidéo
+      enfants:
+        - medias/obs
+        - medias/guidebaladovideo
+        - medias/guidevideolsh
+        - medias/guidevideotgd
+        - medias/teleprompteur
+        - medias/handbrake
+    - titre: Infographie
+      enfants:
+        - medias/tabgraphique
+- cle: a-propos
+  titre: À propos
+  menu:
+    - titre: Nous joindre
+      page: a-propos/nous-joindre
+      enfants:
+        - page: a-propos/soutien-informatique
+          cache: true
+        - page: a-propos/soutien-creation
+          cache: true
+    - a-propos/contribuer
+    - a-propos/accessibilite
+    - a-propos/politique

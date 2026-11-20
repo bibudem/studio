@@ -43,6 +43,24 @@ const processeur = unified({
   smartypants: false,
 })
 
+/**
+ * Dev seulement : /admin/ sert public/admin/index.html (interface de rédaction). Le serveur
+ * de dev ne sert l'index d'un dossier de public/ que sous son nom complet quand des routes
+ * existent dans le même dossier (src/pages/admin/*.ts) ; en ligne, /admin/ répond déjà.
+ */
+const adminEnDev = {
+  name: 'admin-en-dev',
+  hooks: {
+    'astro:server:setup': ({ server }) => {
+      server.middlewares.use((req, _res, next) => {
+        const m = req.url?.match(/^\/admin\/?(\?.*)?$/)
+        if (m) req.url = `/admin/index.html${m[1] ?? ''}`
+        next()
+      })
+    },
+  },
+}
+
 export default defineConfig({
   // Cache d'Astro (images déjà converties en AVIF et WebP) hors de node_modules : `npm ci` vide
   // node_modules à chaque build Amplify, ce qui forçait la reconversion de toutes les images.
@@ -55,7 +73,7 @@ export default defineConfig({
   build: { format: 'directory' },
   markdown: { processor: processeur },
   // React ne sert qu'au build : aucun îlot, aucun JavaScript React envoyé au navigateur
-  integrations: [react(), sitemap({ filter: (page) => !/^\/(dev|admin|search)(\/|$)/.test(new URL(page).pathname) && !NON_LISTEES.has(new URL(page).pathname) })],
+  integrations: [adminEnDev, react(), sitemap({ filter: (page) => !/^\/(dev|admin|search)(\/|$)/.test(new URL(page).pathname) && !NON_LISTEES.has(new URL(page).pathname) })],
   redirects: REDIRECTIONS,
   vite: {
     resolve: { alias: { '@/': fileURLToPath(new URL('./src/', import.meta.url)) } },
