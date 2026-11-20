@@ -36,7 +36,7 @@ Les bibliothèques participent au **projet FilUM**, une initiative du laboratoir
 
 Cette collaboration permet de donner une seconde vie aux déchets de filament et de contribuer à une impression 3D plus durable et responsable.
 
-::video[Tutoriel vidéo : Impression 3D]{youtube="92DW3QDXqRw"}
+::video[Projet FilUM]{youtube="92DW3QDXqRw"}
 
 ---
 

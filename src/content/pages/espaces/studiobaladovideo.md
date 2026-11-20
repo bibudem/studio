@@ -29,7 +29,7 @@ Si vous souhaitez enregistrer une présentation, une capsule vidéo, une démons
 
 ## Présentation en vidéo
 
-::video[Tutoriel vidéo : Studio balado vidéo]{youtube="fN6ydg5KxaM"}
+::video[Courte présentation du studio]{youtube="fN6ydg5KxaM"}
 
 ---
 

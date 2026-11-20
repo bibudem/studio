@@ -1,5 +1,6 @@
 ---
-title: HandBrake
+title: Réencoder des vidéos
+titreMenu: Réencoder des vidéos
 description: "Guide de HandBrake, logiciel libre et gratuit : installation et utilisation"
 aide: crea
 derniereMaj: 2026-11-05
