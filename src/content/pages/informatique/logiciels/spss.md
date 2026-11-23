@@ -1,6 +1,7 @@
 ---
 title: SPSS (IBM SPSS Statistics)
-description: "IBM SPSS Statistics, logiciel d'analyse statistique, gratuit pour la communauté UdeM : en bibliothèque, à distance ou via la Logithèque."
+description: "IBM SPSS Statistics, logiciel d'analyse statistique, gratuit pour
+  la communauté UdeM : en bibliothèque, à distance ou via la Logithèque."
 aide: info
 derniereMaj: 2026-10-19
 ---
@@ -48,7 +49,7 @@ L’université fournit gratuitement le logiciel d’analyse statistique IBM SPS
 - Aller vers **Pomme** → **Préférences Système** (ou Réglages système) → **Sécurité et confidentialité** (ou Confidentialité et sécurité) → **Général** → **Ouvrir quand même**
 
 :::alerte{type="attention" titre="Important"}
-* Ne pas cliquer sur **Personnaliser**.
+* Ne pas cliquer **Personnaliser**.
 * Ne pas changer le dossier d’installation, laisser l’emplacement par défaut.
 :::
 
