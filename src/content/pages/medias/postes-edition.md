@@ -42,7 +42,7 @@ Le poste d’édition de la [Bibliothèque des lettres et sciences humaines](htt
 
 - Écran ultralarge ou *widescreen* 34p (21:9)
 
-Le poste donne également accès à la version complète de DaVinci Resolve Studio
+Le poste donne également accès à la version complète de DaVinci Resolve Studio.
 :::
 
 ---
