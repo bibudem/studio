@@ -41,16 +41,6 @@ Paquet `harmonium` (version fixée dans `package.json`). Le site en utilise pour
 
 Les composants propres à studio·bib (carte des bibliothèques, catalogue de logiciels, visite 360°, onglets…) sont dans `src/components/studio/`.
 
-## Déploiement
-
-AWS Amplify (`amplify.yml`, `customHttp.yml`), sortie `dist/`. La branche `main` est le site public ; l'interface de rédaction y enregistre directement, et chaque enregistrement est en ligne après la reconstruction.
-
-Page 404 : dans la console Amplify (**Hosting** → **Rewrites and redirects**), en dernière règle : source `/<*>`, cible `/404.html`, type `404 (Rewrite)`.
-
 ## Licence
 
 Code : MIT. Contenu : CC BY 4.0, sauf indication contraire (Les bibliothèques de l'Université de Montréal).
-
----
-
-Ce site a été conçu avec l'aide de l'intelligence artificielle (Claude, d'Anthropic).
