@@ -3,7 +3,7 @@ title: Salle anatomique
 description: "Salle anatomique de la Bibliothèque de la santé (L-668-1) avec table Anatomage pour explorer l'anatomie en 3D."
 image: "../images/cover/anatomique.webp"
 nonListee: true
-derniereMaj: 2026-11-23
+derniereMaj: 2026-11-24
 ---
 
 La table d’anatomie virtuelle Anatomage permet de visualiser l’anatomie humaine en trois dimensions, d’explorer des contenus liés au fonctionnement du corps et d’étudier des cas d’imagerie médicale. Elle soutient l’enseignement, l’apprentissage et la recherche dans plusieurs disciplines.
@@ -40,3 +40,13 @@ Vous pouvez également passer à la bibliothèque pour découvrir la table. Si l
 ## Visite virtuelle
 
 ::pano360[Salle anatomique]{image="/img/pano/anatomique.webp" alt="Salle anatomique en vue 360°" legende="Vue en 360° de la salle anatomique"}
+
+---
+
+## Remerciements
+
+La salle anatomique a été rendue possible grâce au Fonds d’amélioration de la vie étudiante (FAVE) et aux Frais d’amélioration des services technologiques et informatiques et des collections des bibliothèques (STIC), financés par les cotisations de la communauté étudiante.
+
+:::logos
+- ![Fonds d’amélioration de la vie étudiante (FAVE)](./images/fave.svg)
+:::
