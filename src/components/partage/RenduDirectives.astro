@@ -360,7 +360,9 @@ const TAILLE_CARTE = { xs: 12, sm: 6 }
         )
       case 'logo': {
         const image = ressources.get(noeud) as ImageMetadata
-        const visuel = <Picture src={image} alt={a.alt} formats={['avif', 'webp']} fallbackFormat="webp" {...largeursHauteur(image, 200)} loading="lazy" decoding="async" />
+        const visuel = sansConversion(image) ? (
+          <img src={image.src} width={Math.round((image.width / image.height) * 200)} height={200} alt={a.alt} loading="lazy" decoding="async" />
+        ) : <Picture src={image} alt={a.alt} formats={['avif', 'webp']} fallbackFormat="webp" {...largeursHauteur(image, 200)} loading="lazy" decoding="async" />
         return <div class="logo">{a.lien ? <Lien to={a.lien}>{visuel}</Lien> : visuel}</div>
       }
       case 'icone-texte': {
@@ -620,6 +622,16 @@ const TAILLE_CARTE = { xs: 12, sm: 6 }
     .logos {
       grid-template-columns: repeat(4, minmax(0, 1fr));
     }
+  }
+
+  /* Un logo seul prend toute la rangée, centré, et s'affiche plus grand */
+  .logos:has(> .logo:only-child) {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .logo:only-child :global(img) {
+    height: 260px;
+    max-height: 260px;
   }
 
   /* Texte et grande icône dans un carré */
