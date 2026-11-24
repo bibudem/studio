@@ -32,7 +32,7 @@
     "@types/react-dom": "^19.3.0",
     "astro": "^7.4.1",
     "github-slugger": "^2.0.0",
-    "harmonium": "github:bibudem/harmonium#v1.1.0",
+    "harmonium": "github:bibudem/harmonium#v1.2.0",
     "leaflet": "^1.9.4",
     "minisearch": "^7.2.0",
     "react": "^19.3.1",
