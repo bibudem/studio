@@ -27,6 +27,9 @@ sigles:
   - sigle: TI
     forme: technologies de l'information
     theme: Lieux et services
+  - sigle: FAVE
+    forme: Fonds d’amélioration de la vie étudiante
+    theme: Lieux et services
   - sigle: SGQRI
     forme: Standard du gouvernement du Québec sur les ressources informationnelles
     theme: Accessibilité

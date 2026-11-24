@@ -13,10 +13,15 @@ import { ABREVIATIONS } from '../data/abreviations.mjs'
 const IGNORES = new Set(['code', 'pre', 'kbd', 'abbr', 'script', 'style', 'svg'])
 
 const echapper = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
-const sigles = Object.keys(ABREVIATIONS).sort((a, b) => b.length - a.length)
-const MOTIF = new RegExp(`(?<![\\p{L}\\p{N}-])(?:${sigles.map(echapper).join('|')})(?![\\p{L}\\p{N}-])`, 'gu')
 
-export default function rehypeAbreviations() {
+/*
+ * La liste arrive en option depuis astro.config.mjs : elle entre ainsi dans l'empreinte de la
+ * config, et Astro rend de nouveau les pages quand un sigle change (sinon il garde en cache le
+ * rendu des pages qui n'ont pas changé, avec les anciennes abréviations).
+ */
+export default function rehypeAbreviations({ abreviations = ABREVIATIONS } = {}) {
+  const sigles = Object.keys(abreviations).sort((a, b) => b.length - a.length)
+  const MOTIF = new RegExp(`(?<![\\p{L}\\p{N}-])(?:${sigles.map(echapper).join('|')})(?![\\p{L}\\p{N}-])`, 'gu')
   return (arbre) => {
     const vus = new Set()
 
@@ -43,7 +48,7 @@ export default function rehypeAbreviations() {
           enfants.push({
             type: 'element',
             tagName: 'abbr',
-            properties: { title: ABREVIATIONS[m[0]] },
+            properties: { title: abreviations[m[0]] },
             children: [{ type: 'text', value: m[0] }],
           })
           debut = m.index + m[0].length

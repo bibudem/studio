@@ -11,6 +11,7 @@ import { remarkDirectivesBib, rehypeDirectivesBib } from './src/plugins/directiv
 import { remarkHtmlPermis } from './src/plugins/directives-studio.mjs'
 import rehypeAncresTitres from './src/plugins/rehype-ancres-titres.mjs'
 import rehypeAbreviations from './src/plugins/rehype-abreviations.mjs'
+import { lireAbreviations } from './src/data/abreviations.mjs'
 import { REDIRECTIONS } from './src/data/redirections.mjs'
 
 // Pages en préparation (nonListee) : publiées par leur adresse, mais hors du sitemap
@@ -36,9 +37,10 @@ process.env.SITE_ENV ||= branche() === 'main' ? 'production' : 'preprod'
 // puis ancres des titres et abréviations (<abbr>). rehypeDirectivesBib en dernier : il change les
 // directives, les liens et les images en marqueurs que RenduDirectives.astro
 // remplace par les composants.
+const FICHIER_ABREVIATIONS = 'src/data/abreviations.yaml'
 const processeur = unified({
   remarkPlugins: [remarkDirective, remarkHtmlPermis, remarkDirectivesBib],
-  rehypePlugins: [rehypeAncresTitres, rehypeAbreviations, rehypeDirectivesBib],
+  rehypePlugins: [rehypeAncresTitres, [rehypeAbreviations, { abreviations: lireAbreviations(readFileSync(FICHIER_ABREVIATIONS, 'utf8')) }], rehypeDirectivesBib],
   // Les guillemets et apostrophes du contenu sont déjà typographiques
   smartypants: false,
 })
@@ -51,6 +53,8 @@ const processeur = unified({
 const adminEnDev = {
   name: 'admin-en-dev',
   hooks: {
+    // Un sigle ajouté ou modifié (à la main ou dans /admin/) relance le serveur de dev
+    'astro:config:setup': ({ addWatchFile }) => addWatchFile(new URL(`./${FICHIER_ABREVIATIONS}`, import.meta.url)),
     'astro:server:setup': ({ server }) => {
       server.middlewares.use((req, _res, next) => {
         const m = req.url?.match(/^\/admin\/?(\?.*)?$/)
